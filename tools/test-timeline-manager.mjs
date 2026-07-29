@@ -1,0 +1,73 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import vm from "node:vm";
+
+const managerPath = resolve("outputs", "editor-timeline-manager.js");
+const source = readFileSync(managerPath, "utf8");
+const context = { structuredClone, window: {} };
+
+vm.createContext(context);
+vm.runInContext(source, context, { filename: managerPath });
+
+const manager = context.window.EditorTimelineManager;
+const failures = [];
+const assert = (condition, message) => { if (!condition) failures.push(message); };
+
+assert(manager.isSection("history"), "base history section id should be valid");
+assert(manager.isSection("history3"), "duplicated history section id should be valid");
+assert(!manager.isSection("process"), "process should not be a history section");
+
+const model = manager.createDefaultModel();
+assert(model.groups.length === 4, "default history should have four month groups");
+assert(model.groups.every((group) => group.events.length === 2), "default groups should have two events");
+assert(model.textStyles.phone.headline.size > 0, "phone headline style should exist");
+assert(model.groups[0].events[0].textStyles.desktop.title.size > 0, "event text styles should be independent");
+assert(Object.keys(manager.ICONS).length >= 8, "history icon library should offer useful choices");
+
+const colored = manager.normalizeModel({ groups: [{ periodColor: "#123abc", events: [{}] }] });
+assert(colored.groups[0].periodColor === "#123abc", "month title background color should be preserved");
+const unsafeColor = manager.normalizeModel({ groups: [{ periodColor: "red;position:fixed", events: [{}] }] });
+assert(unsafeColor.groups[0].periodColor === "", "invalid month title background color should be rejected");
+
+const addedGroup = manager.addGroup(model);
+assert(addedGroup.groups.length === 5, "addGroup should append a month group");
+assert(model.groups.length === 4, "addGroup should not mutate the source model");
+
+const groupId = model.groups[0].id;
+const addedEvent = manager.addEvent(model, groupId);
+assert(addedEvent.groups[0].events.length === 3, "addEvent should append an event to its group");
+const removedEvent = manager.removeEvent(addedEvent, groupId, addedEvent.groups[0].events[0].id);
+assert(removedEvent.groups[0].events.length === 2, "removeEvent should remove the selected event");
+
+const moved = manager.moveItem(model.groups, model.groups[3].id, "up");
+assert(moved[2].id === model.groups[3].id, "moveItem should reorder month groups");
+
+const uneven = manager.addEvent(manager.addEvent(model, model.groups[0].id), model.groups[0].id);
+const distribution = manager.distributeGroups(uneven.groups);
+assert(distribution.columns.flat().length === uneven.groups.length, "desktop distribution should contain every month group");
+assert(new Set(distribution.columns.flat()).size === uneven.groups.length, "desktop distribution should not duplicate month groups");
+
+const paginationSource = [
+  { id: "month-a", events: Array.from({ length: 6 }, (_, index) => ({ id: `event-a-${index}` })) },
+  { id: "month-b", events: Array.from({ length: 14 }, (_, index) => ({ id: `event-b-${index}` })) }
+];
+const firstHistoryPage = manager.paginateGroups(paginationSource, 8);
+assert(firstHistoryPage.total === 20, "pagination should count every history event");
+assert(firstHistoryPage.visibleCount === 8 && firstHistoryPage.hasMore, "first history page should expose eight events");
+assert(firstHistoryPage.groups[0].events.length === 6 && firstHistoryPage.groups[1].events.length === 2, "pagination should preserve month boundaries while slicing events");
+const secondHistoryPage = manager.paginateGroups(paginationSource, 16);
+assert(secondHistoryPage.visibleCount === 16 && secondHistoryPage.hasMore, "the second history page should expose sixteen events");
+const finalHistoryPage = manager.paginateGroups(paginationSource, 24);
+assert(finalHistoryPage.visibleCount === 20 && !finalHistoryPage.hasMore, "the final page should reveal all remaining events");
+
+const fewer = manager.removeGroup(model, model.groups[0].id);
+assert(fewer.groups.length === 3, "removeGroup should remove the selected month group");
+assert(manager.estimateHeight(model, "phone") > manager.estimateHeight(fewer, "phone"), "fewer groups should reduce mobile height");
+assert(manager.estimateHeight(model, "phone") > manager.estimateHeight(model, "desktop"), "mobile history should reserve stacked-card height");
+
+if (failures.length) {
+  console.error(failures.join("\n"));
+  process.exitCode = 1;
+} else {
+  console.log("timeline manager tests OK");
+}

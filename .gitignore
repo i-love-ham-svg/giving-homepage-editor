@@ -1,0 +1,15 @@
+tools/.tmp-*
+*.log
+work/
+deliverables/
+developer-handoff/
+outputs/test-artifacts/
+outputs/representative-greeting-editor-delivery/
+outputs/representative-greeting-editor-developer-handoff-*/
+outputs/*.zip
+outputs/*-check.png
+outputs/program-section-*.png
+outputs/timeline-section-*.png
+outputs/gallery-*-qa.jpg
+Thumbs.db
+.DS_Store
