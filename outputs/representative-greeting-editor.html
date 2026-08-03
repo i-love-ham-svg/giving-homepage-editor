@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
+  <link rel="icon" href="data:,">
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -531,6 +532,17 @@
       border-right: 0;
       border-radius: 0;
       box-shadow: none;
+    }
+    .stage.view-mode .program-section-content {
+      padding-top: 20px;
+    }
+
+    .stage.tablet.view-mode .program-section-content {
+      padding-top: 18px;
+    }
+
+    .stage.mobile.view-mode .program-section-content {
+      padding-top: 16px;
     }
     .stage.mobile {
       border-radius: 34px;
@@ -2109,6 +2121,29 @@
       pointer-events: none;
     }
 
+    .main-intro-style-switcher {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 8px 24px rgba(66, 45, 36, .12);
+      pointer-events: auto;
+    }
+    .main-intro-style-switcher > span { padding-inline: 5px; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .main-intro-style-options { display: flex; gap: 3px; }
+    .main-intro-style-options button { min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--ink); font-weight: 800; cursor: pointer; }
+    .main-intro-style-options button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .gallery-section-content > .main-intro-style-switcher { position: sticky; top: 10px; right: auto; width: max-content; margin: 0 auto 10px; }
+    .stage.mobile .main-intro-style-switcher,
+    .stage.tablet .main-intro-style-switcher { top: 8px; right: 8px; }
+    .stage.mobile .main-intro-style-switcher > span { display: none; }
     .main-intro-surface::before {
       content: "";
       position: absolute;
@@ -7774,6 +7809,23 @@
         );
       color: var(--gallery-ink);
       box-sizing: border-box;
+    }
+
+    .gallery-section-content.is-hero-only {
+      min-height: 0;
+      padding-bottom: 0;
+    }
+
+    .gallery-section-content.is-hero-only .gallery-hero {
+      min-height: 0;
+      margin-bottom: 0;
+    }
+
+    .gallery-section-content.is-hero-only .gallery-categories,
+    .gallery-section-content.is-hero-only .gallery-month-row,
+    .gallery-section-content.is-hero-only .gallery-grid,
+    .gallery-section-content.is-hero-only .gallery-footer {
+      display: none !important;
     }
 
     .gallery-edit-only {
@@ -17948,6 +18000,69 @@
       stage.insertBefore(surface, elements.title ?? backgroundEditHit);
     }
 
+    function getPairedMainIntroGallerySectionId(mainIntroSectionId) {
+      return Object.keys(state.gallerySections ?? {}).find((sectionId) => {
+        const model = getGallerySectionContent(sectionId);
+        return model.heroOnly && model.mainIntroStyleSection && model.mainIntroSourceSectionId === mainIntroSectionId;
+      }) ?? "";
+    }
+
+    function renderMainIntroStyleSwitcher(sectionId, activeStyle = "text") {
+      return `<div class="main-intro-style-switcher gallery-edit-only" data-main-intro-style-switcher data-section-id="${escapeHtml(sectionId)}"><span>소개 스타일</span><div class="main-intro-style-options" role="group" aria-label="메인 소개 스타일"><button type="button" data-main-intro-style="text" aria-pressed="${activeStyle === "text"}">텍스트형</button><button type="button" data-main-intro-style="gallery" aria-pressed="${activeStyle === "gallery"}">갤러리형</button></div></div>`;
+    }
+
+    function ensureMainIntroStyleSwitcher(sectionId) {
+      const surface = document.querySelector(`.main-intro-surface[data-section-id="${sectionId}"]`);
+      if (!surface || surface.querySelector("[data-main-intro-style-switcher]")) return;
+      surface.insertAdjacentHTML("beforeend", renderMainIntroStyleSwitcher(sectionId, "text"));
+    }
+
+    function switchMainIntroStyle(sectionId, style) {
+      if (!isMainIntroSection(sectionId) || !["text", "gallery"].includes(style)) return;
+      let gallerySectionId = getPairedMainIntroGallerySectionId(sectionId);
+      if (style === "gallery") {
+        if (!gallerySectionId) {
+          const sourceIndex = getSectionOrder().indexOf(sectionId);
+          gallerySectionId = createGallerySection("bottom", null, Math.max(0, sourceIndex + 1));
+          const model = getGallerySectionContent(gallerySectionId);
+          const content = getMainIntroSectionContent(sectionId);
+          Object.assign(model, {
+            heroOnly: true,
+            mainIntroStyleSection: true,
+            mainIntroSourceSectionId: sectionId,
+            eyebrow: content.mainIntroKicker || model.eyebrow,
+            headline: content.mainIntroTitle || model.headline,
+            description: content.mainIntroBody || model.description,
+            heights: {}
+          });
+          setGallerySectionContent(gallerySectionId, model);
+          appendSectionToActiveHomeMenu(gallerySectionId);
+        } else {
+          const model = getGalleryModel(gallerySectionId);
+          model.heights = {};
+          renderGallerySection(gallerySectionId);
+        }
+        state.hiddenSections[sectionId] = true;
+        state.hiddenSections[gallerySectionId] = false;
+        setActiveSection(gallerySectionId, { selectLayer: true });
+      } else {
+        if (gallerySectionId) state.hiddenSections[gallerySectionId] = true;
+        state.hiddenSections[sectionId] = false;
+        setActiveSection(sectionId, { selectLayer: true });
+      }
+      applySectionVisibility(); applyLayouts(); syncSectionControls();
+      recordHistory("메인 소개 스타일 변경");
+      showToast(style === "gallery" ? "갤러리형 소개로 변경했습니다" : "텍스트형 소개로 변경했습니다");
+    }
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-main-intro-style]");
+      if (!button) return;
+      const sectionId = button.closest("[data-main-intro-style-switcher]")?.dataset.sectionId;
+      if (!sectionId) return;
+      event.preventDefault(); event.stopPropagation();
+      switchMainIntroStyle(sectionId, button.dataset.mainIntroStyle);
+    });
     function createMainIntroEditable(sectionId, part, value = "") {
       const id = `${sectionId === "mainIntro" ? "mainIntro" : sectionId}${part}`;
       const existing = elements[id];
@@ -18009,6 +18124,7 @@
       ensureMainIntroLayerMaps(sectionId, options.sourceSectionId ?? "mainIntro");
       const content = options.content ?? getMainIntroSectionContent(options.sourceSectionId ?? "mainIntro");
       if (sectionId !== "mainIntro") createMainIntroSurface(sectionId);
+      ensureMainIntroStyleSwitcher(sectionId);
       ids.forEach((id) => {
         const part = getMainIntroLayerPart(id);
         const value = content[`mainIntro${part}`] ?? "";
@@ -18884,7 +19000,7 @@
           layer.style.height = previousLayerHeight;
 
           const model = getModel(sectionId);
-          const nextHeight = Math.max(getMinimumHeight(key), measured);
+          const nextHeight = Math.max(getMinimumHeight(key, model, sectionId), measured);
           if (Math.abs((Number(model.heights[key]) || 0) - nextHeight) > 4) {
             model.heights[key] = nextHeight;
             changed = true;
@@ -21746,9 +21862,10 @@
     function getGalleryRequiredHeightPx(sectionId, viewport = state.viewport) {
       const key = normalizeViewportKey(viewport);
       const model = getGalleryModel(sectionId);
+      const minimumHeight = model.heroOnly ? 0 : 460;
       const estimated = galleryRuntime.estimateHeight(model, key);
       const measured = Number(model.heights?.[key]) || 0;
-      return measured > 0 ? Math.max(460, measured) : Math.max(460, estimated);
+      return measured > 0 ? Math.max(minimumHeight, measured) : Math.max(minimumHeight, estimated);
     }
 
     function ensureGalleryLayerMaps(sectionId) {
@@ -21778,7 +21895,7 @@
         fieldSelector: "textarea.gallery-field",
         contentSelector: ".gallery-section-content",
         getModel: getGalleryModel,
-        getMinimumHeight: () => 460,
+        getMinimumHeight: (_viewport, model) => model.heroOnly ? 0 : 460,
         releaseLayerHeight: true,
         extraHeight: 8
       });
@@ -22468,8 +22585,9 @@
         .map((style) => `<option value="${style.id}"${style.id === model.mobileStyle ? " selected" : ""}>${escapeHtml(style.label)}</option>`)
         .join("");
       layer.innerHTML = `
-        <div class="gallery-section-content" data-desktop-style="${escapeHtml(model.desktopStyle)}" data-mobile-style="${escapeHtml(model.mobileStyle)}">
+        <div class="gallery-section-content${model.heroOnly ? " is-hero-only" : ""}" data-desktop-style="${escapeHtml(model.desktopStyle)}" data-mobile-style="${escapeHtml(model.mobileStyle)}">
           ${renderGalleryHeroDecorations(model)}
+          ${model.mainIntroStyleSection ? renderMainIntroStyleSwitcher(model.mainIntroSourceSectionId, "gallery") : ""}
           <div class="gallery-style-bar gallery-edit-only" aria-label="갤러리 스타일 선택">
             <label class="gallery-desktop-style-control">PC <select data-gallery-setting="desktopStyle">${desktopOptions}</select></label>
             <button type="button" data-gallery-action="add-decoration">+ 장식</button>
@@ -22503,6 +22621,9 @@
           </footer>
         </div>
       `;
+      if (model.heroOnly) {
+        layer.querySelectorAll(".gallery-categories, .gallery-month-row, .gallery-grid, .gallery-footer").forEach((node) => node.remove());
+      }
       bindGallerySectionEvents(sectionId);
       syncGalleryImageSelection(sectionId);
       syncGalleryCustomTextSelection(sectionId);
@@ -23477,6 +23598,7 @@
         <button type="button" data-section-insert-action="addHistory">새 연혁 추가</button>
         <button type="button" data-section-insert-action="addDonation">새 후원 안내 추가</button>
         <button type="button" data-section-insert-action="addGallery">새 갤러리 추가</button>
+        <button type="button" data-section-insert-action="addGalleryIntro">새 갤러리형 소개 추가</button>
         <button type="button" data-section-insert-action="close">닫기</button>
       `;
       sectionInsertLayer.appendChild(menu);
@@ -23661,6 +23783,17 @@
       showToast(`${getSectionDisplayLabel(sectionId)} \uC139\uC158\uC744 \uCD94\uAC00\uD588\uC2B5\uB2C8\uB2E4`);
       return sectionId;
     }
+    function addNewGalleryIntroAt(slot = "bottom", insertIndex = null) {
+      const sectionId = createGallerySection(slot, null, insertIndex);
+      const model = getGallerySectionContent(sectionId);
+      model.heroOnly = true;
+      setGallerySectionContent(sectionId, model);
+      appendSectionToActiveHomeMenu(sectionId);
+      recordHistory("갤러리형 소개 섹션 추가");
+      showToast("갤러리 상단 소개 섹션을 추가했습니다");
+      return sectionId;
+    }
+
     function duplicateSectionAt(sourceSectionId, slot = "bottom", insertIndex = null) {
       sourceSectionId = normalizeSectionId(sourceSectionId);
       if (!sectionLabels[sourceSectionId] || state.hiddenSections[sourceSectionId]) {
@@ -23751,21 +23884,50 @@
       showSectionInsertMenu({ dataset: { slot, insertIndex: String(insertIndex ?? "") }, style: { top: "50%" } });
     }
 
-    function syncSectionControls() {
+    function isPairedMainIntroGallerySection(sectionId) {
+  if (!isGallerySection(sectionId)) return false;
+  const model = getGallerySectionContent(sectionId);
+  return Boolean(model.heroOnly && model.mainIntroStyleSection && model.mainIntroSourceSectionId);
+}
+
+function getLogicalSectionSelectEntries() {
+  const entries = [];
+  getSectionOrder().forEach((sectionId) => {
+    if (isPairedMainIntroGallerySection(sectionId)) return;
+    if (isMainIntroSection(sectionId)) {
+      const pairedGalleryId = getPairedMainIntroGallerySectionId(sectionId);
+      const activeSectionId = pairedGalleryId && !state.hiddenSections[pairedGalleryId]
+        ? pairedGalleryId
+        : sectionId;
+      entries.push({
+        value: activeSectionId,
+        label: getSectionDisplayLabel(sectionId),
+        hidden: false
+      });
+      return;
+    }
+    entries.push({
+      value: sectionId,
+      label: getSectionDisplayLabel(sectionId),
+      hidden: Boolean(state.hiddenSections[sectionId])
+    });
+  });
+  return entries;
+}
+function syncSectionControls() {
       const active = normalizeSectionId(state.activeSection);
       const clipboard = state.sectionClipboard;
       sectionSelectControls.forEach((control) => {
-        const currentValue = control.value;
-        control.innerHTML = "";
-        getSectionOrder().forEach((sectionId) => {
-          const option = document.createElement("option");
-          option.value = sectionId;
-          option.textContent = `${getSectionDisplayLabel(sectionId)}${state.hiddenSections[sectionId] ? " (숨김)" : ""}`;
-          control.appendChild(option);
-        });
-        if (currentValue && sectionLabels[currentValue]) control.value = currentValue;
-        control.value = active;
-      });
+    control.innerHTML = "";
+    getLogicalSectionSelectEntries().forEach((entry) => {
+      const option = document.createElement("option");
+      option.value = entry.value;
+      option.textContent = `${entry.label}${entry.hidden ? " (숨김)" : ""}`;
+      control.appendChild(option);
+    });
+    control.value = active;
+    if (!control.value && control.options.length) control.selectedIndex = 0;
+  });
       sectionCopyButtons.forEach((button) => {
         button.disabled = Boolean(state.hiddenSections[active]);
       });
@@ -24956,7 +25118,8 @@
       addProcessAt: addNewProcessAt,
       addHistoryAt: addNewHistoryAt,
       addDonationAt: addNewDonationAt,
-      addGalleryAt: addNewGalleryAt
+      addGalleryAt: addNewGalleryAt,
+      addGalleryIntroAt: addNewGalleryIntroAt
     });
 
     const StorageManager = Object.freeze({
@@ -25479,6 +25642,7 @@
         if (action === "addGreeting") SectionManager.addGreetingAt(slot, insertIndex);
         if (action === "addProgram") SectionManager.addProgramAt(slot, insertIndex);
         if (action === "addGallery") SectionManager.addGalleryAt(slot, insertIndex);
+        if (action === "addGalleryIntro") SectionManager.addGalleryIntroAt(slot, insertIndex);
         if (action === "addProcess") SectionManager.addProcessAt(slot, insertIndex);
         if (action === "addHistory") SectionManager.addHistoryAt(slot, insertIndex);
         if (action === "addDonation") SectionManager.addDonationAt(slot, insertIndex);

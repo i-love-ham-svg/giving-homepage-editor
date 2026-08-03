@@ -397,6 +397,11 @@
       .slice(0, 20);
     const maxTextId = customTexts.reduce((max, item) => Math.max(max, Number(item.id.replace(/\D/g, "")) || 0), 0);
     return {
+      heroOnly: model.heroOnly === true,
+      mainIntroStyleSection: model.mainIntroStyleSection === true,
+      mainIntroSourceSectionId: typeof model.mainIntroSourceSectionId === "string"
+        ? model.mainIntroSourceSectionId
+        : "",
       desktopStyle: desktopIds.includes(model.desktopStyle) ? model.desktopStyle : "mosaic",
       mobileStyle: mobileIds.includes(model.mobileStyle) ? model.mobileStyle : "poster",
       eyebrow: String(model.eyebrow ?? "GALLERY"),
