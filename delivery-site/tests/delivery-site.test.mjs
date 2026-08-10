@@ -37,15 +37,36 @@ test("builds the finished Songak community board shell", async () => {
 test("serves every public menu and footer document as a separate lightweight page", async () => {
   const pageFiles = [
     "public-about.html",
+    "public-about-greeting.html",
+    "public-about-mission.html",
+    "public-about-corporate.html",
+    "public-about-history.html",
+    "public-about-facility.html",
+    "public-about-organization.html",
     "public-programs.html",
+    "public-programs-list.html",
+    "public-programs-schedule.html",
+    "public-programs-schedule-original.html",
+    "public-programs-case-management.html",
+    "public-programs-application.html",
     "public-participation.html",
+    "public-participation-volunteer.html",
+    "public-participation-donation.html",
     "public-news.html",
+    "public-news-notices.html",
+    "public-news-press.html",
+    "public-news-videos.html",
+    "public-news-gallery.html",
+    "public-news-visitor-board.html",
     "public-privacy.html",
     "public-email-refusal.html",
     "public-directions.html",
   ];
   const pages = await Promise.all(pageFiles.map((file) => readFile(new URL(`../outputs/${file}`, root), "utf8")));
-  const worker = await readFile(new URL("worker/index.ts", root), "utf8");
+  const [worker, communityPage] = await Promise.all([
+    readFile(new URL("worker/index.ts", root), "utf8"),
+    readFile(new URL("app/community/page.tsx", root), "utf8"),
+  ]);
 
   for (const page of pages) {
     assert.match(page, /<html lang="ko">/);
@@ -62,8 +83,15 @@ test("serves every public menu and footer document as a separate lightweight pag
 
   assert.match(worker, /PUBLIC_PAGE_ROUTES/);
   assert.match(worker, /"\/about": "\/songak\/public-about\.html"/);
+  assert.match(worker, /"\/about\/greeting": "\/songak\/public-about-greeting\.html"/);
+  assert.match(worker, /"\/programs\/case-management": "\/songak\/public-programs-case-management\.html"/);
+  assert.match(worker, /"\/participation\/volunteer": "\/songak\/public-participation-volunteer\.html"/);
+  assert.match(worker, /"\/news\/visitor-board": "\/songak\/public-news-visitor-board\.html"/);
   assert.match(worker, /request\.method === "HEAD"/);
   assert.match(worker, /Response\.redirect\(url\.toString\(\), 308\)/);
+  assert.match(worker, /LEGACY_PUBLIC_REDIRECTS[\s\S]*?facility-detail[\s\S]*?\/about\/facility/);
+  assert.match(worker, /representative-greeting-editor[\s\S]*?session\.admin[\s\S]*?\/staff-login/);
+  assert.match(communityPage, /<BoardApp \/>/);
 });
 
 test("ships durable board storage, moderation, and media routes", async () => {
@@ -129,7 +157,8 @@ test("keeps the public site read-only and gates the staff editor with temporary 
     readFile(new URL("app/api/board/admin/logout/route.ts", root), "utf8"),
     readFile(new URL("lib/board-server.ts", root), "utf8"),
   ]);
-  assert.match(page, /mode=view/);
+  assert.match(page, /송악사회복지관 공개 홈페이지/);
+  assert.doesNotMatch(page, /<iframe|representative-greeting-editor/);
   assert.doesNotMatch(page, /mode=edit/);
   assert.doesNotMatch(editorPage, /requireChatGPTUser/);
   assert.match(editorPage, /force-dynamic/);

@@ -7,7 +7,7 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "sync:editor": "node scripts/sync-editor.mjs",
+    "sync:editor": "node ../tools/build-public-site.mjs && node scripts/sync-editor.mjs",
     "predev": "pnpm sync:editor",
     "dev": "vinext dev",
     "prebuild": "pnpm sync:editor",

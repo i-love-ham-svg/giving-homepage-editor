@@ -26,12 +26,47 @@ interface ExecutionContext {
 const PUBLIC_PAGE_ROUTES: Record<string, string> = {
   "/": "/songak/representative-greeting-public.html",
   "/about": "/songak/public-about.html",
+  "/about/greeting": "/songak/public-about-greeting.html",
+  "/about/mission": "/songak/public-about-mission.html",
+  "/about/corporate": "/songak/public-about-corporate.html",
+  "/about/history": "/songak/public-about-history.html",
+  "/about/facility": "/songak/public-about-facility.html",
+  "/about/organization": "/songak/public-about-organization.html",
   "/programs": "/songak/public-programs.html",
+  "/programs/list": "/songak/public-programs-list.html",
+  "/programs/schedule": "/songak/public-programs-schedule.html",
+  "/programs/schedule-original": "/songak/public-programs-schedule-original.html",
+  "/programs/case-management": "/songak/public-programs-case-management.html",
+  "/programs/application": "/songak/public-programs-application.html",
   "/participation": "/songak/public-participation.html",
+  "/participation/volunteer": "/songak/public-participation-volunteer.html",
+  "/participation/donation": "/songak/public-participation-donation.html",
   "/news": "/songak/public-news.html",
+  "/news/notices": "/songak/public-news-notices.html",
+  "/news/press": "/songak/public-news-press.html",
+  "/news/videos": "/songak/public-news-videos.html",
+  "/news/gallery": "/songak/public-news-gallery.html",
+  "/news/visitor-board": "/songak/public-news-visitor-board.html",
   "/privacy-policy": "/songak/public-privacy.html",
   "/email-refusal": "/songak/public-email-refusal.html",
   "/directions": "/songak/public-directions.html",
+};
+
+const LEGACY_PUBLIC_REDIRECTS: Record<string, string> = {
+  "/songak/facility-detail": "/about/facility",
+  "/songak/facility-detail.html": "/about/facility",
+  "/songak/program-schedule": "/programs/schedule",
+  "/songak/program-schedule.html": "/programs/schedule",
+  "/songak/case-management-detail": "/programs/case-management",
+  "/songak/case-management-detail.html": "/programs/case-management",
+  "/songak/organization-staff": "/about/organization",
+  "/songak/organization-staff.html": "/about/organization",
+  "/songak/video-archive": "/news/videos",
+  "/songak/video-archive.html": "/news/videos",
+  "/songak/online-application": "/programs/application",
+  "/songak/online-application.html": "/programs/application",
+  "/songak/community-board": "/community",
+  "/songak/community-board.html": "/community",
 };
 
 // Image security config. SVG sources with .svg extension auto-skip the
@@ -43,6 +78,32 @@ const PUBLIC_PAGE_ROUTES: Record<string, string> = {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/songak/representative-greeting-public" || url.pathname === "/songak/representative-greeting-public.html") {
+      url.pathname = "/";
+      return Response.redirect(url.toString(), 308);
+    }
+
+    if (url.pathname === "/community-board") {
+      url.pathname = "/community";
+      return Response.redirect(url.toString(), 308);
+    }
+
+    const legacyPublicPath = LEGACY_PUBLIC_REDIRECTS[url.pathname];
+    if (legacyPublicPath) {
+      url.pathname = legacyPublicPath;
+      return Response.redirect(url.toString(), 308);
+    }
+
+    if (url.pathname === "/songak/representative-greeting-editor" || url.pathname === "/songak/representative-greeting-editor.html") {
+      const sessionUrl = new URL("/api/board/admin/session", request.url);
+      const sessionResponse = await handler.fetch(new Request(sessionUrl, { headers: request.headers }), env, ctx);
+      const session = await sessionResponse.clone().json().catch(() => ({ admin: false })) as { admin?: boolean };
+      if (!session.admin) {
+        const loginUrl = new URL("/staff-login", request.url);
+        return Response.redirect(loginUrl.toString(), 302);
+      }
+    }
 
     if ((request.method === "GET" || request.method === "HEAD") && url.pathname !== "/" && url.pathname.endsWith("/")) {
       const canonicalPath = url.pathname.replace(/\/+$/, "");

@@ -1,10 +1,11 @@
-const PUBLIC_SITE_URL =
-  "/songak/representative-greeting-editor.html?mode=view&editorRole=visitor&v=20260810-public-delivery";
-
 export default function Home() {
   return (
     <main className="editor-shell">
-      <iframe className="editor-frame" src={PUBLIC_SITE_URL} title="송악사회복지관 홈페이지" />
+      <section aria-label="송악사회복지관 공개 홈페이지">
+        <h1>송악사회복지관</h1>
+        <p>공개 홈페이지를 불러오고 있습니다.</p>
+        <a href="/about">복지관 소개 보기</a>
+      </section>
     </main>
   );
 }
