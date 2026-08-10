@@ -96,7 +96,7 @@
       label: "로그인·회원가입", originalIds: [], kinds: ["social", "guide"],
       models: {
         hero: { template: "volunteer", label: "SNS 회원 · 메인 소개", eyebrow: "SOCIAL ACCOUNT", headline: "한 번의 인증으로 송악과 연결", description: "별도의 아이디와 비밀번호 없이 사용 중인 SNS 계정으로 안전하게 시작합니다.", ctaLabel: "SNS로 시작하기", detailSecondaryCta: "이용 안내" },
-        social: { template: "volunteer", label: "SNS 회원 · 인증 선택", headline: "로그인·회원가입", description: "", note: "", socialLayout: "drive-split", detailAssetUrl: "./assets/generated/account-sns-photoreal-v1.webp", detailAssetAlt: "송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원의 실사 이미지", detailMobileAssetUrl: "./assets/generated/account-sns-photoreal-mobile-v2.png", detailMobileAssetAlt: "모바일 화면용 송악사회복지관 어르신과 복지관 직원의 실사 이미지", detailAssetFit: "cover", details: [
+        social: { template: "volunteer", label: "SNS 회원 · 인증 선택", headline: "로그인·회원가입", description: "", note: "", socialLayout: "drive-split", detailAssetUrl: "./assets/generated/account-sns-photoreal-v1.webp", detailAssetAlt: "송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원의 실사 이미지", detailMobileAssetUrl: "./assets/generated/account-sns-photoreal-mobile-v2.webp", detailMobileAssetAlt: "모바일 화면용 송악사회복지관 어르신과 복지관 직원의 실사 이미지", detailAssetFit: "cover", details: [
           { id: "account-kakao-client", label: "카카오 REST API 키", value: "" },
           { id: "account-naver-client", label: "네이버 Client ID", value: "" },
           { id: "account-google-client", label: "Google Client ID", value: "" },

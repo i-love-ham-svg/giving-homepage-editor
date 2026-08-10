@@ -21,7 +21,7 @@ const assertJsonEqual = (actual, expected) => {
 assert.equal(typeof manager, "object");
 assert.match(editorHtml, /function isSafeEditorImageSource\(source\)[\s\S]*?securityRuntime\.isSafeImageDataUrl\(value\) \|\| isProjectAssetUrl/);
 assert.match(editorHtml, /function showPhotoAsset\(src[\s\S]*?if \(!isSafeEditorImageSource\(src\)\)[\s\S]*?refs\.photoImage\.src = src/);
-assert.match(editorHtml, /dataUrl: "\.\/assets\/concept\/representative-concept\.png"/);
+assert.match(editorHtml, /dataUrl: "\.\/assets\/concept\/representative-concept\.webp"/);
 assert.equal(manager.isSection("greeting"), true);
 assert.equal(manager.isSection("greeting2"), true);
 assert.equal(manager.isSection("mainIntro"), false);

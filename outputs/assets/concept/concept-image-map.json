@@ -17,7 +17,7 @@
   "assets": [
     {
       "id": "representative-concept",
-      "path": "./assets/concept/representative-concept.png",
+      "path": "./assets/concept/representative-concept.webp",
       "target": "state.assets.photo.dataUrl; additional greeting sections: state.greetingSections[sectionId].assets.photo.dataUrl",
       "domConsumer": "#photoFrame #photoImage",
       "alt": "가상의 복지관 대표자 콘셉트 이미지",

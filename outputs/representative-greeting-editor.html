@@ -3,9 +3,6 @@
 <head>
   <link rel="icon" href="data:,">
   <meta charset="utf-8">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="./editor-detail-bundles.css?v=20260805-9">
   <title>송악사회복지관 홈페이지 편집기</title>
@@ -15239,7 +15236,7 @@
     /* Preset artwork contains its own title; pin its top edge so the title clears the floating menu. */
     .sns-auth-desktop-image[src$="account-sns-photoreal-v1.webp"],
     .sns-auth-desktop-image[src$="account-sns-pop-v1.webp"],
-    .sns-auth-desktop-image[src$="account-sns-character-desktop-v4.png"] {
+    .sns-auth-desktop-image[src$="account-sns-character-desktop-v4.webp"] {
       --sns-preset-y: clamp(16px, 1.5vw, 22px);
       object-position: center top;
     }
@@ -17666,7 +17663,7 @@
         background: null,
         photo: {
           name: "가상의 복지관 대표자 콘셉트 이미지",
-          dataUrl: "./assets/concept/representative-concept.png",
+          dataUrl: "./assets/concept/representative-concept.webp",
           alt: "가상의 복지관 대표자 콘셉트 이미지",
           caption: "편집 시안용 콘셉트 이미지",
           naturalWidth: 0,
@@ -26998,7 +26995,7 @@
     }
 
     function applyConceptImageDefaults() {
-      const portrait = { name: "가상의 복지관 대표자 콘셉트 이미지", dataUrl: "./assets/concept/representative-concept.png", alt: "가상의 복지관 대표자 콘셉트 이미지", caption: "편집 시안용 콘셉트 이미지", naturalWidth: 0, naturalHeight: 0 };
+      const portrait = { name: "가상의 복지관 대표자 콘셉트 이미지", dataUrl: "./assets/concept/representative-concept.webp", alt: "가상의 복지관 대표자 콘셉트 이미지", caption: "편집 시안용 콘셉트 이미지", naturalWidth: 0, naturalHeight: 0 };
       getSectionOrder().filter(isGreetingSection).forEach((sectionId) => {
         const model = getGreetingModel(sectionId);
         if (!model.assets.photo?.dataUrl) model.assets.photo = structuredClone(portrait);
@@ -29622,9 +29619,9 @@
           const accountVisualUrl = model.detailAssetUrl || "./assets/generated/account-sns-photoreal-v1.webp";
           const accountVisualAlt = model.detailAssetAlt || "송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원의 실사 이미지";
           const socialMobileAssetMigrations = {
-            "./assets/generated/account-sns-photoreal-mobile-v1.webp": "./assets/generated/account-sns-photoreal-mobile-v2.png",
-            "./assets/generated/account-sns-pop-mobile-v1.webp": "./assets/generated/account-sns-pop-mobile-v2.png",
-            "./assets/generated/account-sns-character-mobile-v4.png": "./assets/generated/account-sns-character-mobile-v5.png"
+            "./assets/generated/account-sns-photoreal-mobile-v1.webp": "./assets/generated/account-sns-photoreal-mobile-v2.webp",
+            "./assets/generated/account-sns-pop-mobile-v1.webp": "./assets/generated/account-sns-pop-mobile-v2.webp",
+            "./assets/generated/account-sns-character-mobile-v4.png": "./assets/generated/account-sns-character-mobile-v5.webp"
           };
           const storedMobileVisualUrl = model.detailMobileAssetUrl || accountVisualUrl;
           const accountMobileVisualUrl = socialMobileAssetMigrations[storedMobileVisualUrl] || storedMobileVisualUrl;
@@ -29635,11 +29632,11 @@
             return `--sns-button-bg:${escapeHtml(style.background || "#ffffff")};--sns-button-color:${escapeHtml(style.color || "#202124")};--sns-button-size:${clamp(Number(style.size) || 16, 10, 30)}px;--sns-button-font:${escapeHtml(fontFamilies[style.font] ?? fontFamilies.sans)};--sns-button-align:${escapeHtml(normalizeTextAlignment(style.align, "center"))}`;
           };
           const socialImagePresets = [
-            { desktop: "./assets/generated/account-sns-photoreal-v1.webp", mobile: "./assets/generated/account-sns-photoreal-mobile-v2.png", label: "세대공감 실사형", alt: "송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원의 실사 이미지", mobileAlt: "모바일 화면용 송악사회복지관 어르신과 복지관 직원의 실사 이미지" },
-            { desktop: "./assets/generated/account-sns-pop-v1.webp", mobile: "./assets/generated/account-sns-pop-mobile-v2.png", label: "청년 POP형", alt: "송악사회복지관 앞에서 함께 웃는 청년 이용자와 복지관 직원의 실사 이미지", mobileAlt: "모바일 화면용 송악사회복지관 청년 이용자와 복지관 직원의 실사 이미지" },
-            { desktop: "./assets/generated/account-sns-character-desktop-v4.png", mobile: "./assets/generated/account-sns-character-mobile-v5.png", label: "캐릭터형", alt: "송악사회복지관 앞에서 함께 웃는 어르신·복지사·어린이 캐릭터 이미지", mobileAlt: "모바일 화면용 송악사회복지관 어르신·복지사·어린이 캐릭터 이미지" }
+            { desktop: "./assets/generated/account-sns-photoreal-v1.webp", mobile: "./assets/generated/account-sns-photoreal-mobile-v2.webp", label: "세대공감 실사형", alt: "송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원의 실사 이미지", mobileAlt: "모바일 화면용 송악사회복지관 어르신과 복지관 직원의 실사 이미지" },
+            { desktop: "./assets/generated/account-sns-pop-v1.webp", mobile: "./assets/generated/account-sns-pop-mobile-v2.webp", label: "청년 POP형", alt: "송악사회복지관 앞에서 함께 웃는 청년 이용자와 복지관 직원의 실사 이미지", mobileAlt: "모바일 화면용 송악사회복지관 청년 이용자와 복지관 직원의 실사 이미지" },
+            { desktop: "./assets/generated/account-sns-character-desktop-v4.webp", mobile: "./assets/generated/account-sns-character-mobile-v5.webp", label: "캐릭터형", alt: "송악사회복지관 앞에서 함께 웃는 어르신·복지사·어린이 캐릭터 이미지", mobileAlt: "모바일 화면용 송악사회복지관 어르신·복지사·어린이 캐릭터 이미지" }
           ];
-          const socialImageSwitcher = `<details class="sns-auth-image-picker essential-edit-only"><summary>이미지 스타일</summary><div class="sns-auth-image-switcher" role="group" aria-label="로그인 이미지 선택">${socialImagePresets.map((preset) => `<button type="button" class="sns-auth-image-choice" data-essential-action="set-social-image" data-sns-image-value="${escapeHtml(preset.desktop)}" data-sns-mobile-image-value="${escapeHtml(preset.mobile)}" data-sns-image-alt="${escapeHtml(preset.alt)}" data-sns-mobile-image-alt="${escapeHtml(preset.mobileAlt)}" aria-pressed="${accountVisualUrl === preset.desktop}"><img src="${escapeHtml(preset.desktop)}" alt=""><span>${escapeHtml(preset.label)}</span></button>`).join("")}</div></details>`;
+          const socialImageSwitcher = `<details class="sns-auth-image-picker essential-edit-only"><summary>이미지 스타일</summary><div class="sns-auth-image-switcher" role="group" aria-label="로그인 이미지 선택">${socialImagePresets.map((preset) => `<button type="button" class="sns-auth-image-choice" data-essential-action="set-social-image" data-sns-image-value="${escapeHtml(preset.desktop)}" data-sns-mobile-image-value="${escapeHtml(preset.mobile)}" data-sns-image-alt="${escapeHtml(preset.alt)}" data-sns-mobile-image-alt="${escapeHtml(preset.mobileAlt)}" aria-pressed="${accountVisualUrl === preset.desktop}"><img src="${escapeHtml(preset.desktop)}" alt="" loading="lazy" decoding="async"><span>${escapeHtml(preset.label)}</span></button>`).join("")}</div></details>`;
           body = `<div class="sns-auth-layout" data-sns-layout="drive-split">
               <section class="sns-auth-panel" aria-label="SNS 로그인과 회원가입">
                 <div class="sns-auth-edit-actions essential-edit-only" aria-label="로그인 이미지와 섹션 꾸미기">
@@ -29654,8 +29651,8 @@
                 </div>
               </section>
               <aside class="sns-auth-visual" data-essential-source-image-target role="button" tabindex="0" aria-label="로그인 이미지 편집">
-                <img class="sns-auth-desktop-image" data-detail-source-image src="${escapeHtml(accountVisualUrl)}" alt="${escapeHtml(accountVisualAlt)}" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
-                <img class="sns-auth-mobile-image" src="${escapeHtml(accountMobileVisualUrl)}" alt="${escapeHtml(accountMobileVisualAlt)}" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
+                <img class="sns-auth-desktop-image" data-detail-source-image src="${escapeHtml(accountVisualUrl)}" alt="${escapeHtml(accountVisualAlt)}" decoding="async" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
+                <img class="sns-auth-mobile-image" src="${escapeHtml(accountMobileVisualUrl)}" alt="${escapeHtml(accountMobileVisualAlt)}" loading="lazy" decoding="async" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
               </aside>
               <button type="button" class="sns-auth-config-trigger essential-edit-only" data-essential-action="open-social-config">API 연동</button>
               <dialog class="sns-auth-config-dialog essential-edit-only" data-sns-auth-config-dialog aria-label="SNS 로그인 API 연동 설정">
@@ -35482,8 +35479,8 @@
         if (!needsAssetUpgrade && !needsLayoutUpgrade) return;
         model.socialLayout = "drive-split";
         if (needsAssetUpgrade && model.detailAssetUrl === "./assets/generated/account-sns-welcome-v3.webp") {
-          model.detailAssetUrl = "./assets/generated/account-sns-character-desktop-v4.png";
-          model.detailMobileAssetUrl = "./assets/generated/account-sns-character-mobile-v5.png";
+          model.detailAssetUrl = "./assets/generated/account-sns-character-desktop-v4.webp";
+          model.detailMobileAssetUrl = "./assets/generated/account-sns-character-mobile-v5.webp";
           model.detailAssetAlt = "송악사회복지관 앞에서 함께 웃는 어르신·복지사·어린이 캐릭터 이미지";
           model.detailMobileAssetAlt = "모바일 화면용 송악사회복지관 어르신·복지사·어린이 캐릭터 이미지";
         }

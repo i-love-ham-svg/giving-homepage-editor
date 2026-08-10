@@ -184,13 +184,13 @@ try {
       mobile: document.querySelector(".sns-auth-mobile-image")?.getAttribute("src")
     }));
     if (!selectedImages.desktop?.includes("account-sns-pop-v1.webp") || !selectedImages.mobile?.includes("account-sns-pop-mobile-v1.webp")) throw new Error(`${viewport.name} paired image switch failure ${JSON.stringify(selectedImages)}`);
-    await page.locator('.sns-auth-image-choice[data-sns-image-value*="account-sns-character-desktop-v4.png"]').evaluate((button) => button.click());
+    await page.locator('.sns-auth-image-choice[data-sns-image-value*="account-sns-character-desktop-v4.webp"]').evaluate((button) => button.click());
     await page.waitForTimeout(120);
     const selectedCharacterImages = await page.evaluate(() => ({
       desktop: document.querySelector(".sns-auth-desktop-image")?.getAttribute("src"),
       mobile: document.querySelector(".sns-auth-mobile-image")?.getAttribute("src")
     }));
-    if (!selectedCharacterImages.desktop?.includes("account-sns-character-desktop-v4.png") || !selectedCharacterImages.mobile?.includes("account-sns-character-mobile-v4.png")) throw new Error(`${viewport.name} paired character image failure ${JSON.stringify(selectedCharacterImages)}`);
+    if (!selectedCharacterImages.desktop?.includes("account-sns-character-desktop-v4.webp") || !selectedCharacterImages.mobile?.includes("account-sns-character-mobile-v5.webp")) throw new Error(`${viewport.name} paired character image failure ${JSON.stringify(selectedCharacterImages)}`);
     await page.locator('.sns-auth-button[data-sns-provider="kakao"]').click();
     const ctaToolbar = await page.evaluate(() => ({
       toolbar: !document.getElementById("inlineToolbar").hidden,
