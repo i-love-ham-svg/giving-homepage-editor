@@ -14427,7 +14427,22 @@
 
     body.public-view-role .workspace {
       min-height: 100vh;
-      padding-top: 0;
+      padding: 0;
+    }
+
+    body.public-view-role .stage-shell {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      overflow: hidden;
+    }
+
+    body.public-view-role .stage {
+      border: 0;
+      border-radius: 0;
+      outline: 0;
+      box-shadow: none;
     }
 
     body.staff-editor-role .app {
@@ -23986,9 +24001,11 @@
       const { w, h } = getStageSize();
       const viewportProfile = viewportProfiles[normalizeViewportKey(state.viewport)] ?? viewportProfiles.desktop;
       const availableW = shell.clientWidth;
+      const publicDesktop = document.body.classList.contains("public-view-role") && !isResponsiveViewport();
+      const maxScale = publicDesktop ? 2 : 1;
       const scale = isResponsiveViewport()
         ? clamp(Math.min(availableW / w, 1), .55, 1)
-        : clamp(Math.min(availableW / w, 1), .38, 1);
+        : clamp(Math.min(availableW / w, maxScale), .38, maxScale);
       state.scale = scale;
       document.documentElement.style.setProperty("--scale", String(scale));
       /* 스테이지 전체가 축소되어도 모바일 메뉴의 최종 클릭 면적은 44px 이상이다. */

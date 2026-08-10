@@ -4,7 +4,6 @@ const PUBLIC_SITE_URL =
 export default function Home() {
   return (
     <main className="editor-shell">
-      <a className="staff-login-link" href="/staff-login">복지관 담당자 로그인</a>
       <iframe className="editor-frame" src={PUBLIC_SITE_URL} title="송악사회복지관 홈페이지" />
     </main>
   );

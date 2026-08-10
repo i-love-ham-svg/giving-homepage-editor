@@ -11,7 +11,7 @@ test("routes public staff entry and SNS buttons through the temporary login form
     readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
   ]);
 
-  assert.match(publicPage, /href="\/staff-login"/);
+  assert.doesNotMatch(publicPage, /staff-login-link/);
   assert.match(loginPage, /\/api\/board\/admin\/login/);
   assert.match(loginPage, /id: String\(form\.get\("username"\)/);
   assert.match(loginPage, /type="password"/);
