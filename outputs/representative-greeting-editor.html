@@ -19802,6 +19802,13 @@
     function detectResponsiveViewport() {
       const viewportW = Math.max(1, window.innerWidth || screen.width || 1360);
       const viewportH = Math.max(1, window.innerHeight || screen.height || 900);
+      const ua = navigator.userAgent || "";
+      const mobileDevice = Boolean(navigator.userAgentData?.mobile)
+        || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)
+        || (window.matchMedia("(pointer: coarse)").matches
+          && window.matchMedia("(hover: none)").matches
+          && Number(navigator.maxTouchPoints || 0) > 0);
+      if (!mobileDevice) return "desktop";
       const shortSide = Math.min(viewportW, viewportH);
       if (shortSide < 375) return "phoneSmall";
       if (shortSide < 600) return "phone";
