@@ -148,7 +148,7 @@ test("ships durable site drafts, publishing, version restore, and server authori
 });
 
 test("keeps the public site read-only and gates the staff editor with temporary credentials or SIWC", async () => {
-  const [page, editorPage, editorAccess, sessionRoute, loginRoute, logoutRoute, boardServer] = await Promise.all([
+  const [page, editorPage, editorAccess, sessionRoute, loginRoute, logoutRoute, boardServer, editorHtml] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/editor/page.tsx", root), "utf8"),
     readFile(new URL("app/editor/editor-access.tsx", root), "utf8"),
@@ -156,6 +156,7 @@ test("keeps the public site read-only and gates the staff editor with temporary 
     readFile(new URL("app/api/board/admin/login/route.ts", root), "utf8"),
     readFile(new URL("app/api/board/admin/logout/route.ts", root), "utf8"),
     readFile(new URL("lib/board-server.ts", root), "utf8"),
+    readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
   ]);
   assert.match(page, /송악사회복지관 공개 홈페이지/);
   assert.doesNotMatch(page, /<iframe|representative-greeting-editor/);
@@ -174,6 +175,7 @@ test("keeps the public site read-only and gates the staff editor with temporary 
   assert.match(boardServer, /TEMP_EDITOR_PASSWORD/);
   assert.match(boardServer, /HMAC/);
   assert.match(boardServer, /HttpOnly/);
+  assert.match(editorHtml, /isPublicView[\s\S]*?\/api\/board\/admin\/session[\s\S]*?window\.location\.replace\("\/staff-login"\)/);
   assert.match(boardServer, /SameSite=Lax/);
   assert.doesNotMatch(boardServer, /TEMP_EDITOR_PASSWORD\s*\?\?\s*["']/);
 });

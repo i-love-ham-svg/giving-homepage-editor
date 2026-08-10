@@ -5,6 +5,24 @@
   <link rel="icon" href="data:,">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const isPublicView = params.get("mode") === "view" && params.get("editorRole") !== "staff";
+      if (isPublicView) return;
+      document.documentElement.style.visibility = "hidden";
+      fetch("/api/board/admin/session", { credentials: "same-origin", cache: "no-store" })
+        .then((response) => response.ok ? response.json() : { admin: false })
+        .then((session) => {
+          if (!session.admin) {
+            window.location.replace("/staff-login");
+            return;
+          }
+          document.documentElement.style.visibility = "";
+        })
+        .catch(() => window.location.replace("/staff-login"));
+    })();
+  </script>
   <meta name="description" content="주민과 함께 행복한 지역공동체를 만들어가는 송악사회복지관 홈페이지입니다.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ko_KR">

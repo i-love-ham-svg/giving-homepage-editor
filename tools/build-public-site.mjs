@@ -114,6 +114,17 @@ function shell({ route, title, description, main }) { const pageTitle = `${title
 function renderPage(item) { const hero = `<section class="page-hero"><small>${esc(item.eyebrow)}</small><h1>${esc(item.title)}</h1><p>${esc(item.description)}</p></section>`; const body = item.documentHtml ? `<section class="content-section"><article class="document">${item.documentHtml}</article></section>` : `<section class="content-section"><div class="card-grid">${item.cards.map(cardHtml).join("")}</div></section>`; return shell({ route: item.route, title: item.title, description: item.description, main: hero + body }); }
 function renderHome() { const main = `<section class="hero" aria-label="송악사회복지관 대표 이미지와 담당자 로그인"><picture class="hero-picture"><source media="(max-width:760px)" srcset="/songak/assets/generated/account-sns-photoreal-mobile-v2.webp"><img src="/songak/assets/generated/account-sns-photoreal-v1.webp" alt="송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원" width="1536" height="1024" fetchpriority="high" decoding="async"></picture><div class="login-panel" id="login" aria-label="SNS 로그인 선택"><a class="sns-button kakao" href="/staff-login?provider=kakao"><span class="provider-mark">K</span><span class="sns-label">카카오로 시작하기</span><span></span></a><a class="sns-button naver" href="/staff-login?provider=naver"><span class="provider-mark">N</span><span class="sns-label">네이버로 시작하기</span><span></span></a><a class="sns-button" href="/staff-login?provider=google"><span class="provider-mark">G</span><span class="sns-label">구글(Google)로 시작하기</span><span></span></a></div></section>`; return shell({ route: "/", title: "송악사회복지관 함께마당", description: "주민과 함께 행복한 지역공동체를 만들어가는 송악사회복지관입니다.", main }); }
 
+const legacyPages = [
+  ["facility-detail.html", "facility", "/about/facility"],
+  ["program-schedule.html", "schedule", "/programs/schedule"],
+  ["case-management-detail.html", "case", "/programs/case-management"],
+  ["organization-staff.html", "organization", "/about/organization"],
+  ["video-archive.html", "video", "/news/videos"],
+  ["online-application.html", "application", "/programs/application"],
+];
+function legacyRedirect(pageKind, target) { return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=${target}"><link rel="canonical" href="${baseUrl}${target}"><title>송악사회복지관 공개 페이지로 이동</title></head><body data-page="${pageKind}"><p><a href="${target}">공개 페이지로 이동</a></p><script>location.replace(${JSON.stringify(target)});</script></body></html>`; }
+
 await writeFile(path.join(outputDir, "representative-greeting-public.html"), renderHome(), "utf8");
 await Promise.all(PAGES.map((item) => writeFile(path.join(outputDir, item.file), renderPage(item), "utf8")));
+await Promise.all(legacyPages.map(([file, pageKind, target]) => writeFile(path.join(outputDir, file), legacyRedirect(pageKind, target), "utf8")));
 console.log(`Built ${PAGES.length + 1} public Songak pages.`);

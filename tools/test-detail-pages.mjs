@@ -6,23 +6,20 @@ import { ApplicationStore } from "./application-store.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const pages = [
-  ["facility-detail.html", "facility"],
-  ["program-schedule.html", "schedule"],
-  ["case-management-detail.html", "case"],
-  ["organization-staff.html", "organization"],
-  ["video-archive.html", "video"],
-  ["online-application.html", "application"]
+  ["facility-detail.html", "facility", "/about/facility"],
+  ["program-schedule.html", "schedule", "/programs/schedule"],
+  ["case-management-detail.html", "case", "/programs/case-management"],
+  ["organization-staff.html", "organization", "/about/organization"],
+  ["video-archive.html", "video", "/news/videos"],
+  ["online-application.html", "application", "/programs/application"]
 ];
 
-for (const [file, page] of pages) {
+for (const [file, page, target] of pages) {
   const html = readFileSync(join(root, "outputs", file), "utf8");
   assert.match(html, new RegExp(`data-page="${page}"`));
-  assert.match(html, /detail-pages\.css/);
-  assert.match(html, /detail-pages\.js/);
-  assert.match(html, /editor-detail-bundle-data\.js/);
-  assert.match(html, /<main[^>]+id="detailMain"/);
-  assert.match(html, new RegExp(`representative-greeting-editor\\.html\\?mode=view(?:&amp;|&)stylePage=${page}`));
+  assert.match(html, new RegExp(`url=${target.replaceAll("/", "\\/")}`));
   assert.match(html, /location\.replace/);
+  assert.doesNotMatch(html, /representative-greeting-editor|detail-pages\.js|editor-detail-bundle-data\.js/);
 }
 
 const script = readFileSync(join(root, "outputs", "detail-pages.js"), "utf8");
