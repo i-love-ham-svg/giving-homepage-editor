@@ -352,6 +352,14 @@
       display: none !important;
     }
 
+    /* The menu list owns vertical touch scrolling while the full-screen mobile
+       panel is open; lock the page scroller so overscroll cannot move content. */
+    html:has(body.home-menu-open),
+    body.home-menu-open {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
     .device-preview-toggle.active {
       color: #fff;
       background: var(--accent-strong);
@@ -1619,7 +1627,7 @@
       display: block;
       width: auto;
       height: min(
-        calc(var(--mobile-viewport-h, 844) * 1px),
+        calc(var(--mobile-viewport-h, 844) * 1px - var(--home-menu-sticky-y, 0px)),
         calc(var(--stage-h) * 1px - var(--home-menu-sticky-y, 0px))
       );
       min-height: 0;
@@ -14342,6 +14350,7 @@
     }
 
     .stage.mobile .homepage-menu.open .homepage-menu-list {
+      position: absolute;
       top: 104px;
       right: 22px;
       bottom: 20px;
@@ -15475,6 +15484,38 @@
       backdrop-filter: none;
     }
 
+    /* Landscape tablets use the available horizontal canvas instead of keeping
+       the portrait 9:16 card. The desktop artwork and compact overlay keep all
+       three sign-in choices inside the first screen after rotation. */
+    .stage.tablet.tablet-landscape .sns-auth-layout[data-sns-layout="drive-split"] .sns-auth-visual {
+      aspect-ratio: 3 / 2;
+      border-radius: 22px;
+    }
+
+    .stage.tablet.tablet-landscape .sns-auth-visual > .sns-auth-desktop-image {
+      display: block;
+      object-position: center top;
+    }
+
+    .stage.tablet.tablet-landscape .sns-auth-visual > .sns-auth-mobile-image { display: none; }
+
+    .stage.tablet.tablet-landscape .sns-auth-layout[data-sns-layout="drive-split"] .sns-auth-panel {
+      align-self: start;
+      justify-self: end;
+      width: min(360px, 38%);
+      margin: 240px 24px 0;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, .72);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, .3);
+      box-shadow: 0 18px 44px rgba(22, 61, 46, .18);
+      -webkit-backdrop-filter: blur(7px) saturate(1.04);
+      backdrop-filter: blur(7px) saturate(1.04);
+    }
+
+    .stage.tablet.tablet-landscape .sns-auth-buttons { gap: 8px; }
+    .stage.tablet.tablet-landscape .sns-auth-button { min-height: 52px; }
+
     .stage.mobile .sns-auth-edit-actions,
     .stage.phone-small .sns-auth-edit-actions {
       right: 0;
@@ -15718,7 +15759,7 @@
       border-radius: 999px;
       color: #fff;
       background: #356b55;
-      font: 850 15px/1 "Pretendard Variable", system-ui, sans-serif;
+      font: 850 15px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
       box-shadow: 0 10px 24px rgba(38, 87, 65, .2);
     }
 
@@ -15767,9 +15808,22 @@
       startedAt: performance.now(),
       paintedAt: 0,
       readyAt: 0,
+      overlayHiddenAt: 0,
+      domContentLoadedAt: 0,
+      loadAt: 0,
+      siteContentStartedAt: 0,
+      siteContentReadyAt: 0,
+      siteContentEncodedBytes: 0,
+      siteContentDecodedBytes: 0,
       appHiddenAtPaint: false,
       overlayVisibleAtPaint: false
     };
+    document.addEventListener("DOMContentLoaded", () => {
+      window.__songakEditorBoot.domContentLoadedAt = performance.now();
+    }, { once: true });
+    window.addEventListener("load", () => {
+      window.__songakEditorBoot.loadAt = performance.now();
+    }, { once: true });
   </script>
   <div class="app">
     <header class="topbar">
@@ -16847,27 +16901,28 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="./editor-storage-schema.js"></script>
-  <script src="./editor-security-manager.js"></script>
-  <script src="./editor-color-picker-manager.js"></script>
-  <script src="./editor-imported-sticker-manifest.js?v=20260806-1"></script>
-  <script src="./editor-visual-asset-manager.js"></script>
-  <script src="./editor-history-manager.js"></script>
-  <script src="./editor-storage-manager.js"></script>
-  <script src="./editor-section-manager.js"></script>
-  <script src="./editor-main-intro-manager.js"></script>
-  <script src="./editor-greeting-manager.js"></script>
-  <script src="./editor-program-manager.js?v=text-box-layout-20260805"></script>
-  <script src="./editor-category-toolbar-manager.js"></script>
-  <script src="./editor-process-manager.js?v=text-box-layout-20260805"></script>
-  <script src="./editor-timeline-manager.js?v=text-box-layout-20260805"></script>
-  <script src="./editor-gallery-manager.js?v=text-box-layout-20260805"></script>
-  <script src="./editor-donation-manager.js?v=text-box-layout-20260805"></script>
-  <script src="./editor-detail-bundle-data.js?v=20260805-1"></script>
-  <script src="./editor-essential-manager.js?v=footer-layout-docs-20260806-2"></script>
-  <script src="./editor-viewport-manager.js"></script>
-  <script src="./editor-performance-manager.js"></script>
+  <script defer src="./editor-storage-schema.js"></script>
+  <script defer src="./editor-security-manager.js"></script>
+  <script defer src="./editor-color-picker-manager.js"></script>
+  <script defer src="./editor-imported-sticker-manifest.js?v=20260806-1"></script>
+  <script defer src="./editor-visual-asset-manager.js"></script>
+  <script defer src="./editor-history-manager.js"></script>
+  <script defer src="./editor-storage-manager.js"></script>
+  <script defer src="./editor-section-manager.js"></script>
+  <script defer src="./editor-main-intro-manager.js"></script>
+  <script defer src="./editor-greeting-manager.js"></script>
+  <script defer src="./editor-program-manager.js?v=text-box-layout-20260805"></script>
+  <script defer src="./editor-category-toolbar-manager.js"></script>
+  <script defer src="./editor-process-manager.js?v=text-box-layout-20260805"></script>
+  <script defer src="./editor-timeline-manager.js?v=text-box-layout-20260805"></script>
+  <script defer src="./editor-gallery-manager.js?v=text-box-layout-20260805"></script>
+  <script defer src="./editor-donation-manager.js?v=text-box-layout-20260805"></script>
+  <script defer src="./editor-detail-bundle-data.js?v=20260805-1"></script>
+  <script defer src="./editor-essential-manager.js?v=footer-layout-docs-20260806-2"></script>
+  <script defer src="./editor-viewport-manager.js"></script>
+  <script defer src="./editor-performance-manager.js"></script>
   <script>
+  document.addEventListener("DOMContentLoaded", () => {
     const securityRuntime = window.EditorSecurityManager;
     const historyRuntime = window.EditorHistoryManager.createAssetStore();
     const stage = document.getElementById("stage");
@@ -19297,7 +19352,10 @@
     function toggleHomeMenu() {
       const opening = !state.homeMenu.open;
       state.homeMenu.open = opening;
-      if (opening && !state.expandedHomeMenuId) syncActiveHomeMenuExpansion();
+      if (opening) {
+        syncVisibleMobileMenuHeight();
+        if (!state.expandedHomeMenuId) syncActiveHomeMenuExpansion();
+      }
       renderHomeMenu({ syncInputs: false });
     }
 
@@ -20952,10 +21010,19 @@
       return 0;
     }
 
+    function isTabletLandscapeViewport(viewport = state.viewport) {
+      if (normalizeViewportKey(viewport) !== "tablet") return false;
+      const viewportWidth = Math.max(1, window.visualViewport?.width ?? window.innerWidth ?? 768);
+      const viewportHeight = Math.max(1, window.visualViewport?.height ?? window.innerHeight ?? 1024);
+      return viewportWidth > viewportHeight && viewportWidth >= 900;
+    }
+
     function getRenderedStageSize(viewport = state.viewport, options = {}) {
       const key = normalizeViewportKey(viewport);
       const profile = viewportProfiles[key] ?? viewportProfiles.desktop;
-      const renderedWidth = profile.w;
+      const renderedWidth = isTabletLandscapeViewport(key)
+        ? Math.min(1024, Math.max(profile.w, Math.round(window.visualViewport?.width ?? window.innerWidth ?? profile.w)))
+        : profile.w;
       const visible = getVisibleSectionIds();
       const gap = getSectionInsertGapPx(viewport);
       const safeTop = options.includeEditorSafeArea === false ? 0 : getMobileEditorSafeTopPx(viewport);
@@ -24117,7 +24184,18 @@
       scheduleSectionStyleChoiceSync();
     }
 
+    function syncVisibleMobileMenuHeight(profile = viewportProfiles[normalizeViewportKey(state.viewport)] ?? viewportProfiles.desktop, scale = state.scale || 1) {
+      const visibleViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const visibleStageTop = Math.max(0, stage.getBoundingClientRect().top);
+      const stickyTop = Number.parseFloat(getComputedStyle(stage).getPropertyValue("--home-menu-sticky-y")) || 0;
+      const visibleStageHeight = Math.max(180, (visibleViewportHeight - visibleStageTop) / Math.max(scale, .1) - stickyTop);
+      stage.style.setProperty("--mobile-viewport-h", String(Math.min(profile.h, visibleStageHeight)));
+    }
+
     function fitStage() {
+      const tabletLandscape = isTabletLandscapeViewport();
+      stage.classList.toggle("tablet-landscape", tabletLandscape);
+      document.body.classList.toggle("tablet-landscape-ui", tabletLandscape);
       const { w, h } = getStageSize();
       const viewportProfile = viewportProfiles[normalizeViewportKey(state.viewport)] ?? viewportProfiles.desktop;
       const availableW = shell.clientWidth;
@@ -24134,10 +24212,7 @@
       document.documentElement.style.setProperty("--stage-h", String(h));
       stage.style.setProperty("--stage-w", String(w));
       stage.style.setProperty("--stage-h", String(h));
-      const visibleViewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      const visibleStageTop = Math.max(0, stage.getBoundingClientRect().top);
-      const visibleStageHeight = Math.max(320, (visibleViewportHeight - visibleStageTop) / Math.max(scale, .1));
-      stage.style.setProperty("--mobile-viewport-h", String(Math.min(viewportProfile.h, visibleStageHeight)));
+      syncVisibleMobileMenuHeight(viewportProfile, scale);
       stageScale.style.width = `${w * scale}px`;
       stageScale.style.height = `${h * scale}px`;
       applyBackground();
@@ -29792,8 +29867,8 @@
                 </div>
               </section>
               <aside class="sns-auth-visual" data-essential-source-image-target role="button" tabindex="0" aria-label="로그인 이미지 편집">
-                <img class="sns-auth-desktop-image" data-detail-source-image src="${escapeHtml(accountVisualUrl)}" alt="${escapeHtml(accountVisualAlt)}" decoding="async" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
-                <img class="sns-auth-mobile-image" src="${escapeHtml(accountMobileVisualUrl)}" alt="${escapeHtml(accountMobileVisualAlt)}" loading="lazy" decoding="async" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
+                <img class="sns-auth-desktop-image" data-detail-source-image ${document.body.dataset.editorRole === "public" && isResponsiveViewport() && normalizeViewportKey(state.viewport) !== "tablet" ? `data-deferred-src="${escapeHtml(accountVisualUrl)}"` : `src="${escapeHtml(accountVisualUrl)}"`} alt="${escapeHtml(accountVisualAlt)}" decoding="async" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
+                <img class="sns-auth-mobile-image" ${document.body.dataset.editorRole === "public" && !isResponsiveViewport() ? `data-deferred-src="${escapeHtml(accountMobileVisualUrl)}"` : `src="${escapeHtml(accountMobileVisualUrl)}"`} alt="${escapeHtml(accountMobileVisualAlt)}" loading="lazy" decoding="async" style="--detail-asset-fit:${model.detailAssetFit === "contain" ? "contain" : "cover"};--detail-asset-scale:${clamp(Number(model.detailAssetScale) || 1, .2, 4)};--detail-asset-opacity:${clamp(Number(model.detailAssetOpacity ?? 100), 0, 100) / 100}">
               </aside>
               <button type="button" class="sns-auth-config-trigger essential-edit-only" data-essential-action="open-social-config">API 연동</button>
               <dialog class="sns-auth-config-dialog essential-edit-only" data-sns-auth-config-dialog aria-label="SNS 로그인 API 연동 설정">
@@ -36878,14 +36953,24 @@ function syncSectionControls() {
     async function readRemoteSiteDocument() {
       if (!/^https?:$/.test(window.location.protocol)) return null;
       const draftQuery = isPublicDocumentRequest() ? "" : "?mode=draft";
+      const boot = window.__songakEditorBoot;
+      if (boot) boot.siteContentStartedAt = performance.now();
       try {
         const response = await fetch(`/api/site-content/${remoteSiteDocumentKey}${draftQuery}`, {
           credentials: "same-origin",
-          cache: "no-store",
+          // A publish must be immediately visible. Revalidate instead of serving
+          // stale data, while still allowing a cheap ETag-based 304 response.
+          cache: "no-cache",
           headers: { accept: "application/json" }
         });
         if (!response.ok) return null;
-        const payload = await response.json();
+        const responseText = await response.text();
+        if (boot) {
+          boot.siteContentReadyAt = performance.now();
+          boot.siteContentEncodedBytes = Math.max(0, Number(response.headers.get("content-length")) || 0);
+          boot.siteContentDecodedBytes = new TextEncoder().encode(responseText).byteLength;
+        }
+        const payload = JSON.parse(responseText);
         remoteSiteRevision = Math.max(0, Number(payload.revision) || 0);
         return payload.content && typeof payload.content === "object" ? payload.content : null;
       } catch (error) {
@@ -39060,6 +39145,11 @@ function syncSectionControls() {
       }
       scheduleFloatingEditorUi({ fit: true });
     });
+    /* Browser chrome, the on-screen keyboard, and rotation can resize the
+       visible viewport without producing an equivalent layout-viewport resize. */
+    window.visualViewport?.addEventListener("resize", () => {
+      scheduleFloatingEditorUi({ fit: true });
+    }, { passive: true });
     window.addEventListener("keydown", handleEditorHistoryShortcut);
     window.addEventListener("keydown", handleSectionClipboardShortcut);
     stage.addEventListener("keydown", (event) => {
@@ -39270,7 +39360,10 @@ function syncSectionControls() {
         document.body.classList.remove("is-app-booting");
         overlay?.setAttribute("aria-busy", "false");
         overlay?.classList.add("is-ready");
-        window.setTimeout(() => { if (overlay) overlay.hidden = true; }, 260);
+        window.setTimeout(() => {
+          if (overlay) overlay.hidden = true;
+          if (boot) boot.overlayHiddenAt = performance.now();
+        }, 260);
         window.dispatchEvent(new CustomEvent("songak:editor-ready"));
       }, remaining);
     }
@@ -39548,6 +39641,7 @@ function syncSectionControls() {
         window.setTimeout(initializeEditorApplication, 0);
       });
     });
+  }, { once: true });
   </script>
 </body>
 </html>

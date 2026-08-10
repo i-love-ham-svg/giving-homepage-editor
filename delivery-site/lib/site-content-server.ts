@@ -58,6 +58,32 @@ function parseJson(value: string | null): unknown {
   return JSON.parse(value);
 }
 
+function publishedEtag(key: string, current: SiteContentRow | null): string {
+  const published = current?.published_json || "null";
+  const publishedAt = current?.published_at || "unpublished";
+  const marker = `${key}:${publishedAt}:${new TextEncoder().encode(published).byteLength}`;
+  let hash = 2166136261;
+  for (let index = 0; index < marker.length; index += 1) {
+    hash ^= marker.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `W/"site-${(hash >>> 0).toString(16)}"`;
+}
+
+function publicSiteContentResponse(request: Request, data: unknown, etag: string): Response {
+  const cacheHeaders = {
+    "cache-control": "public, no-cache, must-revalidate",
+    etag,
+    vary: "accept-encoding",
+  };
+  if (request.headers.get("if-none-match") === etag) {
+    return new Response(null, { status: 304, headers: cacheHeaders });
+  }
+  const response = json(data);
+  Object.entries(cacheHeaders).forEach(([name, value]) => response.headers.set(name, value));
+  return response;
+}
+
 function serializeContent(content: unknown): string {
   if (content === null || typeof content !== "object" || Array.isArray(content)) {
     throw new SiteContentError("저장할 내용은 JSON 객체여야 합니다.", 400);
@@ -87,14 +113,18 @@ export async function getSiteContent(request: Request, keyValue: string): Promis
   const wantsDraft = new URL(request.url).searchParams.get("mode") === "draft";
   if (wantsDraft) await requireEditor(request);
   const current = await row(key);
-  if (!current) return json({ key, content: null, revision: 0, publishedAt: null });
-  return json({
+  if (!current) {
+    const data = { key, content: null, revision: 0, publishedAt: null };
+    return wantsDraft ? json(data) : publicSiteContentResponse(request, data, publishedEtag(key, null));
+  }
+  const data = {
     key,
     content: parseJson(wantsDraft ? current.draft_json : current.published_json),
     revision: current.revision,
     updatedAt: current.updated_at,
     publishedAt: current.published_at,
-  });
+  };
+  return wantsDraft ? json(data) : publicSiteContentResponse(request, data, publishedEtag(key, current));
 }
 
 export async function saveSiteDraft(request: Request, keyValue: string): Promise<Response> {
