@@ -23,6 +23,17 @@ interface ExecutionContext {
   passThroughOnException(): void;
 }
 
+const PUBLIC_PAGE_ROUTES: Record<string, string> = {
+  "/": "/songak/representative-greeting-public.html",
+  "/about": "/songak/public-about.html",
+  "/programs": "/songak/public-programs.html",
+  "/participation": "/songak/public-participation.html",
+  "/news": "/songak/public-news.html",
+  "/privacy": "/songak/public-privacy.html",
+  "/email-refusal": "/songak/public-email-refusal.html",
+  "/directions": "/songak/public-directions.html",
+};
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -33,12 +44,21 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
-    if (request.method === "GET" && url.pathname === "/") {
-      // Public visitors receive a small read-only document; the full editor is
-      // loaded only inside the authenticated /editor route.
-      const publicUrl = new URL("/songak/representative-greeting-public", request.url);
+    if ((request.method === "GET" || request.method === "HEAD") && url.pathname !== "/" && url.pathname.endsWith("/")) {
+      const canonicalPath = url.pathname.replace(/\/+$/, "");
+      if (PUBLIC_PAGE_ROUTES[canonicalPath]) {
+        url.pathname = canonicalPath;
+        return Response.redirect(url.toString(), 308);
+      }
+    }
+
+    const publicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname];
+    if ((request.method === "GET" || request.method === "HEAD") && publicAssetPath) {
+      // Public visitors receive only the selected read-only page. The full
+      // editor remains isolated behind the authenticated /editor route.
+      const publicUrl = new URL(publicAssetPath, request.url);
       const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
-      return withSecurityHeaders(publicResponse, "/songak/representative-greeting-public.html");
+      return withSecurityHeaders(publicResponse, publicAssetPath);
     }
 
     if (url.pathname === "/_vinext/image") {
@@ -71,9 +91,11 @@ function withSecurityHeaders(response: Response, pathname = ""): Response {
     secured.headers.set("cache-control", "public, max-age=31536000, immutable");
   } else if (pathname.startsWith("/songak/assets/")) {
     secured.headers.set("cache-control", "public, max-age=604800");
+  } else if (pathname === "/songak/public-site.css") {
+    secured.headers.set("cache-control", "public, max-age=86400, stale-while-revalidate=604800");
   } else if (/^\/songak\/.*\.(?:css|js)$/.test(pathname)) {
     secured.headers.set("cache-control", "public, max-age=86400");
-  } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-public.html")) {
+  } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-public.html") || pathname.includes("/public-")) {
     secured.headers.set("cache-control", "public, max-age=300, stale-while-revalidate=3600");
   }
   return secured;

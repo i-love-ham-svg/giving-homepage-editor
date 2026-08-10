@@ -23,16 +23,47 @@ test("builds the finished Songak community board shell", async () => {
   assert.match(publicPage, /송악사회복지관 함께마당/);
   assert.match(publicPage, /\/staff-login\?provider=kakao/);
   assert.match(publicPage, /account-sns-photoreal-mobile-v2\.webp/);
-  assert.match(publicPage, /id="about"/);
-  assert.match(publicPage, /id="programs"/);
-  assert.match(publicPage, /id="participation"/);
-  assert.match(publicPage, /id="news"/);
-  assert.match(publicPage, /href="#privacy"/);
-  assert.match(publicPage, /id="privacy"/);
+  assert.match(publicPage, /href="\/about"/);
+  assert.match(publicPage, /href="\/programs"/);
+  assert.match(publicPage, /href="\/participation"/);
+  assert.match(publicPage, /href="\/news"/);
+  assert.match(publicPage, /href="\/privacy"/);
   assert.match(publicPage, /이메일무단수집거부/);
   assert.match(publicPage, /찾아오시는 길/);
   assert.doesNotMatch(publicPage, /editor-[a-z-]+\.js|Hahmlet-Variable\.ttf|PretendardVariable\.woff2/);
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+});
+
+test("serves every public menu and footer document as a separate lightweight page", async () => {
+  const pageFiles = [
+    "public-about.html",
+    "public-programs.html",
+    "public-participation.html",
+    "public-news.html",
+    "public-privacy.html",
+    "public-email-refusal.html",
+    "public-directions.html",
+  ];
+  const pages = await Promise.all(pageFiles.map((file) => readFile(new URL(`../outputs/${file}`, root), "utf8")));
+  const worker = await readFile(new URL("worker/index.ts", root), "utf8");
+
+  for (const page of pages) {
+    assert.match(page, /<html lang="ko">/);
+    assert.match(page, /\/songak\/public-site\.css/);
+    assert.match(page, /href="\/about"/);
+    assert.match(page, /href="\/programs"/);
+    assert.match(page, /href="\/participation"/);
+    assert.match(page, /href="\/news"/);
+    assert.match(page, /href="\/privacy"/);
+    assert.match(page, /href="\/email-refusal"/);
+    assert.match(page, /href="\/directions"/);
+    assert.doesNotMatch(page, /representative-greeting-editor|editor-[a-z-]+\.js|mode=edit|<iframe/);
+  }
+
+  assert.match(worker, /PUBLIC_PAGE_ROUTES/);
+  assert.match(worker, /"\/about": "\/songak\/public-about\.html"/);
+  assert.match(worker, /request\.method === "HEAD"/);
+  assert.match(worker, /Response\.redirect\(url\.toString\(\), 308\)/);
 });
 
 test("ships durable board storage, moderation, and media routes", async () => {
