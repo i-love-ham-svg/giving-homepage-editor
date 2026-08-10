@@ -28,13 +28,14 @@ test("builds the finished Songak public site and community board shell", async (
 });
 
 test("serves every public menu and footer document through the canonical read-only renderer", async () => {
-  const [worker, communityPage, editor] = await Promise.all([
+  const [worker, communityPage, editor, viteConfig] = await Promise.all([
     readFile(new URL("worker/index.ts", root), "utf8"),
     readFile(new URL("app/community/page.tsx", root), "utf8"),
     readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
+    readFile(new URL("vite.config.ts", root), "utf8"),
   ]);
   assert.match(worker, /PUBLIC_PAGE_ROUTES/);
-  assert.match(worker, /configuredPublicAssetPath\.replace\(\/\\\.html\$\//);
+  assert.match(viteConfig, /assets: \{ html_handling: "none" as const \}/);
   for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/news/visitor-board", "/privacy-policy", "/email-refusal", "/directions"]) {
     assert.match(worker, new RegExp(`"${route.replaceAll("/", "\\/")}": "\\/songak\\/representative-greeting-editor\\.html"`));
   }

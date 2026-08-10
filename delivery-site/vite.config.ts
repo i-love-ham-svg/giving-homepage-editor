@@ -14,6 +14,9 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  // Public routes are resolved by the Worker. Asset-level HTML canonicalization
+  // would otherwise redirect the browser onto the internal editor pathname.
+  assets: { html_handling: "none" as const },
   d1_databases: d1
     ? [
         {

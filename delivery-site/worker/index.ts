@@ -115,12 +115,8 @@ const worker = {
     }
 
     const dynamicPublicMenuPath = /^\/page\/home-menu-[a-z0-9-]+$/.test(url.pathname);
-    const configuredPublicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname]
+    const publicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname]
       || (dynamicPublicMenuPath ? "/songak/representative-greeting-editor.html" : "");
-    // Static asset serving canonicalizes *.html to an extensionless URL with a
-    // 307. Fetching that canonical asset internally prevents a public route from
-    // leaking visitors onto the raw editor pathname.
-    const publicAssetPath = configuredPublicAssetPath.replace(/\.html$/, "");
     if ((request.method === "GET" || request.method === "HEAD") && publicAssetPath) {
       // All public routes use the exact same canonical renderer as the editor.
       // The browser pathname selects a single read-only page inside that renderer,
