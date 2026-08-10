@@ -9,7 +9,7 @@ const executablePath = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 ].filter(Boolean).find(existsSync);
-const url = process.env.EDITOR_URL ?? "http://127.0.0.1:4185/representative-greeting-editor.html";
+const url = process.env.EDITOR_URL ?? "http://127.0.0.1:43185/representative-greeting-editor.html";
 const browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 }, deviceScaleFactor: 1 });
 

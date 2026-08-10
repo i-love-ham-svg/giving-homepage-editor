@@ -29,6 +29,11 @@
     return sectionId === "gallery" || /^gallery\d+$/.test(String(sectionId));
   }
 
+  function isEssentialSection(sectionId) {
+    return ["facility", "organization", "location", "volunteer", "notice", "schedule", "footer"].includes(String(sectionId))
+      || /^essential\d+$/.test(String(sectionId));
+  }
+
   function normalizeSectionId(sectionId, labels = {}) {
     return labels?.[sectionId] ? sectionId : "greeting";
   }
@@ -41,13 +46,17 @@
       if (isMainIntroSection(sectionId)) {
         const firstNonIntro = filtered.findIndex((id) => !isMainIntroSection(id));
         filtered.splice(firstNonIntro >= 0 ? firstNonIntro : filtered.length, 0, sectionId);
-      } else if ((isProgramSection(sectionId) || isProcessSection(sectionId) || isHistorySection(sectionId) || isDonationSection(sectionId) || isGallerySection(sectionId)) && filtered.some(isGreetingSection)) {
+      } else if ((isProgramSection(sectionId) || isProcessSection(sectionId) || isHistorySection(sectionId) || isDonationSection(sectionId) || isGallerySection(sectionId) || isEssentialSection(sectionId)) && filtered.some(isGreetingSection)) {
         filtered.splice(filtered.findIndex(isGreetingSection), 0, sectionId);
       } else {
         filtered.push(sectionId);
       }
     });
-    return filtered.length ? filtered : ["mainIntro", "greeting"].filter((sectionId) => labels[sectionId]);
+    const normalized = filtered.length ? filtered : ["mainIntro", "greeting"].filter((sectionId) => labels[sectionId]);
+    if (labels.footer && normalized.includes("footer")) {
+      return [...normalized.filter((sectionId) => sectionId !== "footer"), "footer"];
+    }
+    return normalized;
   }
 
   function getIntroIndex(sectionId, order) {
@@ -98,6 +107,9 @@
       const index = Math.max(1, galleryIds.indexOf(sectionId) + 1);
       return index <= 1 ? "갤러리" : `갤러리 ${index}`;
     }
+    if (isEssentialSection(sectionId)) {
+      return labels[sectionId] ?? "필수 정보";
+    }
     return labels[sectionId] ?? "섹션";
   }
 
@@ -123,6 +135,9 @@
     if (currentIndex >= 0) nextOrder.splice(currentIndex, 1);
     const insertIndex = getInsertIndexForSlot(slot, explicitIndex, nextOrder, visibleIds);
     nextOrder.splice(clampIndex(insertIndex, 0, nextOrder.length), 0, sectionId);
+    if (sectionId === "footer" || nextOrder.includes("footer")) {
+      return [...nextOrder.filter((id) => id !== "footer"), "footer"];
+    }
     return nextOrder;
   }
 
@@ -136,7 +151,8 @@
       || (isProcessSection(snapshot.sectionId) && isProcessSection(target))
       || (isHistorySection(snapshot.sectionId) && isHistorySection(target))
       || (isDonationSection(snapshot.sectionId) && isDonationSection(target))
-      || (isGallerySection(snapshot.sectionId) && isGallerySection(target));
+      || (isGallerySection(snapshot.sectionId) && isGallerySection(target))
+      || (isEssentialSection(snapshot.sectionId) && isEssentialSection(target));
   }
 
   function getClipboardPasteLabel(clipboard) {
@@ -156,6 +172,7 @@
     getIntroIndex,
     isGreetingSection,
     isDonationSection,
+    isEssentialSection,
     isHistorySection,
     isGallerySection,
     isMainIntroSection,

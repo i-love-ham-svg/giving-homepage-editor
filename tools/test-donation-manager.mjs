@@ -16,8 +16,8 @@ assert.equal(manager.isSection("donation3"), true);
 assert.equal(manager.isSection("history"), false);
 
 const base = manager.createDefaultModel();
-assert.equal(base.cards.length, 4);
-assert.equal(base.cards[0].title, "정기후원");
+assert.equal(base.cards.length, 5);
+assert.equal(base.cards[0].title, "기금 후원");
 assert.ok(manager.ICONS.recurring.body.includes("path"));
 assert.equal(base.backgroundColor, null);
 assert.equal(base.accentColor, null);
@@ -59,15 +59,15 @@ assert.equal(customCard.cards[0].accentColor, "#be185d");
 assert.equal(customCard.ctaBackgroundColor, "#7c3aed");
 
 const added = manager.addCard(base);
-assert.equal(added.cards.length, 5);
-assert.equal(base.cards.length, 4);
-assert.equal(added.cards[4].title, "새 후원 방법");
+assert.equal(added.cards.length, 6);
+assert.equal(base.cards.length, 5);
+assert.equal(added.cards[5].title, "새 후원 방법");
 
-const moved = manager.moveItem(added.cards, added.cards[4].id, "up");
-assert.equal(moved[3].id, added.cards[4].id);
+const moved = manager.moveItem(added.cards, added.cards[5].id, "up");
+assert.equal(moved[4].id, added.cards[5].id);
 
 const removed = manager.removeCard(added, added.cards[1].id);
-assert.equal(removed.cards.length, 4);
+assert.equal(removed.cards.length, 5);
 assert.equal(removed.cards.some((card) => card.id === added.cards[1].id), false);
 
 assert.ok(manager.estimateHeight(base, "phone") > manager.estimateHeight(base, "desktop"));

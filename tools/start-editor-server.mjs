@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const serverFile = resolve(workspaceRoot, "tools", "serve-editor.mjs");
-const port = Number.parseInt(process.argv.at(2) ?? "4185", 10);
+const port = Number.parseInt(process.argv.at(2) ?? "43185", 10);
 const editorUrl = `http://127.0.0.1:${port}/representative-greeting-editor.html`;
 
 function isEditorReady(timeoutMs = 700) {

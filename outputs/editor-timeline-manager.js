@@ -97,7 +97,11 @@
     return {
       size: Math.max(8, Math.min(96, Number(style?.size) || fallback.size)),
       color: typeof style?.color === "string" && style.color ? style.color : fallback.color,
-      font: ["serif", "batang", "sans", "rounded"].includes(style?.font) ? style.font : fallback.font
+      font: ["serif", "batang", "sans", "rounded"].includes(style?.font) ? style.font : fallback.font,
+      align: ["left", "center", "right"].includes(style?.align) ? style.align : (fallback.align || ""),
+      boxWidth: Math.max(30, Math.min(100, Number(style?.boxWidth ?? fallback.boxWidth ?? 100))),
+      boxOffsetX: Math.max(-320, Math.min(320, Number(style?.boxOffsetX ?? fallback.boxOffsetX ?? 0))),
+      boxOffsetY: Math.max(-320, Math.min(320, Number(style?.boxOffsetY ?? fallback.boxOffsetY ?? 0)))
     };
   }
 
@@ -121,7 +125,12 @@
       name: String(image.name || "연혁 이미지"),
       dataUrl,
       naturalWidth: Math.max(0, Number(image.naturalWidth) || 0),
-      naturalHeight: Math.max(0, Number(image.naturalHeight) || 0)
+      naturalHeight: Math.max(0, Number(image.naturalHeight) || 0),
+      alt: String(image.alt || "콘셉트 이미지"),
+      caption: String(image.caption || "콘셉트 이미지"),
+      fit: image.fit === "contain" ? "contain" : "cover",
+      scale: Math.max(.2, Math.min(4, Number(image.scale) || 1)),
+      opacity: Math.max(0, Math.min(100, Number(image.opacity ?? 100)))
     };
   }
 
@@ -152,45 +161,47 @@
 
   function createDefaultModel() {
     return normalizeModel({
-      eyebrow: "모두의기부 이야기",
-      headline: "세부 연혁",
-      archiveLabel: "Monthly Archive",
-      description: "단체가 걸어온 발자취를 월별로 확인하실 수 있습니다.",
+      eyebrow: "송악사회복지관 이야기",
+      headline: "함께 걸어온 길",
+      archiveLabel: "SONGAK HISTORY",
+      description: "2020년 수탁 협약부터 지역주민과 함께 만들어 온 변화의 기록입니다.",
       nextGroupId: 5,
       nextEventId: 9,
       groups: [
         {
-          year: "2026", month: "07", icon: "calendar", tone: "green",
+          year: "2026", month: "03", icon: "calendar", tone: "green",
           events: [
-            { date: "07.15", title: "지역사회 통합돌봄 사업 선정", description: "지역사회 통합돌봄 선도사업 기관으로 선정되어 서비스를 시작합니다." },
-            { date: "07.02", title: "여름방학 돌봄교실 시작", description: "아이들의 즐거운 방학을 위한 돌봄교실이 시작되었습니다." }
+            { date: "03.26", title: "송악실버학당 5기 개강", description: "(재)송악읍개발위원회 공모사업으로 어르신 맞춤형 프로그램을 시작했습니다.", image: { name: "어르신 프로그램 활동 콘셉트 이미지", dataUrl: "./assets/concept/history-senior-class-concept.png", alt: "어르신 프로그램 활동 콘셉트 이미지", caption: "콘셉트 이미지" } },
+            { date: "03.25", title: "노인복지증진 업무협약", description: "대한노인회 당진시지회와 송악읍·당진3동 노인복지증진을 위한 협약을 체결했습니다.", image: { name: "기관 간 협약 콘셉트 이미지", dataUrl: "./assets/concept/history-partnership-concept.png", alt: "기관 간 협약을 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } },
+            { date: "03.24", title: "AI+디지털 업무협약", description: "신성대학교와 지역주민의 디지털 역량 강화를 위한 업무협약을 체결했습니다.", image: { name: "기관 간 협약 콘셉트 이미지", dataUrl: "./assets/concept/history-partnership-concept.png", alt: "기관 간 협약을 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } }
           ]
         },
         {
-          year: "2026", month: "06", icon: "users", tone: "green",
+          year: "2026", month: "01", icon: "building", tone: "green",
           events: [
-            { date: "06.20", title: "후원자 간담회 진행", description: "후원자님들과 뜻깊은 시간을 가지며 소통하는 자리를 마련했습니다." },
-            { date: "06.01", title: "신규 프로그램 오픈", description: "새로운 교육 프로그램 운영을 시작합니다." }
+            { date: "01.22", title: "다비치안경 업무협약", description: "지역주민의 건강한 일상을 지원하기 위한 협력체계를 마련했습니다.", image: { name: "기관 간 협약 콘셉트 이미지", dataUrl: "./assets/concept/history-partnership-concept.png", alt: "기관 간 협약을 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } },
+            { date: "01.16", title: "송악사회복지관 수탁기념식", description: "(재)송악읍개발위원회 수탁을 기념하고 새로운 출발을 알렸습니다.", image: { name: "수탁·취임 행사 콘셉트 이미지", dataUrl: "./assets/concept/history-inauguration-concept.png", alt: "수탁·취임 행사를 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } },
+            { date: "01.01", title: "제2대 김형철 관장 취임", description: "(재)송악읍개발위원회가 복지관 운영을 시작했습니다.", image: { name: "수탁·취임 행사 콘셉트 이미지", dataUrl: "./assets/concept/history-inauguration-concept.png", alt: "수탁·취임 행사를 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } }
           ]
         },
         {
           year: "2025", month: "11", icon: "building", tone: "orange",
           events: [
-            { date: "11.20", title: "기관 리뉴얼 완료", description: "더 나은 환경과 서비스 제공을 위해 공간 리뉴얼을 완료했습니다." },
-            { date: "11.05", title: "자원봉사자 감사의 날", description: "함께해 주신 자원봉사자분들께 감사의 마음을 전했습니다." }
+            { date: "11.28", title: "제3회 후원자·자원봉사자 감사의 날", description: "지역의 든든한 동반자에게 감사의 마음을 전했습니다.", image: { name: "지역축제·감사 행사 콘셉트 이미지", dataUrl: "./assets/concept/history-community-event-concept.png", alt: "지역축제와 감사 행사를 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } },
+            { date: "11.01", title: "제2회 행복나눔 페스티벌", description: "온 가족이 함께 즐기는 마을축제를 개최했습니다.", image: { name: "지역축제·감사 행사 콘셉트 이미지", dataUrl: "./assets/concept/history-community-event-concept.png", alt: "지역축제와 감사 행사를 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } }
           ]
         },
         {
-          year: "2025", month: "09", icon: "handshake", tone: "orange",
+          year: "2021", month: "11", icon: "handshake", tone: "orange",
           events: [
-            { date: "09.10", title: "지역 협력 협약 체결", description: "지역사회 발전을 위한 협약을 체결하고 상호 협력을 약속했습니다." },
-            { date: "09.01", title: "추석맞이 지원사업 진행", description: "지역 내 취약계층을 위한 나눔 활동을 진행했습니다." }
+            { date: "11.18", title: "송악사회복지관 개관식", description: "지역주민과 함께하는 행복나눔터의 문을 열었습니다.", image: { name: "복지관 개관 콘셉트 이미지", dataUrl: "./assets/concept/history-opening-concept.png", alt: "복지관 개관을 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } },
+            { date: "11.02", title: "지역개발·복지증진 업무협약", description: "(재)송악읍개발위원회와 지역의 복지증진을 위한 협력체계를 마련했습니다.", image: { name: "기관 간 협약 콘셉트 이미지", dataUrl: "./assets/concept/history-partnership-concept.png", alt: "기관 간 협약을 재현한 콘셉트 이미지", caption: "콘셉트 이미지" } }
           ]
         }
       ],
-      ctaTitle: "더 긴 여정이 궁금하신가요?",
-      ctaDescription: "단체의 시작부터 오늘까지, 더 많은 이야기를 연도별 연혁에서 만나보세요.",
-      ctaButton: "연도별 연혁 보기"
+      ctaTitle: "송악의 더 많은 이야기가 궁금하신가요?",
+      ctaDescription: "2020년부터 오늘까지의 전체 연혁은 공식 홈페이지에서 확인할 수 있습니다.",
+      ctaButton: "전체 연혁 보기"
     });
   }
 

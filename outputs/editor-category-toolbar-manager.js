@@ -5,7 +5,9 @@
     const buttons = {
       view: options.viewButton ?? null,
       add: options.addButton ?? null,
-      delete: options.deleteButton ?? null
+      delete: options.deleteButton ?? null,
+      previous: options.previousButton ?? null,
+      next: options.nextButton ?? null
     };
     let context = null;
 
@@ -34,6 +36,8 @@
       syncButton("view", "\uBCF4\uAE30");
       syncButton("add", "\uBD84\uB958 \uCD94\uAC00");
       syncButton("delete", "\uBD84\uB958 \uC0AD\uC81C");
+      syncButton("previous", "\uC774\uC804");
+      syncButton("next", "\uB2E4\uC74C");
     }
 
     function invoke(action) {

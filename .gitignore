@@ -13,3 +13,16 @@ outputs/timeline-section-*.png
 outputs/gallery-*-qa.jpg
 Thumbs.db
 .DS_Store
+.pnpm-store/
+data/
+skill-build/
+tools/__pycache__/
+**/node_modules/
+**/.env
+**/.dev.vars
+!**/.env.example
+!**/.dev.vars.example
+delivery-site/tsconfig.tsbuildinfo
+outputs/assets/stickers/contact-sheets/
+outputs/assets/stickers/library-contact-sheets/
+outputs/assets/stickers/original/

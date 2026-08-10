@@ -187,7 +187,11 @@
     return {
       size: Math.max(8, Math.min(96, Number(style?.size) || fallback.size)),
       color: typeof style?.color === "string" && style.color ? style.color : fallback.color,
-      font: ["serif", "batang", "sans", "rounded"].includes(style?.font) ? style.font : fallback.font
+      font: ["serif", "batang", "sans", "rounded"].includes(style?.font) ? style.font : fallback.font,
+      align: ["left", "center", "right"].includes(style?.align) ? style.align : (fallback.align || ""),
+      boxWidth: Math.max(30, Math.min(100, Number(style?.boxWidth ?? fallback.boxWidth ?? 100))),
+      boxOffsetX: Math.max(-320, Math.min(320, Number(style?.boxOffsetX ?? fallback.boxOffsetX ?? 0))),
+      boxOffsetY: Math.max(-320, Math.min(320, Number(style?.boxOffsetY ?? fallback.boxOffsetY ?? 0)))
     };
   }
 
@@ -233,16 +237,15 @@
     return normalizeModel({
       kicker: "송악사회복지관 사례관리",
       headline: "사례관리 과정",
-      description: "혼자 해결하기 어려운 문제를 함께 살피고, 필요한 지원을 차근차근 연결합니다.",
-      nextStepId: 7,
+      description: "복합적인 어려움을 함께 살피고 지역사회 자원과 맞춤형 서비스를 연결합니다.",
+      nextStepId: 6,
       nextHighlightId: 4,
       steps: [
-        { icon: "clipboard-edit", title: "상담 신청", description: "도움이 필요할 때 상담을 신청합니다." },
-        { icon: "users-chat", title: "초기 상담", description: "현재 상황을 함께 이야기합니다." },
-        { icon: "user-search", title: "욕구 및 상황 파악", description: "생활과 어려움을 종합적으로 살핍니다." },
-        { icon: "clipboard-check", title: "서비스 계획 수립", description: "필요한 지원 방향을 함께 정합니다." },
-        { icon: "handshake", title: "자원 연계", description: "복지서비스와 지역 자원을 연결합니다." },
-        { icon: "report-check", title: "점검 및 사후관리", description: "변화와 추가 필요를 지속적으로 확인합니다." }
+        { icon: "clipboard-edit", title: "접수 및 초기상담", description: "도움이 필요한 상황과 욕구를 함께 이야기합니다." },
+        { icon: "users-chat", title: "사례회의", description: "복합적인 상황을 검토하고 지원 방향을 논의합니다." },
+        { icon: "handshake", title: "맞춤형 서비스 제공", description: "개별 계획에 따라 복지서비스와 지역 자원을 연결합니다." },
+        { icon: "report-check", title: "점검 및 평가", description: "지원 과정과 변화를 살피고 계획을 조정합니다." },
+        { icon: "check-circle", title: "종결 및 사후관리", description: "지원 종료 후에도 필요한 변화와 추가 욕구를 확인합니다." }
       ],
       highlights: [
         { icon: "message", title: "상담", description: "마음에 귀 기울이는 첫걸음" },

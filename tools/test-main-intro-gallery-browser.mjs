@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 
-const url = "http://127.0.0.1:4185/representative-greeting-editor.html?v=main-intro-gallery-final";
+const url = "http://127.0.0.1:43185/representative-greeting-editor.html?v=main-intro-gallery-final";
 const viewports = [
   { name: "desktop", width: 1440, height: 900 },
   { name: "phone", width: 390, height: 844 },

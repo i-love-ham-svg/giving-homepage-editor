@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#234236">
+  <title>송악사회복지관 소통게시판</title>
+  <style>
+    :root {
+      --ink: #17261f;
+      --muted: #607369;
+      --brand: #2f6751;
+      --brand-dark: #234236;
+      --accent: #f0b638;
+      --soft: #edf5f0;
+      --paper: #fbfdfb;
+      --line: #d4e2da;
+      --danger: #a54848;
+      --shadow: 0 18px 48px rgba(31, 62, 49, .1);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% -10%, rgba(240, 182, 56, .15), transparent 28rem),
+        linear-gradient(180deg, #f8fbf9, #fff 38rem);
+      font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .skip-link { position: fixed; left: 12px; top: -60px; z-index: 100; padding: 12px 16px; border-radius: 12px; color: #fff; background: var(--brand-dark); }
+    .skip-link:focus { top: 12px; }
+    .site-header {
+      position: sticky;
+      z-index: 40;
+      top: 0;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-height: 72px;
+      padding: 12px max(20px, calc((100vw - 1180px) / 2));
+      border-bottom: 1px solid rgba(47, 103, 81, .12);
+      background: rgba(251, 253, 251, .92);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 900; }
+    .brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 50%; color: #fff; background: var(--brand); }
+    .header-title { color: var(--muted); font-size: 14px; font-weight: 800; }
+    .header-spacer { flex: 1; }
+    .header-btn, .primary-btn, .secondary-btn, .ghost-btn, .danger-btn {
+      min-height: 44px;
+      padding: 0 17px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      font-weight: 850;
+    }
+    .primary-btn { color: #fff; background: var(--brand); box-shadow: 0 9px 20px rgba(47, 103, 81, .2); }
+    .secondary-btn, .header-btn { border-color: var(--line); color: var(--brand-dark); background: #fff; }
+    .ghost-btn { color: var(--brand); background: transparent; }
+    .danger-btn { border-color: #edcccc; color: var(--danger); background: #fff6f6; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+      gap: 36px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 72px 20px 48px;
+      align-items: end;
+    }
+    .eyebrow { margin: 0 0 12px; color: var(--brand); font-size: 13px; font-weight: 900; letter-spacing: .16em; }
+    h1 { max-width: 760px; margin: 0; font-family: "Noto Serif KR", Batang, serif; font-size: clamp(38px, 6vw, 66px); line-height: 1.12; letter-spacing: -.055em; }
+    .hero-copy { max-width: 660px; margin: 22px 0 0; color: var(--muted); font-size: 18px; line-height: 1.75; }
+    .hero-actions { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+    .hero-guide { padding: 26px; border: 1px solid var(--line); border-radius: 28px; background: rgba(255,255,255,.86); box-shadow: var(--shadow); }
+    .hero-guide strong { display: block; margin-bottom: 13px; font-size: 18px; }
+    .guide-step { display: flex; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .guide-step span { display: grid; flex: 0 0 28px; height: 28px; place-items: center; border-radius: 50%; color: #fff; background: var(--brand); font-size: 12px; font-weight: 900; }
+    .board-shell { max-width: 1180px; margin: 0 auto; padding: 0 20px 90px; }
+    .board-toolbar { position: relative; z-index: 4; display: grid; grid-template-columns: minmax(260px, 1fr) auto auto; gap: 10px; padding: 15px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.94); box-shadow: 0 12px 30px rgba(31,62,49,.07); }
+    .search-wrap { position: relative; }
+    .search-wrap input { width: 100%; min-height: 48px; padding: 0 48px 0 17px; border: 1px solid var(--line); border-radius: 14px; outline: none; }
+    .search-wrap input:focus, select:focus, textarea:focus, input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(47,103,81,.12); outline: none; }
+    .search-wrap button { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; border: 0; border-radius: 12px; color: #fff; background: var(--brand); }
+    .board-toolbar select { min-height: 48px; padding: 0 38px 0 15px; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: #fff; font-weight: 750; }
+    .category-tabs { display: flex; gap: 8px; overflow-x: auto; margin: 22px 0 30px; padding-bottom: 4px; scrollbar-width: none; }
+    .category-tabs::-webkit-scrollbar { display: none; }
+    .category-tab { flex: 0 0 auto; min-height: 42px; padding: 0 18px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: #fff; font-weight: 850; }
+    .category-tab.active { border-color: var(--brand); color: #fff; background: var(--brand); }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 30px 0 18px; }
+    .section-heading h2 { margin: 0; font-size: clamp(25px, 4vw, 36px); letter-spacing: -.035em; }
+    .result-count { color: var(--muted); font-size: 14px; }
+    .post-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .post-grid.compact { grid-template-columns: 1fr; }
+    .post-grid.compact .post-card { min-height: 0; }
+    .post-grid.compact .post-card-button { display: grid; grid-template-columns: 180px minmax(0, 1fr); }
+    .post-grid.compact .thumbnail { height: 100%; min-height: 160px; }
+    .post-card { position: relative; display: flex; min-height: 320px; overflow: hidden; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: 0 12px 34px rgba(31,62,49,.07); transition: transform .18s ease, box-shadow .18s ease; }
+    .post-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .post-card-button { display: flex; width: 100%; height: 100%; padding: 0; border: 0; flex-direction: column; color: inherit; background: transparent; text-align: left; }
+    .thumbnail { position: relative; display: grid; height: 170px; overflow: hidden; place-items: center; color: #fff; background: linear-gradient(140deg, var(--brand), #6b927f); }
+    .thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+    .thumbnail-letter { font-family: "Noto Serif KR", Batang, serif; font-size: 58px; font-weight: 900; opacity: .9; }
+    .video-badge, .pin-badge { position: absolute; top: 12px; padding: 6px 10px; border-radius: 999px; color: #fff; background: rgba(23,38,31,.76); font-size: 12px; font-weight: 900; }
+    .video-badge { right: 12px; }
+    .pin-badge { left: 12px; background: var(--accent); color: #3f2b00; }
+    .post-card-body { display: flex; flex: 1; flex-direction: column; padding: 20px; }
+    .post-meta { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .category-badge { color: var(--brand); font-weight: 900; }
+    .post-card h3 { display: -webkit-box; margin: 11px 0 10px; overflow: hidden; font-size: 20px; line-height: 1.42; letter-spacing: -.025em; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .post-excerpt { display: -webkit-box; margin: 0; overflow: hidden; color: var(--muted); font-size: 14px; line-height: 1.65; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .post-stats { display: flex; gap: 14px; margin-top: auto; padding-top: 18px; color: var(--muted); font-size: 12px; }
+    .status-badge { margin-left: auto; padding: 4px 8px; border-radius: 999px; background: #fff1ce; color: #765100; font-weight: 900; }
+    .empty-state { padding: 70px 20px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); text-align: center; background: rgba(255,255,255,.65); }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 30px; }
+    .pagination span { min-width: 100px; color: var(--muted); text-align: center; }
+    .admin-bar { display: flex; align-items: center; gap: 10px; margin: 18px 0; padding: 14px 16px; border-radius: 16px; color: #fff; background: var(--brand-dark); }
+    .admin-bar strong { margin-right: auto; }
+    .admin-bar select { min-height: 40px; border: 0; border-radius: 10px; padding: 0 12px; }
+    dialog { width: min(720px, calc(100vw - 28px)); max-height: min(900px, calc(100dvh - 28px)); padding: 0; overflow: hidden; border: 0; border-radius: 26px; color: var(--ink); background: var(--paper); box-shadow: 0 28px 90px rgba(15,37,27,.34); }
+    dialog::backdrop { background: rgba(15,37,27,.58); backdrop-filter: blur(5px); }
+    .dialog-head { position: sticky; z-index: 3; top: 0; display: flex; align-items: center; gap: 12px; min-height: 70px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: rgba(251,253,251,.95); backdrop-filter: blur(12px); }
+    .dialog-head h2 { margin: 0; font-size: 22px; }
+    .dialog-head .close-btn { margin-left: auto; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 50%; background: #fff; font-size: 22px; }
+    .dialog-body { max-height: calc(100dvh - 170px); overflow-y: auto; padding: 22px; }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .field { display: grid; gap: 7px; margin-bottom: 14px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label, .field legend { font-size: 13px; font-weight: 900; }
+    .field small { color: var(--muted); line-height: 1.5; }
+    .field input, .field select, .field textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 13px; color: var(--ink); background: #fff; }
+    .field textarea { min-height: 190px; line-height: 1.7; resize: vertical; }
+    .upload-zone { display: grid; min-height: 130px; padding: 20px; place-items: center; border: 2px dashed #b8cfc2; border-radius: 18px; color: var(--muted); background: var(--soft); text-align: center; }
+    .upload-zone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .media-preview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .media-tile { position: relative; min-height: 110px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #eef3f0; }
+    .media-tile img, .media-tile video { width: 100%; height: 110px; object-fit: cover; }
+    .media-tile-controls { position: absolute; inset: auto 6px 6px 6px; display: flex; gap: 5px; }
+    .media-tile button, .media-tile label { min-height: 30px; padding: 0 9px; border: 0; border-radius: 999px; color: #fff; background: rgba(23,38,31,.78); font-size: 11px; font-weight: 850; }
+    .media-tile .selected-thumb { background: var(--accent); color: #3f2b00; }
+    .upload-progress { height: 8px; overflow: hidden; border-radius: 999px; background: #e3ece7; }
+    .upload-progress span { display: block; width: 0; height: 100%; background: var(--brand); transition: width .2s ease; }
+    .consent-row { display: flex; align-items: flex-start; gap: 9px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .consent-row input { margin-top: 3px; }
+    .dialog-actions { position: sticky; z-index: 3; bottom: 0; display: flex; justify-content: flex-end; gap: 9px; padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(251,253,251,.96); }
+    .detail-title { margin: 8px 0 14px; font-family: "Noto Serif KR", Batang, serif; font-size: clamp(28px, 5vw, 42px); line-height: 1.25; letter-spacing: -.045em; }
+    .detail-meta { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+    .detail-body { margin: 28px 0; white-space: pre-wrap; font-size: 16px; line-height: 1.85; }
+    .detail-media { display: grid; gap: 14px; }
+    .detail-media img, .detail-media video { width: 100%; max-height: 540px; object-fit: contain; border-radius: 18px; background: #edf3ef; }
+    .detail-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .moderation-tools { display: flex; gap: 8px; margin-top: 18px; padding: 14px; border-radius: 14px; background: var(--soft); }
+    .toast { position: fixed; z-index: 100; left: 50%; bottom: 22px; max-width: calc(100vw - 28px); padding: 13px 18px; transform: translate(-50%, 30px); border-radius: 999px; color: #fff; background: var(--brand-dark); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .2s ease; }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+    .mobile-write { position: fixed; z-index: 30; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); display: none; width: 58px; height: 58px; place-items: center; border: 0; border-radius: 50%; color: #fff; background: var(--brand); box-shadow: 0 14px 28px rgba(47,103,81,.32); font-size: 28px; }
+    .site-footer { padding: 42px 20px; color: rgba(255,255,255,.75); background: var(--brand-dark); text-align: center; }
+    [hidden] { display: none !important; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding-top: 52px; }
+      .hero-guide { max-width: 620px; }
+      .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      .site-header { min-height: 62px; padding: 10px 14px; }
+      .header-title, #writeHeaderBtn { display: none; }
+      .header-btn { min-height: 40px; padding: 0 13px; font-size: 13px; }
+      .brand-mark { width: 36px; height: 36px; }
+      .hero { padding: 42px 16px 34px; }
+      .hero-copy { font-size: 16px; }
+      .hero-guide { padding: 20px; }
+      .board-shell { padding: 0 14px 86px; }
+      .board-toolbar { grid-template-columns: 1fr 1fr; padding: 11px; }
+      .search-wrap { grid-column: 1 / -1; }
+      .post-grid { grid-template-columns: 1fr; }
+      .post-grid.compact .post-card-button { grid-template-columns: 110px minmax(0, 1fr); }
+      .post-grid.compact .thumbnail { min-height: 150px; }
+      .post-card { min-height: 0; }
+      .thumbnail { height: 190px; }
+      .section-heading { align-items: start; flex-direction: column; }
+      .field-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .media-preview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      dialog { width: 100vw; max-width: none; height: 100dvh; max-height: none; border-radius: 0; }
+      .dialog-body { max-height: calc(100dvh - 146px); padding: 18px 16px; }
+      .dialog-head { min-height: 62px; padding: 10px 14px; }
+      .dialog-actions { padding: 11px 14px calc(11px + env(safe-area-inset-bottom)); }
+      .dialog-actions button { flex: 1; }
+      .mobile-write { display: grid; }
+      .admin-bar { align-items: stretch; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#boardMain">게시판 본문으로 이동</a>
+  <header class="site-header">
+    <a class="brand" href="./representative-greeting-editor.html" aria-label="송악사회복지관 편집기로 이동">
+      <span class="brand-mark">송</span>
+      <span>송악사회복지관</span>
+    </a>
+    <span class="header-title">주민과 함께 만드는 소통게시판</span>
+    <span class="header-spacer"></span>
+    <button class="header-btn" id="adminBtn" type="button">관리자</button>
+    <button class="primary-btn" id="writeHeaderBtn" type="button">글쓰기</button>
+  </header>
+
+  <main id="boardMain">
+    <section class="hero" aria-labelledby="boardTitle">
+      <div>
+        <p class="eyebrow">SONGAK COMMUNITY BOARD</p>
+        <h1 id="boardTitle">우리 동네의 따뜻한 소식을 함께 나눠요</h1>
+        <p class="hero-copy">복지관의 새로운 소식을 빠르게 확인하고, 주민 여러분의 이야기와 제안을 사진·영상과 함께 간편하게 남길 수 있습니다.</p>
+        <div class="hero-actions">
+          <button class="primary-btn" id="writeHeroBtn" type="button">주민 글쓰기</button>
+          <button class="secondary-btn" id="guideBtn" type="button">이용 안내</button>
+        </div>
+      </div>
+      <aside class="hero-guide" id="boardGuide" aria-label="게시판 이용 순서">
+        <strong>누구나 쉽게 참여할 수 있어요</strong>
+        <div class="guide-step"><span>1</span><div>글쓰기 버튼을 누르고 제목과 내용을 입력합니다.</div></div>
+        <div class="guide-step"><span>2</span><div>사진과 영상을 추가하고 대표 썸네일을 선택합니다.</div></div>
+        <div class="guide-step"><span>3</span><div>관리자 확인 후 안전하게 게시판에 공개됩니다.</div></div>
+      </aside>
+    </section>
+
+    <section class="board-shell" aria-label="게시글 목록">
+      <div class="board-toolbar">
+        <form class="search-wrap" id="searchForm" role="search">
+          <input id="searchInput" type="search" maxlength="100" placeholder="제목, 내용, 작성자 검색" aria-label="게시글 검색">
+          <button type="submit" aria-label="검색">⌕</button>
+        </form>
+        <select id="sortSelect" aria-label="게시글 정렬">
+          <option value="latest">최신순</option>
+          <option value="views">조회순</option>
+        </select>
+        <select id="viewSelect" aria-label="게시글 보기 방식">
+          <option value="card">카드형</option>
+          <option value="compact">간단히</option>
+        </select>
+      </div>
+
+      <div class="admin-bar" id="adminBar" hidden>
+        <strong>관리자 검수 모드</strong>
+        <select id="adminStatusSelect" aria-label="게시 상태 선택">
+          <option value="pending">승인 대기</option>
+          <option value="published">공개</option>
+          <option value="rejected">반려</option>
+          <option value="hidden">숨김</option>
+          <option value="all">전체</option>
+        </select>
+        <button class="secondary-btn" id="adminLogoutBtn" type="button">종료</button>
+      </div>
+
+      <nav class="category-tabs" id="categoryTabs" aria-label="게시글 분류"></nav>
+      <div class="section-heading">
+        <h2>함께 나누는 소식</h2>
+        <span class="result-count" id="resultCount" aria-live="polite">불러오는 중</span>
+      </div>
+      <div class="post-grid" id="postGrid" aria-live="polite"></div>
+      <div class="empty-state" id="emptyState" hidden>
+        <strong>조건에 맞는 게시글이 없습니다.</strong>
+        <p>검색어를 바꾸거나 첫 번째 이야기를 남겨보세요.</p>
+      </div>
+      <div class="pagination" id="pagination">
+        <button class="secondary-btn" id="prevPageBtn" type="button">이전</button>
+        <span id="pageInfo">1 / 1</span>
+        <button class="secondary-btn" id="nextPageBtn" type="button">다음</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">송악사회복지관 · 주민과 함께 만드는 행복한 지역공동체</footer>
+  <button class="mobile-write" id="mobileWriteBtn" type="button" aria-label="게시글 작성">＋</button>
+
+  <dialog id="writeDialog" aria-labelledby="writeDialogTitle">
+    <form id="writeForm">
+      <div class="dialog-head">
+        <h2 id="writeDialogTitle">주민 글쓰기</h2>
+        <button class="close-btn" type="button" data-close-dialog="writeDialog" aria-label="닫기">×</button>
+      </div>
+      <div class="dialog-body">
+        <input id="editingPostId" type="hidden">
+        <div class="field-grid">
+          <div class="field">
+            <label for="postCategory">분류</label>
+            <select id="postCategory" required>
+              <option value="resident">주민 이야기</option>
+              <option value="question">질문·제안</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="postAuthor">작성자</label>
+            <input id="postAuthor" maxlength="40" autocomplete="name" placeholder="이름 또는 닉네임" required>
+          </div>
+          <div class="field full">
+            <label for="postTitle">제목</label>
+            <input id="postTitle" maxlength="160" placeholder="소식의 제목을 입력해 주세요" required>
+          </div>
+          <div class="field full">
+            <label for="postBody">내용</label>
+            <textarea id="postBody" maxlength="20000" placeholder="함께 나누고 싶은 이야기를 입력해 주세요" required></textarea>
+          </div>
+          <div class="field">
+            <label for="postPassword">수정·삭제 비밀번호</label>
+            <input id="postPassword" type="password" minlength="4" maxlength="32" autocomplete="new-password" required>
+            <small>게시글을 수정하거나 삭제할 때 사용합니다.</small>
+          </div>
+          <div class="field">
+            <label for="postContact">연락처 또는 이메일 <span>(선택)</span></label>
+            <input id="postContact" maxlength="120" autocomplete="email" placeholder="관리자에게만 표시됩니다">
+          </div>
+          <div class="field full">
+            <label for="mediaInput">사진·영상</label>
+            <label class="upload-zone" for="mediaInput">
+              <strong>사진이나 영상을 선택하세요</strong>
+              <span>모바일에서는 카메라와 사진첩을 바로 이용할 수 있습니다.</span>
+              <input id="mediaInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime" multiple>
+            </label>
+            <small>사진·영상 합계 12개까지, 사진 15MB·영상 100MB 이하</small>
+            <div class="media-preview" id="mediaPreview"></div>
+            <div class="upload-progress" id="uploadProgress" hidden><span></span></div>
+          </div>
+          <div class="field full">
+            <label class="consent-row"><input id="postConsent" type="checkbox" required> <span>게시판 운영을 위한 작성 정보 처리와 관리자 검수에 동의합니다. 연락처는 공개되지 않습니다.</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="secondary-btn" id="saveDraftBtn" type="button">임시저장</button>
+        <button class="secondary-btn" id="deleteDraftBtn" type="button">임시저장 삭제</button>
+        <button class="primary-btn" id="submitPostBtn" type="submit">검수 요청</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="detailDialog" aria-labelledby="detailTitle">
+    <div class="dialog-head">
+      <span class="category-badge" id="detailCategory"></span>
+      <button class="close-btn" type="button" data-close-dialog="detailDialog" aria-label="닫기">×</button>
+    </div>
+    <article class="dialog-body">
+      <h2 class="detail-title" id="detailTitle"></h2>
+      <div class="detail-meta" id="detailMeta"></div>
+      <div class="detail-body" id="detailBody"></div>
+      <div class="detail-media" id="detailMedia"></div>
+      <div class="detail-tools">
+        <button class="secondary-btn" id="sharePostBtn" type="button">공유하기</button>
+        <button class="secondary-btn" id="editPostBtn" type="button">수정</button>
+        <button class="danger-btn" id="deletePostBtn" type="button">삭제</button>
+        <button class="ghost-btn" id="reportPostBtn" type="button">신고</button>
+      </div>
+      <div class="moderation-tools" id="moderationTools" hidden>
+        <button class="primary-btn" data-moderate="published" type="button">승인·공개</button>
+        <button class="secondary-btn" data-moderate="rejected" type="button">반려</button>
+        <button class="danger-btn" data-moderate="hidden" type="button">숨김</button>
+      </div>
+    </article>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./editor-board-manager.js"></script>
+  <script src="./community-board.js"></script>
+</body>
+</html>

@@ -16,25 +16,36 @@ assert.equal(manager.isSection("program"), true);
 assert.equal(manager.isSection("program3"), true);
 
 const defaults = manager.createDefaultModel();
+const normalizedImageCard = manager.normalizeModel({ cards: [{ id: "image-card", image: { dataUrl: "./assets/generated/example.png", fit: "contain", scale: 2, opacity: 44 } }] }).cards[0];
+assert.equal(normalizedImageCard.image.fit, "contain");
+assert.equal(normalizedImageCard.image.scale, 2);
+assert.equal(normalizedImageCard.image.opacity, 44);
 assert.equal(defaults.textStyles.desktop.headline.size, 48);
 assert.equal(defaults.textStyles.phone.description.size, 15);
 assert.equal(defaults.textStyles.desktop.monthlyCount.size, 32);
 assert.equal(defaults.textStyles.phone.summaryNote.size, 11);
-assert.equal(defaults.monthlyLabel, "이번 달 운영 프로그램");
-assert.equal(defaults.recruitingLabel, "모집 중 프로그램");
+assert.equal(defaults.monthlyLabel, "운영 프로그램");
+assert.equal(defaults.recruitingLabel, "참여 안내 프로그램");
 assert.equal(defaults.monthlyIcon, "calendar");
 assert.equal(defaults.recruitingIcon, "users");
 assert.equal(manager.SUMMARY_ICON_KEYS.includes("heart"), true);
 const defaultSummaryCounts = manager.getSummaryCounts(defaults);
-assert.equal(defaultSummaryCounts.total, 4);
-assert.equal(defaultSummaryCounts.recruiting, 3);
+assert.equal(defaultSummaryCounts.total, 16);
+assert.equal(defaultSummaryCounts.recruiting, 5);
+assert.equal(defaults.imageSetVersion, "official-program-images-20260804");
+assert.equal(defaults.cards.filter((card) => !card.image?.dataUrl).length, 0);
+assert.equal(new Set(defaults.cards.map((card) => card.image.dataUrl)).size, 16);
+defaults.cards.forEach((card) => {
+  const localImagePath = path.resolve("outputs", card.image.dataUrl.replace(/^\.\//, ""));
+  assert.equal(fs.existsSync(localImagePath), true, `${card.id} image must exist: ${localImagePath}`);
+});
 
 const changedSummary = structuredClone(defaults);
 changedSummary.cards[3].status = "모집 중";
 changedSummary.cards.push({ ...changedSummary.cards[0], id: "program-card-5" });
 const changedSummaryCounts = manager.getSummaryCounts(changedSummary);
-assert.equal(changedSummaryCounts.total, 5);
-assert.equal(changedSummaryCounts.recruiting, 5);
+assert.equal(changedSummaryCounts.total, 17);
+assert.equal(changedSummaryCounts.recruiting, 6);
 assert.equal(defaults.categories[0].textStyles.desktop.size, 15);
 assert.equal(defaults.categories[0].textStyles.phone.size, 12);
 
@@ -75,6 +86,7 @@ assert.equal(normalized.textStyles.tablet.headline.size, 40);
 const restored = manager.normalizeModel(normalized);
 assert.equal(restored.textStyles.desktop.headline.size, 61);
 assert.equal(restored.textStyles.phone.description.font, "rounded");
+assert.equal(manager.normalizeModel({}).imageSetVersion, "");
 
 const legacyIcons = manager.normalizeModel({ monthlyIcon: "월", recruitingIcon: "중" });
 assert.equal(legacyIcons.monthlyIcon, "calendar");
@@ -136,6 +148,8 @@ assert.match(editorHtml, /data-card-field="targetLabel"/);
 assert.match(editorHtml, /data-card-field="scheduleLabel"/);
 assert.match(editorHtml, /id="inlineCtaBackgroundInput"/);
 assert.match(editorHtml, /\.program-card-image img\s*\{[^}]*object-fit:\s*contain/s);
+assert.match(editorHtml, /officialProgramImageSetVersion/);
+assert.match(editorHtml, /structuredClone\(officialProgramImages\.get\(card\.id\)\)/);
 
 const missingAllCategory = manager.normalizeModel({
   categories: [{ id: "education", label: "교육" }],

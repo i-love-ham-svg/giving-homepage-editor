@@ -5,6 +5,10 @@ import vm from "node:vm";
 
 const managerPath = path.resolve("outputs/editor-color-picker-manager.js");
 const code = fs.readFileSync(managerPath, "utf8");
+assert.match(code, /const THEME_COLOR_TOKENS = \[/);
+assert.match(code, /function getThemeColors\(\)/);
+assert.match(code, /className = "editor-theme-color-button"/);
+assert.match(code, /applyColor\(input, color\)/);
 class FakeEvent {
   constructor(type, options = {}) {
     this.type = type;

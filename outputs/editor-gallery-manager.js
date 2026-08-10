@@ -144,7 +144,11 @@
     return {
       size: clamp(source.size ?? fallback.size, 8, 96),
       color: normalizeColor(source.color) ?? fallback.color,
-      font: fonts.includes(source.font) ? source.font : fallback.font
+      font: fonts.includes(source.font) ? source.font : fallback.font,
+      align: ["left", "center", "right"].includes(source.align) ? source.align : (fallback.align || ""),
+      boxWidth: clamp(source.boxWidth ?? fallback.boxWidth ?? 100, 30, 100),
+      boxOffsetX: clamp(source.boxOffsetX ?? fallback.boxOffsetX ?? 0, -320, 320),
+      boxOffsetY: clamp(source.boxOffsetY ?? fallback.boxOffsetY ?? 0, -320, 320)
     };
   }
 
@@ -224,32 +228,33 @@
 
   function createDefaultModel() {
     return normalizeModel({
+      imageFitVersion: 1,
       desktopStyle: "mosaic",
       mobileStyle: "poster",
-      eyebrow: "GALLERY",
-      headline: "함께 만든\n소중한 순간들",
-      description: "참여의 기록이 변화의 이야기가 됩니다.",
-      monthLabel: "2026.06",
+      eyebrow: "SONGAK STORY",
+      headline: "복지관에서는\n어떤 일이?",
+      description: "지역주민과 함께 만든 따뜻한 활동 소식을 전합니다.",
+      monthLabel: "2026.07",
       showMonthLabel: true,
-      uploadLabel: "활동 사진 등록하기",
-      ctaLabel: "더 많은 순간 보기",
+      uploadLabel: "복지관 활동 사진 등록하기",
+      ctaLabel: "공식 갤러리 더보기",
       activeCategoryId: "all",
       nextCategoryId: 5,
       nextItemId: 7,
       categories: [
         { id: "all", label: "전체" },
-        { id: "environment", label: "환경" },
-        { id: "sharing", label: "나눔" },
-        { id: "education", label: "교육" },
+        { id: "activity", label: "복지관 활동" },
+        { id: "program", label: "프로그램" },
+        { id: "network", label: "지역연계" },
         { id: "event", label: "행사" }
       ],
       items: [
-        { id: "gallery-item-1", date: "06.01", title: "공원 환경정화 활동", description: "깨끗한 공원을 위해 함께 쓰레기를 수거했어요.", categoryId: "environment", tag: "#환경", likes: 28, comments: 4, tone: "forest" },
-        { id: "gallery-item-2", date: "06.01", title: "팀워크 활동", description: "서로의 힘을 모아 더 큰 가치를 만들었어요.", categoryId: "event", tag: "#함께라서가능해", likes: 32, comments: 2, tone: "rose" },
-        { id: "gallery-item-3", date: "05.28", title: "어린이 환경 교육", description: "아이들과 함께 지구를 지키는 방법을 배웠어요.", categoryId: "education", tag: "#배움", likes: 26, comments: 1, tone: "sky" },
-        { id: "gallery-item-4", date: "05.20", title: "기부 물품 전달", description: "필요한 곳에 따뜻한 마음을 전달했습니다.", categoryId: "sharing", tag: "#나눔", likes: 19, comments: 0, tone: "gold" },
-        { id: "gallery-item-5", date: "05.15", title: "함께한 챌린지", description: "모두의 참여로 목표를 달성했어요.", categoryId: "event", tag: "#해냈어", likes: 31, comments: 0, tone: "green" },
-        { id: "gallery-item-6", date: "05.08", title: "마을 연대의 날", description: "이웃과 인사를 나누고 마음을 연결했습니다.", categoryId: "sharing", tag: "#이웃", likes: 24, comments: 3, tone: "violet" }
+        { id: "gallery-item-1", date: "07.27", title: "주민만나기, 가보자GO! 2편", description: "주민을 직접 만나 복지관을 알리고 지역의 이야기에 귀 기울였습니다.", categoryId: "activity", tag: "#주민만나기 #소통", likes: 28, comments: 4, tone: "forest", image: { name: "공식 갤러리 1550", dataUrl: "./assets/official-sacwc/8686126a0b0c2c4c.jpg", fit: "cover" } },
+        { id: "gallery-item-2", date: "07.20", title: "송악 워터 PLAY!", description: "무더운 여름, 지역주민과 함께 시원한 여름놀이터를 열었습니다.", categoryId: "event", tag: "#여름놀이터 #가족", likes: 32, comments: 2, tone: "sky", image: { name: "공식 갤러리 1545", dataUrl: "./assets/official-sacwc/eeffc60f19126d72.jpg", fit: "cover" } },
+        { id: "gallery-item-3", date: "07.16", title: "제16회 당진환경사랑미술대회", description: "GS EPS와 함께 어린이들의 환경사랑과 창의력을 응원했습니다.", categoryId: "network", tag: "#환경사랑 #GSEPS", likes: 26, comments: 1, tone: "green", image: { name: "공식 갤러리 1543", dataUrl: "./assets/official-sacwc/a50cd70a78e3ba38.jpg", fit: "cover" } },
+        { id: "gallery-item-4", date: "07.08", title: "지역돌봄 아동 발전소 견학", description: "지역돌봄 아동들과 함께 미래를 켜는 하루를 만들었습니다.", categoryId: "program", tag: "#지역돌봄 #현장체험", likes: 19, comments: 0, tone: "gold", image: { name: "공식 영상 1411", dataUrl: "./assets/official-sacwc/d0208f4cdada8c07.jpg", fit: "cover" } },
+        { id: "gallery-item-5", date: "06.24", title: "어르신 행복충전-Day", description: "어르신들과 함께 즐거운 상반기 문화나들이를 다녀왔습니다.", categoryId: "program", tag: "#어르신 #문화나들이", likes: 31, comments: 0, tone: "rose", image: { name: "공식 영상 1398", dataUrl: "./assets/official-sacwc/682cb28d0eb119ff.jpg", fit: "cover" } },
+        { id: "gallery-item-6", date: "05.08", title: "가족愛 퐁당", description: "전 세대가 함께 참여하는 가족문화 행사를 진행했습니다.", categoryId: "event", tag: "#가족문화 #함께", likes: 24, comments: 3, tone: "violet", image: { name: "공식 영상 1311", dataUrl: "./assets/official-sacwc/1a778421279dc57f.jpg", fit: "cover" } }
       ],
       decorations: DEFAULT_GALLERY_DECORATIONS,
       nextDecorationId: 6,
@@ -273,7 +278,8 @@
           dataUrl: String(image.dataUrl),
           naturalWidth: Math.max(0, Number(image.naturalWidth) || 0),
           naturalHeight: Math.max(0, Number(image.naturalHeight) || 0),
-          fit: image.fit === "contain" ? "contain" : "cover",
+          // New and restored gallery images default to full-image visibility.
+          fit: image.fit === "cover" ? "cover" : "contain",
           scale: clamp(image.scale ?? 1, .2, 4),
           x: clamp(image.x ?? 0, -100, 100),
           y: clamp(image.y ?? 0, -100, 100),
@@ -380,6 +386,18 @@
     }
     const categoryIds = categories.map((category) => category.id);
     const items = (Array.isArray(model.items) ? model.items : []).map((item, index) => normalizeItem(item, index, categoryIds));
+    const imageFitVersion = Math.max(0, Number(model.imageFitVersion) || 0);
+    if (imageFitVersion < 2) {
+      const officialAssetPattern = /\/assets\/official-sacwc\/[a-f0-9]+\.jpg(?:[?#].*)?$/i;
+      items.forEach((item) => {
+        if (item.image?.fit === "cover" && officialAssetPattern.test(item.image.dataUrl)) {
+          item.image.fit = "contain";
+          item.image.scale = 1;
+          item.image.x = 0;
+          item.image.y = 0;
+        }
+      });
+    }
     const itemIds = items.map((item) => item.id);
     const heroOrder = [];
     (Array.isArray(model.heroOrder) ? model.heroOrder : itemIds).forEach((itemId) => {
@@ -397,6 +415,7 @@
       .slice(0, 20);
     const maxTextId = customTexts.reduce((max, item) => Math.max(max, Number(item.id.replace(/\D/g, "")) || 0), 0);
     return {
+      imageFitVersion: 2,
       heroOnly: model.heroOnly === true,
       mainIntroStyleSection: model.mainIntroStyleSection === true,
       mainIntroSourceSectionId: typeof model.mainIntroSourceSectionId === "string"
@@ -573,6 +592,11 @@
 
   function estimateHeight(model, viewport) {
     const normalized = normalizeModel(model);
+    if (normalized.heroOnly) {
+      if (viewport === "desktop") return 438;
+      if (viewport === "tablet") return 420;
+      return 460;
+    }
     const count = Math.max(1, getVisibleItems(normalized).length);
     if (viewport === "desktop") {
       const cardRows = Math.ceil(count / (normalized.desktopStyle === "mosaic" ? 5 : 4));

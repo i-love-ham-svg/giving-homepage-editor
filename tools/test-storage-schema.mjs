@@ -19,12 +19,14 @@ function assert(condition, message) {
   if (!condition) failures.push(message);
 }
 
-assert(schema?.SCHEMA_VERSION === 4, "schema version should be 4");
+assert(schema?.SCHEMA_VERSION === 5, "schema version should be 5");
 assert(schema.normalizeSectionId({ id: "greeting77", type: "greeting" }) === "greeting77", "greeting section id should be preserved");
 assert(schema.normalizeSectionId({ id: "mainIntro9", type: "mainIntro" }) === "mainIntro9", "main intro section id should be preserved");
 assert(schema.normalizeSectionId({ id: "program4", type: "program" }) === "program4", "program section id should be preserved");
 assert(schema.normalizeSectionId({ id: "process4", type: "process" }) === "process4", "process section id should be preserved");
 assert(schema.normalizeSectionId({ id: "history4", type: "history" }) === "history4", "history section id should be preserved");
+assert(schema.normalizeSectionId({ id: "facility", type: "essential" }) === "facility", "base essential section id should be preserved");
+assert(schema.normalizeSectionId({ id: "essential4", type: "essential" }) === "essential4", "duplicated essential section id should be preserved");
 
 const saved = schema.hydrateLegacyContentFromSectionDocument({
   schemaVersion: 3,
@@ -71,6 +73,18 @@ const historySaved = schema.hydrateLegacyContentFromSectionDocument({
   }
 });
 assert(historySaved.content.historySections[0].content.groups.length === 1, "history sections should hydrate from section array");
+
+const essentialSaved = schema.hydrateLegacyContentFromSectionDocument({
+  document: {
+    sectionOrder: ["facility", "footer"],
+    sections: [
+      { id: "facility", type: "essential", content: { template: "facility", headline: "시설현황" } },
+      { id: "footer", type: "essential", content: { template: "footer", headline: "하단 정보" } }
+    ]
+  }
+});
+assert(essentialSaved.content.essentialSections.length === 2, "essential sections should hydrate from section array");
+assert(essentialSaved.content.sectionOrder.join(",") === "facility,footer", "essential section order should be preserved");
 
 if (failures.length) {
   console.error(failures.join("\n"));

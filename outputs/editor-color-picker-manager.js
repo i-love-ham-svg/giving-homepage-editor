@@ -10,6 +10,23 @@
       <path d="M17.66 2.93 8.3 12.29a2.426 2.426 0 1 0 3.42 3.42l9.35-9.37"/>
     </svg>`;
 
+  const PALETTE_ICON = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="7" cy="7" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="17" cy="7" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="7" cy="17" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="17" cy="17" r="2" fill="currentColor" stroke="none"/>
+    </svg>`;
+
+  const THEME_COLOR_TOKENS = [
+    ["--ink", "기본 글자"],
+    ["--muted", "보조 글자"],
+    ["--accent", "강조"],
+    ["--accent-strong", "진한 강조"],
+    ["--paper", "본문 배경"],
+    ["--soft", "연한 배경"]
+  ];
+
   function clampByte(value) {
     return Math.max(0, Math.min(255, Math.round(Number(value) || 0)));
   }
@@ -168,6 +185,69 @@
     const notify = typeof options.notify === "function" ? options.notify : () => {};
     const registered = new WeakMap();
     let active = null;
+    let activePalette = null;
+
+    function closePalette() {
+      if (!activePalette) return;
+      doc.removeEventListener("pointerdown", handlePaletteOutside, true);
+      activePalette.button.classList.remove("active");
+      activePalette.panel.remove();
+      activePalette = null;
+    }
+
+    function handlePaletteOutside(event) {
+      if (!activePalette || activePalette.panel.contains(event.target) || activePalette.button.contains(event.target)) return;
+      closePalette();
+    }
+
+    function getThemeColors() {
+      const styles = view.getComputedStyle(doc.documentElement);
+      const seen = new Set();
+      return THEME_COLOR_TOKENS.map(([token, label]) => {
+        const color = cssColorToHex(styles.getPropertyValue(token));
+        return { token, label, color };
+      }).filter((item) => item.color && !seen.has(item.color) && seen.add(item.color));
+    }
+
+    function openPalette(input, button) {
+      if (activePalette?.button === button) {
+        closePalette();
+        return;
+      }
+      closePalette();
+      finish();
+      const panel = doc.createElement("div");
+      panel.className = "editor-theme-color-palette";
+      panel.setAttribute("role", "group");
+      panel.setAttribute("aria-label", "전체 스타일 색상");
+      getThemeColors().forEach(({ label, color }) => {
+        const swatch = doc.createElement("button");
+        swatch.type = "button";
+        swatch.className = "editor-theme-color-swatch";
+        swatch.style.setProperty("--editor-theme-color", color);
+        swatch.title = `${label} ${color}`;
+        swatch.setAttribute("aria-label", `${label} 색상 ${color} 적용`);
+        swatch.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          applyColor(input, color);
+          closePalette();
+        });
+        panel.appendChild(swatch);
+      });
+      doc.body.appendChild(panel);
+      const rect = button.getBoundingClientRect();
+      const width = panel.offsetWidth || 188;
+      const height = panel.offsetHeight || 48;
+      const left = Math.max(8, Math.min(view.innerWidth - width - 8, rect.left));
+      const below = rect.bottom + 6;
+      const top = below + height <= view.innerHeight - 8 ? below : Math.max(8, rect.top - height - 6);
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
+      activePalette = { input, button, panel };
+      button.classList.add("active");
+      doc.addEventListener("pointerdown", handlePaletteOutside, true);
+    }
 
     function finish(message = "") {
       if (!active) return false;
@@ -216,6 +296,7 @@
 
     function start(input, button) {
       if (!input || input.disabled) return false;
+      closePalette();
       finish();
       active = { input, button };
       button?.classList.add("active");
@@ -247,6 +328,18 @@
         start(input, button);
       });
       wrapper.appendChild(button);
+      const paletteButton = doc.createElement("button");
+      paletteButton.type = "button";
+      paletteButton.className = "editor-theme-color-button";
+      paletteButton.innerHTML = PALETTE_ICON;
+      paletteButton.title = "전체 스타일 색상에서 선택";
+      paletteButton.setAttribute("aria-label", `${inputLabel} 전체 스타일 색상에서 선택`);
+      paletteButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openPalette(input, paletteButton);
+      });
+      wrapper.appendChild(paletteButton);
       registered.set(input, button);
       return button;
     }

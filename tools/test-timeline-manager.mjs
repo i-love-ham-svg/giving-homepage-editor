@@ -18,10 +18,17 @@ assert(manager.isSection("history3"), "duplicated history section id should be v
 assert(!manager.isSection("process"), "process should not be a history section");
 
 const model = manager.createDefaultModel();
+const normalizedImageEvent = manager.normalizeModel({ groups: [{ id: "g", events: [{ id: "e", image: { dataUrl: "./assets/generated/example.png", fit: "cover", scale: 1.8, opacity: 52 } }] }] }).groups[0].events[0];
+assert(normalizedImageEvent.image.fit === "cover", "history image fit should persist");
+assert(normalizedImageEvent.image.scale === 1.8, "history image scale should persist");
+assert(normalizedImageEvent.image.opacity === 52, "history image opacity should persist");
 assert(model.groups.length === 4, "default history should have four month groups");
-assert(model.groups.every((group) => group.events.length === 2), "default groups should have two events");
+assert(model.groups[0].events.length === 3 && model.groups[1].events.length === 3, "2026 official groups should include the added agreements");
+assert(model.groups.slice(2).every((group) => group.events.length === 2), "archive groups should preserve their two events");
 assert(model.textStyles.phone.headline.size > 0, "phone headline style should exist");
 assert(model.groups[0].events[0].textStyles.desktop.title.size > 0, "event text styles should be independent");
+assert(model.groups.flatMap((group) => group.events).every((event) => event.image?.dataUrl?.startsWith("./assets/concept/")), "official history defaults should use disclosed concept assets");
+assert(model.groups.flatMap((group) => group.events).every((event) => event.image?.alt?.includes("콘셉트 이미지")), "history concept images should retain disclosure alt text");
 assert(Object.keys(manager.ICONS).length >= 8, "history icon library should offer useful choices");
 
 const colored = manager.normalizeModel({ groups: [{ periodColor: "#123abc", events: [{}] }] });
@@ -35,9 +42,9 @@ assert(model.groups.length === 4, "addGroup should not mutate the source model")
 
 const groupId = model.groups[0].id;
 const addedEvent = manager.addEvent(model, groupId);
-assert(addedEvent.groups[0].events.length === 3, "addEvent should append an event to its group");
+assert(addedEvent.groups[0].events.length === 4, "addEvent should append an event to its group");
 const removedEvent = manager.removeEvent(addedEvent, groupId, addedEvent.groups[0].events[0].id);
-assert(removedEvent.groups[0].events.length === 2, "removeEvent should remove the selected event");
+assert(removedEvent.groups[0].events.length === 3, "removeEvent should remove the selected event");
 
 const moved = manager.moveItem(model.groups, model.groups[3].id, "up");
 assert(moved[2].id === model.groups[3].id, "moveItem should reorder month groups");

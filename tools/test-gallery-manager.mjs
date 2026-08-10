@@ -28,6 +28,8 @@ assert.equal(manager.getFeaturedCount({ desktopStyle: "tape-yellow" }), 5);
 assert.equal(defaults.mobileStyle, "poster");
 assert.equal(defaults.categories.length, 5);
 assert.equal(defaults.items.length, 6);
+assert.equal(defaults.imageFitVersion, 2);
+assert.equal(defaults.items.every((item) => item.image?.fit === "contain"), true);
 assert.deepEqual(Array.from(defaults.heroOrder), Array.from(defaults.items, (item) => item.id));
 assert.equal(defaults.decorations.length, 5);
 assert.equal(defaults.textStyles.desktop.headline.size, 42);
@@ -63,6 +65,29 @@ const normalized = manager.normalizeModel({
 });
 assert.equal(normalized.desktopStyle, "collage");
 assert.equal(normalized.mobileStyle, "journal");
+assert.equal(normalized.items[0].image.fit, "contain");
+
+const legacyOfficialImage = manager.normalizeModel({
+  imageFitVersion: 1,
+  categories: [{ id: "all", label: "전체" }, { id: "activity", label: "활동" }],
+  items: [{
+    id: "legacy-official",
+    categoryId: "activity",
+    image: { dataUrl: "./assets/official-sacwc/8686126a0b0c2c4c.jpg", fit: "cover", scale: 1.4, x: 20, y: -10 }
+  }]
+});
+assert.equal(legacyOfficialImage.items[0].image.fit, "contain");
+assert.deepEqual(
+  { scale: legacyOfficialImage.items[0].image.scale, x: legacyOfficialImage.items[0].image.x, y: legacyOfficialImage.items[0].image.y },
+  { scale: 1, x: 0, y: 0 }
+);
+
+const explicitCustomCover = manager.normalizeModel({
+  imageFitVersion: 2,
+  categories: [{ id: "all", label: "전체" }, { id: "activity", label: "활동" }],
+  items: [{ id: "custom-cover", categoryId: "activity", image: { dataUrl: "data:image/png;base64,AA==", fit: "cover" } }]
+});
+assert.equal(explicitCustomCover.items[0].image.fit, "cover");
 assert.equal(normalized.items[0].image.name, "lesson.png");
 assert.deepEqual({ ...normalized.items[0].heroLayouts.desktop }, { x: 42, y: -18, scale: 1.4, rotation: 12 });
 assert.deepEqual({ ...normalized.items[0].heroLayouts.phone }, { x: -11, y: 25, scale: .72, rotation: -7 });

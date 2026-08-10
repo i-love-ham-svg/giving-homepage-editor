@@ -1,11 +1,11 @@
 Option Explicit
 
-Dim shell, nodePath, scriptPath, command
+Dim shell, fileSystem, workspacePath, command
 Set shell = CreateObject("WScript.Shell")
+Set fileSystem = CreateObject("Scripting.FileSystemObject")
 
-nodePath = "C:\Users\i-lov\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
-scriptPath = "C:\Users\i-lov\Documents\Codex\2026-07-03\3\tools\start-editor-server.mjs"
-command = Chr(34) & nodePath & Chr(34) & " " & Chr(34) & scriptPath & Chr(34) & " 4185"
+workspacePath = fileSystem.GetParentFolderName(fileSystem.GetParentFolderName(WScript.ScriptFullName))
+command = "cmd.exe /c " & Chr(34) & Chr(34) & workspacePath & "\open-editor.cmd" & Chr(34) & " --no-open" & Chr(34)
 
-shell.CurrentDirectory = "C:\Users\i-lov\Documents\Codex\2026-07-03\3"
+shell.CurrentDirectory = workspacePath
 shell.Run command, 0, False

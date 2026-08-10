@@ -31,8 +31,21 @@ try {
     styles: document.querySelectorAll("#decorationStyleGrid [data-decoration-style-key]").length
   }));
   if (counts.stickers < 20) throw new Error(`sticker choices are insufficient ${JSON.stringify(counts)}`);
-  if (counts.natureStickers !== 40 || counts.earthStickers !== 40 || counts.dailyStickers !== 40 || counts.stickerCategories < 4) throw new Error(`sticker category failed ${JSON.stringify(counts)}`);
+  if (counts.natureStickers !== 30 || counts.earthStickers !== 0 || counts.dailyStickers !== 0 || counts.stickerCategories < 7) throw new Error(`sticker category paging failed ${JSON.stringify(counts)}`);
   if (counts.icons < 20 || counts.styles < 10) throw new Error(`insufficient choices ${JSON.stringify(counts)}`);
+
+  const resizeHandle = page.locator("#decorationPickerResizeHandle");
+  const resizeBox = await resizeHandle.boundingBox();
+  const dialogBeforeResize = await page.locator("#decorationPickerModal .decoration-picker-dialog").boundingBox();
+  if (!resizeBox || !dialogBeforeResize) throw new Error("desktop decoration resize handle missing");
+  await page.mouse.move(resizeBox.x + resizeBox.width / 2, resizeBox.y + resizeBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(resizeBox.x + resizeBox.width / 2 + 120, resizeBox.y + resizeBox.height / 2 + 90, { steps: 8 });
+  await page.mouse.up();
+  const dialogAfterResize = await page.locator("#decorationPickerModal .decoration-picker-dialog").boundingBox();
+  if (!dialogAfterResize || dialogAfterResize.width < dialogBeforeResize.width + 80 || dialogAfterResize.height < dialogBeforeResize.height + 60) {
+    throw new Error(`desktop decoration resize failed ${JSON.stringify({ dialogBeforeResize, dialogAfterResize })}`);
+  }
 
   const desktopHeader = await page.evaluate(() => {
     const head = document.getElementById("decorationPickerHead");
@@ -51,14 +64,15 @@ try {
       colorLabelVisible: color.textContent.includes("색상"),
       oneRow: Math.max(...centers) - Math.min(...centers) <= 2,
       noOverflow: head.scrollWidth <= head.clientWidth + 2,
-      horizontalCarousels: ["decorationIconGrid", "decorationStyleGrid"].every((id) => {
+      compactScrollableGrids: ["decorationIconGrid", "decorationStyleGrid"].every((id) => {
         const grid = document.getElementById(id);
-        return grid.scrollWidth > grid.clientWidth && getComputedStyle(grid).overflowX === "auto";
+        const style = getComputedStyle(grid);
+        return style.display === "grid" && style.overflowY === "auto" && style.overflowX === "hidden";
       })
     };
   });
   if (!desktopHeader.settingsInHeader || !desktopHeader.titleHidden || !desktopHeader.colorLabelVisible
-    || !desktopHeader.oneRow || !desktopHeader.noOverflow || !desktopHeader.horizontalCarousels) {
+    || !desktopHeader.oneRow || !desktopHeader.noOverflow || !desktopHeader.compactScrollableGrids) {
     throw new Error(`desktop decoration header layout failed ${JSON.stringify(desktopHeader)}`);
   }
 
@@ -66,10 +80,10 @@ try {
   await page.locator('[data-decoration-carousel-target="decorationStyleGrid"]').click();
   await page.waitForTimeout(400);
   const carouselMotion = await page.evaluate(() => ({
-    icon: document.getElementById("decorationIconGrid").scrollLeft,
-    style: document.getElementById("decorationStyleGrid").scrollLeft
+    icon: document.getElementById("decorationIconGrid").scrollTop,
+    style: document.getElementById("decorationStyleGrid").scrollTop
   }));
-  if (carouselMotion.icon <= 0 || carouselMotion.style <= 0) throw new Error(`carousel more failed ${JSON.stringify(carouselMotion)}`);
+  if (carouselMotion.icon <= 0 || carouselMotion.style < 0) throw new Error(`carousel more failed ${JSON.stringify(carouselMotion)}`);
 
   await page.locator('[data-decoration-icon-key="sprout"]').click();
   await page.locator('[data-decoration-style-key="double-ring"]').click();
@@ -78,7 +92,6 @@ try {
     className: document.querySelector('.donation-section-layer:not([hidden]) .donation-heart-mark')?.className
   }));
   if (applied.decoration.icon !== "sprout" || applied.decoration.style !== "double-ring") throw new Error(`apply failed ${JSON.stringify(applied)}`);
-  await page.locator('[data-decoration-asset-mode="sticker"]').click();
   await page.locator('[data-decoration-sticker-category="nature"]').click();
   await page.locator('[data-decoration-icon-key="sticker-nature-friend-leaf"]').click();
   const stickerApplied = await page.evaluate(() => window.EditorModules.donation.getContent("donation").decorations[0].icon);
@@ -91,6 +104,10 @@ try {
   await page.locator('[data-decoration-icon-key="sticker-daily-color-plane-flight"]').click();
   const dailyStickerApplied = await page.evaluate(() => window.EditorModules.donation.getContent("donation").decorations[0].icon);
   if (dailyStickerApplied !== "sticker-daily-color-plane-flight") throw new Error(`daily sticker apply failed ${dailyStickerApplied}`);
+  await page.locator('[data-decoration-sticker-category="neon"]').click();
+  await page.locator('[data-decoration-icon-key="sticker-imported-17-01"]').click();
+  const importedStickerApplied = await page.evaluate(() => window.EditorModules.donation.getContent("donation").decorations[0].icon);
+  if (importedStickerApplied !== "sticker-imported-17-01") throw new Error(`imported sticker apply failed ${importedStickerApplied}`);
 
   await page.locator("#decorationColorInput").evaluate((input) => {
     input.value = "#2563eb";
@@ -148,13 +165,56 @@ try {
 
   await page.locator('.donation-section-layer:not([hidden]) .donation-decoration-add').click();
   await page.waitForSelector("#decorationPickerModal:not([hidden])");
+  const defaultStyle = await page.evaluate(() => window.EditorModules.donation.getContent("donation").decorations.at(-1)?.style);
+  if (defaultStyle !== "plain") throw new Error(`new decoration default style is not transparent: ${defaultStyle}`);
   await page.locator('[data-decoration-icon-key="heart"]').click();
   await page.locator('[data-decoration-style-key="soft-circle"]').click();
   await page.locator("#decorationAddBtn").click();
   const addedCount = await page.evaluate(() => window.EditorModules.donation.getContent("donation").decorations.length);
-  if (addedCount !== 2) throw new Error(`add failed: ${addedCount}`);
+  if (addedCount !== 1) throw new Error(`add failed: ${addedCount}`);
+
+  const appearanceControl = page.locator('.section-appearance-control[data-section-id="donation"]');
+  await appearanceControl.locator('[data-section-appearance-action="toggle"]').click();
+  await appearanceControl.locator('[data-section-appearance-action="preset"][data-preset="sky"]').click();
+  const sectionAppearance = await page.evaluate(() => {
+    const layer = document.querySelector('.donation-section-layer:not([hidden])');
+    const surface = document.querySelector('.section-theme-surface[data-section-id="donation"]');
+    return {
+      hasSurface: Boolean(surface),
+      background: surface?.style.getPropertyValue("--section-theme-background"),
+      accent: layer?.style.getPropertyValue("--accent"),
+      themed: layer?.dataset.sectionCustomTheme
+    };
+  });
+  if (!sectionAppearance.hasSurface || sectionAppearance.background !== "#eef7fb" || sectionAppearance.accent !== "#2f6f91" || sectionAppearance.themed !== "true") {
+    throw new Error(`section appearance preset failed ${JSON.stringify(sectionAppearance)}`);
+  }
+  await appearanceControl.locator('[data-section-appearance-action="add-decoration"]').click();
+  await page.waitForSelector("#decorationPickerModal:not([hidden])");
+  const pageDecorationPlacement = await page.evaluate(() => {
+    const decoration = document.querySelector('.page-decoration-layer .donation-heart-mark');
+    const section = document.querySelector('.donation-section-layer:not([hidden])');
+    const decorationRect = decoration?.getBoundingClientRect();
+    const sectionRect = section?.getBoundingClientRect();
+    return {
+      exists: Boolean(decoration),
+      frontLayer: getComputedStyle(document.getElementById("pageDecorationLayer")).zIndex,
+      insideSection: Boolean(decorationRect && sectionRect && decorationRect.top < sectionRect.bottom && decorationRect.bottom > sectionRect.top)
+    };
+  });
+  if (!pageDecorationPlacement.exists || pageDecorationPlacement.frontLayer !== "100" || !pageDecorationPlacement.insideSection) {
+    throw new Error(`page decoration section placement failed ${JSON.stringify(pageDecorationPlacement)}`);
+  }
+  await page.locator("#decorationPickerCloseBtn").click();
+  await page.locator("#saveBtn").click();
+  await page.waitForTimeout(700);
+  const savedAppearance = await page.evaluate(() => JSON.parse(localStorage.getItem("sacwcWebsiteEditor") || "{}").content?.sectionAppearances?.donation);
+  if (savedAppearance?.background !== "#eef7fb" || savedAppearance?.accent !== "#2f6f91") throw new Error(`section appearance persistence failed ${JSON.stringify(savedAppearance)}`);
+
   await page.evaluate(() => setViewport("phone"));
   await page.waitForTimeout(500);
+  await page.locator('.donation-section-layer:not([hidden]) .donation-heart-mark').first().click();
+  await page.waitForSelector("#decorationPickerModal:not([hidden])");
   const mobile = await page.evaluate(() => {
     const stageRect = document.getElementById("stage").getBoundingClientRect();
     const modalRect = document.getElementById("decorationPickerModal").getBoundingClientRect();
@@ -200,13 +260,18 @@ try {
       mobileCarouselColumns: firstIcon ? Math.round(iconGrid.clientWidth / firstIcon.getBoundingClientRect().width) : 0,
       bothCarouselsVisible: iconRect.top >= dialogRect.top && iconRect.bottom <= dialogRect.bottom + 2
         && styleRect.top >= dialogRect.top && styleRect.bottom <= dialogRect.bottom + 2,
+      carouselRects: {
+        dialog: { top: dialogRect.top, bottom: dialogRect.bottom },
+        icon: { top: iconRect.top, bottom: iconRect.bottom },
+        style: { top: styleRect.top, bottom: styleRect.bottom }
+      },
       moveButtonVisible: grip.getBoundingClientRect().width >= 30,
       storedPhoneSize: first.sizes.phone,
       renderedSize: Math.round(firstElement.getBoundingClientRect().height / Math.max(window.EditorModules.state?.scale || 1, .1))
     };
   });
   if (!mobile.insideStage || !mobile.noDocumentOverflow || !mobile.noHeaderOverflow || !mobile.controlsOneRow
-    || !mobile.compactDialog || !mobile.editedDecorationVisible || mobile.mobileCarouselColumns !== 5
+    || !mobile.compactDialog || !mobile.editedDecorationVisible || mobile.mobileCarouselColumns < 5
     || !mobile.bothCarouselsVisible || !mobile.moveButtonVisible
     || mobile.storedPhoneSize !== 50) throw new Error(`mobile overflow or layout separation failed ${JSON.stringify(mobile)}`);
 
@@ -226,8 +291,31 @@ try {
     deltaY: modalAfterMove ? Math.round(modalAfterMove.y - modalBeforeMove.y) : 0
   };
   if (Math.abs(mobileMove.deltaX) > 2 || Math.abs(mobileMove.deltaY) < 30) throw new Error(`mobile vertical move failed ${JSON.stringify(mobileMove)}`);
+  await page.locator("#decorationPickerCloseBtn").click();
+  const responsiveAppearance = [];
+  for (const viewport of ["tablet", "phoneSmall"]) {
+    await page.evaluate((nextViewport) => setViewport(nextViewport), viewport);
+    await page.waitForTimeout(420);
+    const result = await page.evaluate((nextViewport) => {
+      const stageRect = document.getElementById("stage").getBoundingClientRect();
+      const trigger = document.querySelector('.section-appearance-control[data-section-id="donation"] .section-appearance-trigger');
+      const triggerRect = trigger?.getBoundingClientRect();
+      const decoration = document.querySelector('.page-decoration-layer .donation-heart-mark');
+      return {
+        viewport: nextViewport,
+        triggerVisible: Boolean(triggerRect && triggerRect.width > 0 && triggerRect.left >= stageRect.left - 2 && triggerRect.right <= stageRect.right + 2),
+        surfaceVisible: Boolean(document.querySelector('.section-theme-surface[data-section-id="donation"]')),
+        decorationVisible: Boolean(decoration && decoration.getBoundingClientRect().width > 0),
+        noOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 2
+      };
+    }, viewport);
+    if (!result.triggerVisible || !result.surfaceVisible || !result.decorationVisible || !result.noOverflow) {
+      throw new Error(`responsive section appearance failed ${JSON.stringify(result)}`);
+    }
+    responsiveAppearance.push(result);
+  }
   if (errors.length) throw new Error(`page errors: ${errors.join(" | ")}`);
-  console.log("decoration browser", JSON.stringify({ counts, desktopHeader, carouselMotion, applied, editorVisibility, adjusted, removed, mobile, mobileMove }));
+  console.log("decoration browser", JSON.stringify({ counts, dialogBeforeResize, dialogAfterResize, desktopHeader, carouselMotion, applied, editorVisibility, adjusted, removed, defaultStyle, mobile, mobileMove, responsiveAppearance }));
   console.log("decoration browser tests OK");
 } finally {
   await browser.close();

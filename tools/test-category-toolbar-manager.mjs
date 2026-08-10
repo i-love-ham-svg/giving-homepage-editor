@@ -34,12 +34,16 @@ assert.equal(typeof manager.create, "function");
 const viewButton = createButton();
 const addButton = createButton();
 const deleteButton = createButton();
+const previousButton = createButton();
+const nextButton = createButton();
 const calls = [];
-const runtime = manager.create({ viewButton, addButton, deleteButton });
+const runtime = manager.create({ viewButton, addButton, deleteButton, previousButton, nextButton });
 
 assert.equal(viewButton.hidden, true);
 assert.equal(addButton.hidden, true);
 assert.equal(deleteButton.hidden, true);
+assert.equal(previousButton.hidden, true);
+assert.equal(nextButton.hidden, true);
 
 runtime.setContext({
   kind: "program",
@@ -47,9 +51,15 @@ runtime.setContext({
   addLabel: "Add",
   deleteLabel: "Delete",
   canDelete: false,
+  previousLabel: "Previous",
+  nextLabel: "Next",
+  canPrevious: true,
+  canNext: false,
   onView: () => calls.push("view"),
   onAdd: () => calls.push("add"),
-  onDelete: () => calls.push("delete")
+  onDelete: () => calls.push("delete"),
+  onPrevious: () => calls.push("previous"),
+  onNext: () => calls.push("next")
 });
 assert.equal(viewButton.hidden, false);
 assert.equal(viewButton.textContent, "View");
@@ -58,7 +68,9 @@ assert.equal(deleteButton.disabled, true);
 viewButton.click();
 addButton.click();
 deleteButton.click();
-assert.deepEqual(calls, ["view", "add"]);
+previousButton.click();
+nextButton.click();
+assert.deepEqual(calls, ["view", "add", "previous"]);
 
 runtime.clear();
 assert.equal(viewButton.hidden, true);

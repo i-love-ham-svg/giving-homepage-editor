@@ -60,7 +60,11 @@
     return {
       size: Math.max(8, Math.min(96, Number(source.size) || fallback.size)),
       color: /^#[0-9a-f]{6}$/i.test(source.color) ? source.color : fallback.color,
-      font: ["sans", "serif", "koreanBrush", "koreanKcc", "koreanNanumBrush", "koreanLoveLetter", "englishScript", "englishSignature"].includes(source.font) ? source.font : fallback.font
+      font: ["sans", "serif", "koreanBrush", "koreanKcc", "koreanNanumBrush", "koreanLoveLetter", "englishScript", "englishSignature"].includes(source.font) ? source.font : fallback.font,
+      align: ["left", "center", "right"].includes(source.align) ? source.align : (fallback.align || ""),
+      boxWidth: Math.max(30, Math.min(100, Number(source.boxWidth ?? fallback.boxWidth ?? 100))),
+      boxOffsetX: Math.max(-320, Math.min(320, Number(source.boxOffsetX ?? fallback.boxOffsetX ?? 0))),
+      boxOffsetY: Math.max(-320, Math.min(320, Number(source.boxOffsetY ?? fallback.boxOffsetY ?? 0)))
     };
   }
 
@@ -109,7 +113,7 @@
       const sourceLayout = item.layouts?.[viewport] ?? item.layout?.[viewport] ?? {};
       layouts[viewport] = {
         x: clamp(sourceLayout.x ?? fallbackLayout.x, 2, 98),
-        y: clamp(sourceLayout.y ?? fallbackLayout.y, 18, 4000)
+        y: clamp(sourceLayout.y ?? fallbackLayout.y, 18, 20000)
       };
       sizes[viewport] = clamp(item.sizes?.[viewport] ?? item.size ?? DECORATION_SIZE_DEFAULTS[viewport], 24, 220);
     });
@@ -118,6 +122,7 @@
       icon: base.icon || "heart",
       style: base.style,
       color: normalizeColor(item.color),
+      layer: item.layer === "back" ? "back" : "front",
       layouts,
       sizes
     };
@@ -137,17 +142,18 @@
 
   function createDefaultModel() {
     return normalizeModel({
-      headline: "당신의 마음이 지역의 변화를 만듭니다",
-      description: "작은 후원도 이웃의 일상에는 큰 힘이 됩니다.",
-      note: "후원 방식에 따라 편하게 참여하실 수 있습니다.",
-      cta: "후원하러 가기",
+      headline: "나눔의 마음이 모여 희망이 됩니다",
+      description: "행복한 나눔의 손길이 따뜻한 송악 지역사회를 만듭니다.",
+      note: "농협 351-1172-9628-93 · 예금주 송악사회복지관 · 문의 041-353-5077",
+      cta: "후원 신청하기",
       cards: [
-        { id: "donation-card-1", title: "정기후원", icon: "recurring" },
-        { id: "donation-card-2", title: "일시후원", icon: "handHeart" },
-        { id: "donation-card-3", title: "물품후원", icon: "boxHeart" },
-        { id: "donation-card-4", title: "후원문의", icon: "message" }
+        { id: "donation-card-1", title: "기금 후원", icon: "recurring" },
+        { id: "donation-card-2", title: "결연 후원", icon: "handHeart" },
+        { id: "donation-card-3", title: "지정 후원", icon: "heart" },
+        { id: "donation-card-4", title: "물품 후원", icon: "boxHeart" },
+        { id: "donation-card-5", title: "후원 문의", icon: "message" }
       ],
-      nextCardId: 5
+      nextCardId: 6
     });
   }
 
@@ -171,10 +177,10 @@
     const decorations = rawDecorations.map(normalizeDecorationItem).slice(0, 24);
     const maxDecorationId = decorations.reduce((max, item) => Math.max(max, Number(item.id.replace(/\D/g, "")) || 0), 0);
     return {
-      headline: String(model.headline || "당신의 마음이 지역의 변화를 만듭니다"),
-      description: String(model.description || "작은 후원도 이웃의 일상에는 큰 힘이 됩니다."),
-      note: String(model.note || "후원 방식에 따라 편하게 참여하실 수 있습니다."),
-      cta: String(model.cta || "후원하러 가기"),
+      headline: String(model.headline || "나눔의 마음이 모여 희망이 됩니다"),
+      description: String(model.description || "행복한 나눔의 손길이 따뜻한 송악 지역사회를 만듭니다."),
+      note: String(model.note || "농협 351-1172-9628-93 · 예금주 송악사회복지관 · 문의 041-353-5077"),
+      cta: String(model.cta || "후원 신청하기"),
       decorations,
       nextDecorationId: Math.max(Number(model.nextDecorationId) || 1, maxDecorationId + 1),
       backgroundColor: null,
@@ -211,10 +217,10 @@
     if (next.decorations.length >= 24) return next;
     const id = `donation-decoration-${next.nextDecorationId++}`;
     const offset = (next.decorations.length % 6) * 4;
-    const decoration = normalizeDecorationItem({ id, icon: "heart", style: "soft-circle" }, next.decorations.length);
+    const decoration = normalizeDecorationItem({ id, icon: "heart", style: "plain" }, next.decorations.length);
     decoration.layouts[viewport] = {
       x: clamp(50 + offset, 8, 92),
-      y: clamp(90 + offset * 3, 24, 4000)
+      y: clamp(90 + offset * 3, 24, 20000)
     };
     next.decorations.push(decoration);
     return next;

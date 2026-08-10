@@ -18,7 +18,7 @@ assert(manager.isSection("process12"), "duplicated process section id should be 
 assert(!manager.isSection("program"), "program section should not be a process section");
 
 const model = manager.createDefaultModel();
-assert(model.steps.length === 6, "default process should have six steps");
+assert(model.steps.length === 5, "default process should match the five official case-management steps");
 assert(model.highlights.length === 3, "default process should have three highlights");
 assert(model.textStyles.phone.headline.size > 0, "phone headline style should exist");
 assert(Boolean(manager.ICONS[model.steps[0].icon]), "default step icon should exist");
@@ -32,17 +32,17 @@ assert(manager.normalizeModel({ ...model, heights: { desktop: 900 } }).heights.d
   "current process heights should be preserved");
 
 const added = manager.addStep(model);
-assert(added.steps.length === 7, "addStep should append a step");
-assert(model.steps.length === 6, "addStep should not mutate the source model");
+assert(added.steps.length === 6, "addStep should append a step");
+assert(model.steps.length === 5, "addStep should not mutate the source model");
 const insertedStep = manager.addStep(model, model.steps[0].id);
-assert(insertedStep.steps.length === 7 && insertedStep.steps[1].title === "새 단계",
+assert(insertedStep.steps.length === 6 && insertedStep.steps[1].title === "새 단계",
   "addStep should insert immediately after the selected step");
 
-const moved = manager.moveItem(added.steps, added.steps[6].id, "up");
-assert(moved[5].id === added.steps[6].id, "moveItem should move a step forward");
+const moved = manager.moveItem(added.steps, added.steps[5].id, "up");
+assert(moved[4].id === added.steps[5].id, "moveItem should move a step forward");
 
 const removed = manager.removeStep(added, added.steps[0].id);
-assert(removed.steps.length === 6, "removeStep should remove a step");
+assert(removed.steps.length === 5, "removeStep should remove a step");
 
 const noSteps = model.steps.reduce((current, step) => manager.removeStep(current, step.id), model);
 assert(noSteps.steps.length === 0, "all process steps should be removable");

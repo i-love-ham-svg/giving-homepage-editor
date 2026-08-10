@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const SCHEMA_VERSION = 4;
+  const SCHEMA_VERSION = 5;
 
   function clone(value) {
     return typeof structuredClone === "function"
@@ -37,21 +37,27 @@
     return sectionId === "gallery" || /^gallery\d+$/.test(String(sectionId));
   }
 
+  function isEssentialSection(sectionId) {
+    return ["facility", "organization", "location", "volunteer", "notice", "schedule", "footer"].includes(String(sectionId))
+      || /^essential\d+$/.test(String(sectionId));
+  }
+
   function normalizeSectionType(section = {}, id = "") {
     const type = section.type ?? section.kind;
-    if (type === "mainIntro" || type === "greeting" || type === "program" || type === "process" || type === "history" || type === "donation" || type === "gallery") return type;
+    if (type === "mainIntro" || type === "greeting" || type === "program" || type === "process" || type === "history" || type === "donation" || type === "gallery" || type === "essential") return type;
     if (isMainIntroSection(id)) return "mainIntro";
     if (isProgramSection(id)) return "program";
     if (isProcessSection(id)) return "process";
     if (isHistorySection(id)) return "history";
     if (isDonationSection(id)) return "donation";
     if (isGallerySection(id)) return "gallery";
+    if (isEssentialSection(id)) return "essential";
     return "greeting";
   }
 
   function normalizeSectionId(section = {}, index = 0) {
     const rawId = section.id ?? section.sectionId;
-    if (isMainIntroSection(rawId) || isGreetingSection(rawId) || isProgramSection(rawId) || isProcessSection(rawId) || isHistorySection(rawId) || isDonationSection(rawId) || isGallerySection(rawId)) return String(rawId);
+    if (isMainIntroSection(rawId) || isGreetingSection(rawId) || isProgramSection(rawId) || isProcessSection(rawId) || isHistorySection(rawId) || isDonationSection(rawId) || isGallerySection(rawId) || isEssentialSection(rawId)) return String(rawId);
     const type = normalizeSectionType(section, rawId);
     if (type === "mainIntro") return index === 0 ? "mainIntro" : `mainIntro${index + 1}`;
     if (type === "program") return index === 0 ? "program" : `program${index + 1}`;
@@ -59,11 +65,12 @@
     if (type === "history") return index === 0 ? "history" : `history${index + 1}`;
     if (type === "donation") return index === 0 ? "donation" : `donation${index + 1}`;
     if (type === "gallery") return index === 0 ? "gallery" : `gallery${index + 1}`;
+    if (type === "essential") return `essential${index + 1}`;
     return index === 0 ? "greeting" : `greeting${index + 1}`;
   }
 
   function normalizeOrderId(sectionId) {
-    if (isMainIntroSection(sectionId) || isGreetingSection(sectionId) || isProgramSection(sectionId) || isProcessSection(sectionId) || isHistorySection(sectionId) || isDonationSection(sectionId) || isGallerySection(sectionId)) return String(sectionId);
+    if (isMainIntroSection(sectionId) || isGreetingSection(sectionId) || isProgramSection(sectionId) || isProcessSection(sectionId) || isHistorySection(sectionId) || isDonationSection(sectionId) || isGallerySection(sectionId) || isEssentialSection(sectionId)) return String(sectionId);
     return "greeting";
   }
 
@@ -185,6 +192,14 @@
         hidden: section.hidden,
         content: section.content
       }));
+    next.content.essentialSections = normalizedSections
+      .filter((section) => section.type === "essential")
+      .map((section) => ({
+        sectionId: section.id,
+        label: section.label,
+        hidden: section.hidden,
+        content: section.content
+      }));
 
     const mergedLayouts = clone(next.layouts ?? {});
     const mergedTextStyles = clone(next.textStyles ?? {});
@@ -207,6 +222,7 @@
     hydrateLegacyContentFromSectionDocument,
     isGreetingSection,
     isDonationSection,
+    isEssentialSection,
     isHistorySection,
     isGallerySection,
     isMainIntroSection,

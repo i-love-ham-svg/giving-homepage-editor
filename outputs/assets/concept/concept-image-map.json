@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-06",
+  "generatorMode": "imagegen-built-in",
+  "policy": {
+    "style": "photorealistic-natural",
+    "sharedConstraints": [
+      "no text",
+      "no logo",
+      "no watermark",
+      "no readable signage",
+      "all people are fictional or non-identifiable"
+    ],
+    "disclosure": "Representative and history assets are concept images, not documentary photographs. Keep the Korean disclosure '콘셉트 이미지' in UI alt or caption text.",
+    "publicationNote": "Replace the fictional representative portrait with an approved real portrait before public release, or retain an explicit concept-image disclosure."
+  },
+  "assets": [
+    {
+      "id": "representative-concept",
+      "path": "./assets/concept/representative-concept.png",
+      "target": "state.assets.photo.dataUrl; additional greeting sections: state.greetingSections[sectionId].assets.photo.dataUrl",
+      "domConsumer": "#photoFrame #photoImage",
+      "alt": "가상의 복지관 대표자 콘셉트 이미지",
+      "caption": "편집 시안용 콘셉트 이미지",
+      "prompt": "Photorealistic portrait of a completely fictional Korean community welfare center representative, late 50s, warm and trustworthy, understated navy suit, bright modern welfare center interior, vertical 4:5 editorial portrait, natural daylight and skin texture; no text, logo, watermark, badge, readable signage, or resemblance to a real person."
+    },
+    {
+      "id": "facility-external",
+      "path": "./assets/concept/facility-external.png",
+      "target": "getFacilityDetailSectionId('selector') -> items[id='facility-detail-floor-external'].imageUrl",
+      "domConsumer": ".facility-detail-floor-panel[data-essential-item-id='facility-detail-floor-external'] .facility-detail-floor-symbol img",
+      "alt": "주차장과 농구장이 있는 외부 시설 콘셉트 이미지",
+      "prompt": "Photorealistic Korean community welfare center exterior with an accessible visitor parking space and community basketball half-court, landscaped greenery, horizontal 3:2, welcoming daylight; no identifiable people, text, logo, watermark, or readable signs."
+    },
+    {
+      "id": "facility-rooftop",
+      "path": "./assets/concept/facility-rooftop.png",
+      "target": "getFacilityDetailSectionId('selector') -> items[id='facility-detail-floor-3f'].imageUrl",
+      "domConsumer": ".facility-detail-floor-panel[data-essential-item-id='facility-detail-floor-3f'] .facility-detail-floor-symbol img",
+      "alt": "게이트볼장과 테라스가 있는 옥상 시설 콘셉트 이미지",
+      "prompt": "Photorealistic welfare center rooftop with compact gateball court, terrace benches, planters, shade and safe railings, Korean suburban skyline, horizontal 3:2, gentle morning light; no identifiable people, text, logo, watermark, or readable signs."
+    },
+    {
+      "id": "facility-second-floor",
+      "path": "./assets/concept/facility-second-floor.png",
+      "target": "getFacilityDetailSectionId('selector') -> items[id='facility-detail-floor-2f'].imageUrl",
+      "domConsumer": ".facility-detail-floor-panel[data-essential-item-id='facility-detail-floor-2f'] .facility-detail-floor-symbol img",
+      "alt": "프로그램실과 강당이 있는 2층 문화·교육 공간 콘셉트 이미지",
+      "prompt": "Photorealistic bright second-floor culture and education zone in a Korean welfare center, flexible program classroom and small community hall, movable tables, acoustic panels, accessible circulation, horizontal 3:2; no people, text, logo, watermark, or readable signs."
+    },
+    {
+      "id": "facility-first-floor",
+      "path": "./assets/concept/facility-first-floor.png",
+      "target": "getFacilityDetailSectionId('selector') -> items[id='facility-detail-floor-1f'].imageUrl",
+      "domConsumer": ".facility-detail-floor-panel[data-essential-item-id='facility-detail-floor-1f'] .facility-detail-floor-symbol img",
+      "alt": "상담·생활·운동 기능을 담은 1층 공간 콘셉트 이미지",
+      "prompt": "Photorealistic welcoming first-floor welfare center living and consultation zone, discreet counseling lounge with glimpses of dining and light exercise areas, barrier-free warm wood interior, horizontal 3:2; no identifiable people, text, logo, watermark, or readable signs."
+    },
+    {
+      "id": "facility-basement",
+      "path": "./assets/concept/facility-basement.png",
+      "target": "getFacilityDetailSectionId('selector') -> items[id='facility-detail-floor-b1'].imageUrl",
+      "domConsumer": ".facility-detail-floor-panel[data-essential-item-id='facility-detail-floor-b1'] .facility-detail-floor-symbol img",
+      "alt": "정돈된 지하 시설 관리 공간 콘셉트 이미지",
+      "prompt": "Photorealistic clean and orderly basement mechanical and safety management area in a Korean public welfare facility, boiler and electrical equipment with safe access aisle, horizontal 3:2; no people, text, logo, watermark, readable labels, or exposed hazards."
+    },
+    {
+      "id": "history-senior-class-concept",
+      "path": "./assets/concept/history-senior-class-concept.png",
+      "target": "state.historySections.history.groups[*].events[title='송악실버학당 5기 개강'].image.dataUrl",
+      "domConsumer": ".history-event-row[data-history-event-id] .history-event-image img",
+      "alt": "어르신 프로그램 활동 콘셉트 이미지",
+      "caption": "콘셉트 이미지",
+      "prompt": "Photorealistic recreated concept scene of fictional Korean older adults enjoying gentle music and rhythm activities with a fictional instructor in a welfare center, horizontal 4:3 candid group scene, warm and dignified; no text, logo, watermark, readable signs, real-person resemblance, or medical stereotypes."
+    },
+    {
+      "id": "history-partnership-concept",
+      "path": "./assets/concept/history-partnership-concept.png",
+      "target": "history events: 노인복지증진 업무협약, AI+디지털 업무협약, 다비치안경 업무협약, 지역개발·복지증진 업무협약 -> image.dataUrl",
+      "domConsumer": ".history-event-row[data-history-event-id] .history-event-image img",
+      "alt": "기관 간 협약을 재현한 콘셉트 이미지",
+      "caption": "콘셉트 이미지",
+      "prompt": "Photorealistic generic partnership ceremony concept in a Korean meeting room, hands of two fictional representatives shaking across a table with softly blurred fictional colleagues, horizontal 4:3; no text, logo, watermark, readable documents, real branding, or resemblance to real people."
+    },
+    {
+      "id": "history-inauguration-concept",
+      "path": "./assets/concept/history-inauguration-concept.png",
+      "target": "history events: 송악사회복지관 수탁기념식, 제2대 김형철 관장 취임 -> image.dataUrl",
+      "domConsumer": ".history-event-row[data-history-event-id] .history-event-image img",
+      "alt": "수탁·취임 행사를 재현한 콘셉트 이미지",
+      "caption": "콘셉트 이미지",
+      "prompt": "Photorealistic generic inauguration and new-operations ceremony concept in a Korean welfare center, fictional administrator at a simple podium and fictional staff applauding, tasteful flowers, horizontal 4:3; no text, logo, watermark, readable banners, or resemblance to real people."
+    },
+    {
+      "id": "history-community-event-concept",
+      "path": "./assets/concept/history-community-event-concept.png",
+      "target": "history events: 제3회 후원자·자원봉사자 감사의 날, 제2회 행복나눔 페스티벌 -> image.dataUrl",
+      "domConsumer": ".history-event-row[data-history-event-id] .history-event-image img",
+      "alt": "지역축제와 감사 행사를 재현한 콘셉트 이미지",
+      "caption": "콘셉트 이미지",
+      "prompt": "Photorealistic concept of a Korean welfare center community appreciation and neighborhood festival with fictional volunteers, families and older residents, simple booths, horizontal 4:3, warm inclusive late-afternoon light; no text, logo, watermark, readable signs, brands, or identifiable children."
+    },
+    {
+      "id": "history-opening-concept",
+      "path": "./assets/concept/history-opening-concept.png",
+      "target": "state.historySections.history.groups[*].events[title='송악사회복지관 개관식'].image.dataUrl",
+      "domConsumer": ".history-event-row[data-history-event-id] .history-event-image img",
+      "alt": "복지관 개관을 재현한 콘셉트 이미지",
+      "caption": "콘셉트 이미지",
+      "prompt": "Photorealistic concept of the opening day of a modern Korean community welfare center, open glass entrance with greenery and fictional residents entering from behind, horizontal 4:3, optimistic morning light; no text, logo, watermark, readable signage, recognizable real building, or identifiable faces."
+    }
+  ]
+}

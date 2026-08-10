@@ -174,6 +174,23 @@
     ))
   ]));
 
+  // Google Drive 원본 40장을 웹용 투명 자산으로 분리한 색상 보존 스티커.
+  // 생성 파일과 분류 정보는 build-sticker-library.py가 단일 원본으로 관리한다.
+  const IMPORTED_STICKERS = Object.freeze(Object.fromEntries(
+    (window.EditorImportedStickerManifest?.items || []).map((item) => [
+      item.id,
+      {
+        label: item.label,
+        category: "sticker",
+        stickerCategory: item.category,
+        image: item.asset,
+        preserveColor: true,
+        stickerStyle: item.style,
+        taxonomyId: item.taxonomyId
+      }
+    ])
+  ));
+
   const ICONS = Object.freeze({
     "clipboard-edit": { label: "상담 신청", body: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 9h6M8 13h4M14.5 17.5l4-4 2 2-4 4-3 .8z"/>' },
     "users-chat": { label: "초기 상담", body: '<circle cx="8" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><path d="M2.5 20c.4-4 2.2-6 5.5-6s5.1 2 5.5 6M12.5 20c.3-3.2 1.8-5 4.5-5s4.2 1.8 4.5 5M10 3h7l3 3-3 3h-2"/>' },
@@ -236,7 +253,8 @@
     "sticker-speech-smile": { label: "이야기 친구", category: "sticker", body: '<path d="M3 4h18v13H9l-6 4z"/><circle cx="8.5" cy="10" r=".5" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10" r=".5" fill="currentColor" stroke="none"/><path d="M9.5 13c1.5 1 3.5 1 5 0"/>' },
     ...NATURE_STICKERS,
     ...EARTH_STICKERS,
-    ...DAILY_STICKERS
+    ...DAILY_STICKERS,
+    ...IMPORTED_STICKERS
   });
 
   const STICKER_KEYS = Object.freeze(
@@ -245,15 +263,27 @@
 
   const STICKER_CATEGORIES = Object.freeze({
     nature: Object.freeze({
-      label: "자연",
+      label: "자연·계절",
       keys: Object.freeze(STICKER_KEYS.filter((key) => ICONS[key].stickerCategory === "nature"))
+    }),
+    animal: Object.freeze({
+      label: "동물",
+      keys: Object.freeze(STICKER_KEYS.filter((key) => ICONS[key].stickerCategory === "animal"))
+    }),
+    botanical: Object.freeze({
+      label: "보태니컬",
+      keys: Object.freeze(STICKER_KEYS.filter((key) => ICONS[key].stickerCategory === "botanical"))
+    }),
+    neon: Object.freeze({
+      label: "형광·네온",
+      keys: Object.freeze(STICKER_KEYS.filter((key) => ICONS[key].stickerCategory === "neon"))
     }),
     earth: Object.freeze({
       label: "지구",
       keys: Object.freeze(STICKER_KEYS.filter((key) => ICONS[key].stickerCategory === "earth"))
     }),
     daily: Object.freeze({
-      label: "일상",
+      label: "사람·일상",
       keys: Object.freeze(STICKER_KEYS.filter((key) => ICONS[key].stickerCategory === "daily"))
     }),
     basic: Object.freeze({
@@ -263,7 +293,7 @@
   });
 
   const DECORATION_STYLES = Object.freeze({
-    plain: { label: "배경 없음" },
+    plain: { label: "투명" },
     "soft-circle": { label: "은은한 원" },
     "solid-circle": { label: "채운 원" },
     ring: { label: "원형 테두리" },
@@ -292,6 +322,9 @@
 
   function renderIcon(iconKey, attributes = "") {
     const icon = ICONS[iconKey] || ICONS.heart;
+    if (icon.image) {
+      return `<svg class="editor-raster-sticker" viewBox="0 0 24 24" aria-hidden="true" focusable="false" ${attributes}><image href="${icon.image}" x="0" y="0" width="24" height="24" preserveAspectRatio="xMidYMid meet"/></svg>`;
+    }
     if (icon.mask) {
       const maskId = `editor-sticker-mask-${iconKey.replace(/[^a-z0-9_-]/gi, "-")}`;
       return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" ${attributes}><mask id="${maskId}"><image href="${icon.mask}" x="0" y="0" width="24" height="24" preserveAspectRatio="xMidYMid meet"/></mask><rect x="0" y="0" width="24" height="24" fill="currentColor" stroke="none" mask="url(#${maskId})"/></svg>`;
@@ -304,6 +337,7 @@
     ICONS,
     STICKER_CATEGORIES,
     STICKER_KEYS,
+    IMPORTED_STICKER_KEYS: Object.freeze(Object.keys(IMPORTED_STICKERS)),
     normalizeDecoration,
     normalizeIcon,
     renderIcon
