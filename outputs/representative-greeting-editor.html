@@ -15210,6 +15210,12 @@
     .sns-auth-layout[data-sns-layout="drive-split"] .sns-auth-panel::before { display: none; }
     .sns-auth-layout[data-sns-layout="drive-split"] .sns-auth-buttons { margin-top: 0; }
 
+    /* PC에서는 세 로그인 버튼을 첫 화면에서 바로 선택할 수 있도록 제목 아래에 배치한다. */
+    .stage.desktop .sns-auth-layout[data-sns-layout="drive-split"] .sns-auth-panel {
+      align-self: start;
+      margin-top: clamp(220px, 18vw, 260px);
+    }
+
     /* Account edit controls belong to the login task, so keep them grouped immediately above the provider buttons. */
     .sns-auth-edit-actions {
       position: absolute;
