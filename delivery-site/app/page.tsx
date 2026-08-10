@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { BoardApp } from "./board-app";
-
-export const metadata: Metadata = {
-  title: "소통게시판 | 송악사회복지관",
-  description: "송악사회복지관 소식과 주민 이야기를 사진·영상으로 나누는 소통게시판",
-};
-
 export default function Home() {
-  return <BoardApp />;
+  return (
+    <main className="editor-shell">
+      <iframe
+        className="editor-frame"
+        src="/songak/representative-greeting-editor.html?v=20260810-public-delivery"
+        title="송악사회복지관 홈페이지 편집기"
+      />
+    </main>
+  );
 }

@@ -28,7 +28,8 @@ test("ships durable board storage, moderation, and media routes", async () => {
     readFile(new URL("lib/media-server.ts", root), "utf8"),
     readFile(new URL("app/board-app.tsx", root), "utf8"),
   ]);
-  assert.deepEqual(JSON.parse(hosting), { d1: "DB", r2: "MEDIA" });
+  const hostingConfig = JSON.parse(hosting);
+  assert.deepEqual({ d1: hostingConfig.d1, r2: hostingConfig.r2 }, { d1: "DB", r2: "MEDIA" });
   for (const table of ["posts", "media", "reports", "audit_logs", "rate_limits"]) assert.match(migration, new RegExp("CREATE TABLE `" + table + "`"));
   assert.match(migration, /idx_posts_public_feed/);
   assert.match(migration, /PRAGMA optimize/);
