@@ -14434,11 +14434,24 @@
        현재 위치는 글자와 배경을 함께 지정해 모든 색상 테마에서 대비를 유지한다. */
     .stage.mobile .homepage-menu-item.level-2 > .homepage-menu-link.active,
     .stage.mobile .homepage-menu-item.level-2 > .homepage-menu-link[aria-current="page"] {
-      border-color: var(--accent-strong);
+      border-color: #1f5a46;
       color: #fff;
-      background: var(--accent-strong);
+      background: #1f5a46;
       opacity: 1;
-      -webkit-text-fill-color: currentColor;
+      -webkit-text-fill-color: #fff;
+    }
+
+    /* Keep the selected mobile menu item visible even when a saved theme
+       supplies a very pale accent color. */
+    .stage.mobile .homepage-menu-item.level-1 > .homepage-menu-link.active,
+    .stage.mobile .homepage-menu-item.level-1 > .homepage-menu-link[aria-current="page"],
+    .stage.mobile .homepage-menu-item.level-3 > .homepage-menu-link.active,
+    .stage.mobile .homepage-menu-item.level-3 > .homepage-menu-link[aria-current="page"] {
+      border-color: #1f5a46;
+      color: #fff;
+      background: #1f5a46;
+      opacity: 1;
+      -webkit-text-fill-color: #fff;
     }
 
     .stage.mobile .homepage-menu-item.level-2 > .homepage-menu-link.has-children::after {
