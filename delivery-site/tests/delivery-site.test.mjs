@@ -34,6 +34,7 @@ test("serves every public menu and footer document through the canonical read-on
     readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
   ]);
   assert.match(worker, /PUBLIC_PAGE_ROUTES/);
+  assert.match(worker, /configuredPublicAssetPath\.replace\(\/\\\.html\$\//);
   for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/news/visitor-board", "/privacy-policy", "/email-refusal", "/directions"]) {
     assert.match(worker, new RegExp(`"${route.replaceAll("/", "\\/")}": "\\/songak\\/representative-greeting-editor\\.html"`));
   }

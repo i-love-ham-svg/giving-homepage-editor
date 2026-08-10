@@ -115,8 +115,12 @@ const worker = {
     }
 
     const dynamicPublicMenuPath = /^\/page\/home-menu-[a-z0-9-]+$/.test(url.pathname);
-    const publicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname]
+    const configuredPublicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname]
       || (dynamicPublicMenuPath ? "/songak/representative-greeting-editor.html" : "");
+    // Static asset serving canonicalizes *.html to an extensionless URL with a
+    // 307. Fetching that canonical asset internally prevents a public route from
+    // leaking visitors onto the raw editor pathname.
+    const publicAssetPath = configuredPublicAssetPath.replace(/\.html$/, "");
     if ((request.method === "GET" || request.method === "HEAD") && publicAssetPath) {
       // All public routes use the exact same canonical renderer as the editor.
       // The browser pathname selects a single read-only page inside that renderer,
@@ -160,7 +164,7 @@ function withSecurityHeaders(response: Response, pathname = ""): Response {
     secured.headers.set("cache-control", "public, max-age=86400, stale-while-revalidate=604800");
   } else if (/^\/songak\/.*\.(?:css|js)$/.test(pathname)) {
     secured.headers.set("cache-control", "public, max-age=86400");
-  } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-public.html") || pathname.includes("/public-")) {
+  } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-editor") || pathname.endsWith("/representative-greeting-public.html") || pathname.includes("/public-")) {
     secured.headers.set("cache-control", "public, max-age=300, stale-while-revalidate=3600");
   }
   return secured;
