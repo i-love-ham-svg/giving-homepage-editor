@@ -14358,6 +14358,10 @@
       box-sizing: border-box;
       display: grid;
       grid-template-columns: minmax(0, 1fr);
+      /* Expanded menu cards must own their full intrinsic height. The base
+         centered grid alignment let long cards overflow into the next row. */
+      grid-auto-rows: max-content;
+      align-items: stretch;
       align-content: start;
       justify-content: stretch;
       justify-items: stretch;

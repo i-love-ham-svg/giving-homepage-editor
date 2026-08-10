@@ -13,7 +13,12 @@ const executablePath = [
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 ].filter(Boolean).find(existsSync);
 const browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
-const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+const context = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+  hasTouch: true,
+  isMobile: true,
+  userAgent: "Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36"
+});
 const page = await context.newPage();
 const workspaceRoot = resolve(".");
 const contentTypes = {
@@ -26,7 +31,8 @@ const contentTypes = {
   ".webp": "image/webp",
   ".woff2": "font/woff2"
 };
-const server = createServer(async (request, response) => {
+const remoteEditorUrl = process.env.EDITOR_URL?.trim();
+const server = remoteEditorUrl ? null : createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://127.0.0.1").pathname);
     const localPath = pathname.startsWith("/songak/")
@@ -43,9 +49,8 @@ const server = createServer(async (request, response) => {
     response.writeHead(404).end("Not found");
   }
 });
-await new Promise((resolveReady) => server.listen(0, "127.0.0.1", resolveReady));
-const { port } = server.address();
-const editorUrl = `http://127.0.0.1:${port}/outputs/representative-greeting-editor.html`;
+if (server) await new Promise((resolveReady) => server.listen(0, "127.0.0.1", resolveReady));
+const editorUrl = remoteEditorUrl || `http://127.0.0.1:${server.address().port}/outputs/representative-greeting-editor.html`;
 
 async function openMenuAt(viewport, width, height) {
   await page.setViewportSize({ width, height });
@@ -69,6 +74,65 @@ try {
   await page.locator("#homepageMenu .homepage-menu-toggle").click();
   await page.locator("#homepageMenu .homepage-menu-toggle").click();
   assert.equal(await page.locator(`#homepageMenu [data-menu-id="${activeRootId}"]`).first().getAttribute("aria-expanded"), "true", "reopening may reveal the current page branch after the panel was fully closed");
+
+  const accountStructure = await page.evaluate(() => {
+    const links = [...document.querySelectorAll('#homepageMenuList [data-menu-id="home-menu-account"]')];
+    return links.map((link) => ({
+      levelOne: link.parentElement?.classList.contains("level-1") || false,
+      nestedInSubmenu: Boolean(link.closest(".homepage-submenu")),
+      label: link.textContent.trim()
+    }));
+  });
+  console.log("mobile-menu-account-structure", JSON.stringify(accountStructure));
+  assert.equal(accountStructure.length, 1, "the account destination must appear exactly once in the mobile menu");
+  assert.equal(accountStructure[0].levelOne, true, "the account destination must remain a top-level mobile menu item");
+  assert.equal(accountStructure[0].nestedInSubmenu, false, "the account destination must not overlap a news submenu");
+
+  const newsRoot = page.locator('#homepageMenu [data-menu-id="home-menu-gallery"]').first();
+  if (await newsRoot.getAttribute("aria-expanded") !== "true") await newsRoot.evaluate((button) => button.click());
+  const newsAccountGeometry = await page.evaluate(() => {
+    const newsElement = document.querySelector('#homepageMenu [data-menu-id="home-menu-gallery"]')?.parentElement;
+    const accountElement = document.querySelector('#homepageMenu [data-menu-id="home-menu-account"]')?.parentElement;
+    const boardElement = document.querySelector('#homepageMenu [data-menu-id="home-menu-news-board"]');
+    const news = newsElement?.getBoundingClientRect();
+    const account = accountElement?.getBoundingClientRect();
+    const board = boardElement?.getBoundingClientRect();
+    const newsStyle = newsElement ? getComputedStyle(newsElement) : null;
+    const accountStyle = accountElement ? getComputedStyle(accountElement) : null;
+    const submenuStyle = newsElement?.querySelector(":scope > .homepage-submenu") ? getComputedStyle(newsElement.querySelector(":scope > .homepage-submenu")) : null;
+    return news && account && board ? {
+      newsBottom: news.bottom,
+      newsHeight: news.height,
+      newsOffsetHeight: newsElement.offsetHeight,
+      accountTop: account.top,
+      accountBottom: account.bottom,
+      boardTop: board.top,
+      boardBottom: board.bottom,
+      newsPosition: newsStyle.position,
+      newsTransform: newsStyle.transform,
+      newsMarginBottom: newsStyle.marginBottom,
+      accountPosition: accountStyle.position,
+      accountTransform: accountStyle.transform,
+      accountMarginTop: accountStyle.marginTop,
+      newsAlignSelf: newsStyle.alignSelf,
+      newsGridRow: `${newsStyle.gridRowStart} / ${newsStyle.gridRowEnd}`,
+      accountAlignSelf: accountStyle.alignSelf,
+      accountGridRow: `${accountStyle.gridRowStart} / ${accountStyle.gridRowEnd}`,
+      newsOffsetTop: newsElement.offsetTop,
+      accountOffsetTop: accountElement.offsetTop,
+      submenuPosition: submenuStyle?.position,
+      submenuHeight: newsElement.querySelector(":scope > .homepage-submenu")?.getBoundingClientRect().height || 0,
+      submenuOffsetHeight: newsElement.querySelector(":scope > .homepage-submenu")?.offsetHeight || 0,
+      listDisplay: getComputedStyle(document.querySelector("#homepageMenuList")).display,
+      listGap: getComputedStyle(document.querySelector("#homepageMenuList")).rowGap,
+      listRows: getComputedStyle(document.querySelector("#homepageMenuList")).gridTemplateRows,
+      listAlignItems: getComputedStyle(document.querySelector("#homepageMenuList")).alignItems
+    } : null;
+  });
+  console.log("mobile-menu-news-account-geometry", JSON.stringify(newsAccountGeometry));
+  assert.ok(newsAccountGeometry, "the news, board, and account menu geometry should be measurable");
+  assert.ok(newsAccountGeometry.boardBottom <= newsAccountGeometry.newsBottom + 1, "the communication board must remain inside the expanded news card");
+  assert.ok(newsAccountGeometry.newsBottom <= newsAccountGeometry.accountTop + 1, "the account card must start after the expanded news card");
 
   const rootIds = await page.locator("#homepageMenu .homepage-menu-item.level-1 > .homepage-menu-link.has-children").evaluateAll((links) => links.map((link) => link.dataset.menuId));
   for (const rootId of rootIds) {
@@ -109,6 +173,30 @@ try {
   assert.equal(scrollState.bodyOverflow, "hidden");
   assert.equal(scrollState.rootOverflow, "hidden");
 
+  // Use a real Chrome touch sequence, not a direct scrollTop assignment, so the
+  // production mobile gesture path stays covered by the regression test.
+  await page.evaluate(() => { document.querySelector("#homepageMenuList").scrollTop = 0; });
+  const listBox = await page.locator("#homepageMenuList").boundingBox();
+  assert.ok(listBox, "the open mobile menu list should have a touch target");
+  const client = await context.newCDPSession(page);
+  const touchX = Math.round(listBox.x + listBox.width / 2);
+  const touchStartY = Math.round(Math.min(listBox.y + listBox.height - 80, page.viewportSize().height - 90));
+  const touchEndY = Math.round(Math.max(listBox.y + 90, touchStartY - 300));
+  await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: touchX, y: touchStartY }] });
+  for (let step = 1; step <= 6; step += 1) {
+    const y = Math.round(touchStartY + (touchEndY - touchStartY) * (step / 6));
+    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: touchX, y }] });
+  }
+  await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await page.waitForTimeout(250);
+  const touchScrollState = await page.evaluate(() => ({
+    scrollTop: document.querySelector("#homepageMenuList").scrollTop,
+    menuOpen: document.querySelector("#homepageMenu").classList.contains("open")
+  }));
+  console.log("mobile-menu-touch-scroll", JSON.stringify(touchScrollState));
+  assert.ok(touchScrollState.scrollTop > 0, "a real upward touch drag should scroll the mobile menu list");
+  assert.equal(touchScrollState.menuOpen, true, "touch scrolling must not close the mobile menu");
+
   for (const [viewport, width, height] of [["phoneSmall", 360, 800], ["phone", 390, 844], ["tablet", 768, 1024], ["phone", 844, 390]]) {
     await openMenuAt(viewport, width, height);
     const bounds = await page.evaluate(() => {
@@ -133,5 +221,5 @@ try {
   console.log("mobile menu regression browser tests OK");
 } finally {
   await browser.close();
-  await new Promise((resolveClosed) => server.close(resolveClosed));
+  if (server) await new Promise((resolveClosed) => server.close(resolveClosed));
 }
