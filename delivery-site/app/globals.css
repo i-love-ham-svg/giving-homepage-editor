@@ -273,3 +273,44 @@ dialog::backdrop { background: rgba(13,35,26,.62); backdrop-filter: blur(5px); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+.staff-login-page {
+  display: grid;
+  min-height: 100dvh;
+  padding: 32px 18px;
+  place-items: center;
+  color: #173d2f;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(242, 185, 62, .18), transparent 30rem),
+    linear-gradient(145deg, #edf5f0, #fbfdfb 48%, #e8f1ec);
+}
+
+.staff-login-card {
+  width: min(100%, 480px);
+  padding: clamp(28px, 5vw, 46px);
+  border: 1px solid #cbdcd2;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 24px 70px rgba(24, 58, 45, .14);
+}
+
+.staff-login-back { display: inline-block; margin-bottom: 28px; color: #557064; font-size: 14px; text-decoration: none; }
+.staff-login-back:hover { text-decoration: underline; }
+.staff-login-brand { display: grid; width: 48px; height: 48px; margin-bottom: 20px; place-items: center; border-radius: 50%; color: #fff; background: #2f6851; font-family: Batang, serif; font-size: 22px; font-weight: 900; }
+.staff-login-eyebrow { margin: 0 0 9px; color: #2f6851; font-size: 11px; font-weight: 900; letter-spacing: .14em; }
+.staff-login-card h1 { margin: 0; font-size: clamp(28px, 6vw, 38px); letter-spacing: -.045em; }
+.staff-login-copy { margin: 14px 0 26px; color: #5d7469; font-size: 15px; line-height: 1.7; }
+.staff-login-form { display: grid; gap: 17px; }
+.staff-login-form label { display: grid; gap: 8px; }
+.staff-login-form label span { font-size: 14px; font-weight: 850; }
+.staff-login-form input { width: 100%; min-height: 52px; padding: 0 15px; border: 1px solid #b9cec2; border-radius: 13px; color: #173d2f; background: #fff; font: inherit; }
+.staff-login-form input:focus { border-color: #2f6851; outline: 3px solid rgba(47, 104, 81, .13); }
+.staff-login-form button { min-height: 54px; margin-top: 3px; border: 0; border-radius: 14px; color: #fff; background: #2f6851; font: inherit; font-weight: 900; cursor: pointer; }
+.staff-login-form button:hover { background: #24523f; }
+.staff-login-form button:disabled { opacity: .65; cursor: wait; }
+.staff-login-error { margin: -3px 0 0; padding: 12px 14px; border-radius: 11px; color: #8c2830; background: #fff0f1; font-size: 13px; line-height: 1.5; }
+.staff-login-notice { margin: 20px 0 0; color: #75877f; font-size: 12px; line-height: 1.6; text-align: center; }
+
+@media (max-width: 520px) {
+  .staff-login-page { padding: 0; align-items: stretch; }
+  .staff-login-card { width: 100%; min-height: 100dvh; padding: 28px 22px; border: 0; border-radius: 0; box-shadow: none; }
+}

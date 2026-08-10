@@ -73,19 +73,32 @@ test("ships durable site drafts, publishing, version restore, and server authori
   assert.match(restoreRoute, /restoreSiteVersion/);
 });
 
-test("keeps the public site read-only and gates the staff editor with SIWC", async () => {
-  const [page, editorPage, editorAccess, sessionRoute] = await Promise.all([
+test("keeps the public site read-only and gates the staff editor with temporary credentials or SIWC", async () => {
+  const [page, editorPage, editorAccess, sessionRoute, loginRoute, logoutRoute, boardServer] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/editor/page.tsx", root), "utf8"),
     readFile(new URL("app/editor/editor-access.tsx", root), "utf8"),
     readFile(new URL("app/api/board/admin/session/route.ts", root), "utf8"),
+    readFile(new URL("app/api/board/admin/login/route.ts", root), "utf8"),
+    readFile(new URL("app/api/board/admin/logout/route.ts", root), "utf8"),
+    readFile(new URL("lib/board-server.ts", root), "utf8"),
   ]);
   assert.match(page, /mode=view/);
   assert.doesNotMatch(page, /mode=edit/);
-  assert.match(editorPage, /requireChatGPTUser\("\/editor"\)/);
+  assert.doesNotMatch(editorPage, /requireChatGPTUser/);
   assert.match(editorPage, /force-dynamic/);
   assert.match(editorAccess, /\/api\/board\/admin\/session/);
   assert.match(editorAccess, /if \(!session\.admin\)/);
   assert.match(editorAccess, /mode=edit/);
   assert.match(sessionRoute, /return_to=%2Feditor/);
+  assert.match(loginRoute, /createAdminSession/);
+  assert.match(loginRoute, /temporary-editor-login/);
+  assert.match(loginRoute, /"set-cookie"/);
+  assert.match(logoutRoute, /clearAdminCookie/);
+  assert.match(boardServer, /TEMP_EDITOR_ID/);
+  assert.match(boardServer, /TEMP_EDITOR_PASSWORD/);
+  assert.match(boardServer, /HMAC/);
+  assert.match(boardServer, /HttpOnly/);
+  assert.match(boardServer, /SameSite=Lax/);
+  assert.doesNotMatch(boardServer, /TEMP_EDITOR_PASSWORD\s*\?\?\s*["']/);
 });

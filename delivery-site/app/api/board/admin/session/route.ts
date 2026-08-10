@@ -7,7 +7,7 @@ export async function GET(request: Request) {
       admin: session.authorized,
       authenticated: session.authenticated,
       email: session.email,
-      signInPath: "/signin-with-chatgpt?return_to=%2F",
+      signInPath: "/signin-with-chatgpt?return_to=%2Feditor",
       signOutPath: "/signout-with-chatgpt?return_to=%2F",
     });
   } catch (error) {

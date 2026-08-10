@@ -5,7 +5,8 @@ import { CATEGORIES, STATUSES } from "./board-types";
 type BoardEnv = {
   DB: D1Database;
   MEDIA: R2Bucket;
-  BOARD_ADMIN_PASSWORD?: string;
+  TEMP_EDITOR_ID?: string;
+  TEMP_EDITOR_PASSWORD?: string;
   BOARD_SESSION_SECRET?: string;
   BOARD_HASH_PEPPER?: string;
   BOARD_EDITOR_EMAILS?: string;
@@ -151,16 +152,60 @@ function requireSecret(value: string | undefined, label: string): string {
   return value;
 }
 
-export async function createAdminSession(password: string): Promise<string> {
+function requireConfigured(value: string | undefined, label: string): string {
+  if (!value) throw new Error(`${label} 설정이 필요합니다.`);
+  return value;
+}
+
+export async function createAdminSession(id: string, password: string): Promise<string> {
   const runtime = getBoardEnv();
-  const expected = requireSecret(runtime.BOARD_ADMIN_PASSWORD, "관리자 비밀번호");
-  if (!(await safeEqual(password, expected))) throw new Error("관리자 비밀번호가 올바르지 않습니다.");
-  const payload = bytesToBase64Url(encoder.encode(JSON.stringify({ role: "admin", exp: Date.now() + 8 * 60 * 60 * 1000 })));
+  const expectedId = requireConfigured(runtime.TEMP_EDITOR_ID, "임시 담당자 아이디");
+  const expectedPassword = requireSecret(runtime.TEMP_EDITOR_PASSWORD, "임시 담당자 비밀번호");
+  const [idMatches, passwordMatches] = await Promise.all([
+    safeEqual(id, expectedId),
+    safeEqual(password, expectedPassword),
+  ]);
+  if (!idMatches || !passwordMatches) throw new Error("아이디 또는 비밀번호가 올바르지 않습니다.");
+  const payload = bytesToBase64Url(encoder.encode(JSON.stringify({
+    role: "admin",
+    subject: "temporary-editor",
+    exp: Date.now() + 8 * 60 * 60 * 1000,
+  })));
   const signature = bytesToBase64Url(await hmac(requireSecret(runtime.BOARD_SESSION_SECRET, "관리자 세션"), payload));
   return `${payload}.${signature}`;
 }
 
+async function hasValidAdminCookie(request: Request): Promise<boolean> {
+  const token = cookieValue(request, ADMIN_COOKIE);
+  const [payload, signature, extra] = token.split(".");
+  if (!payload || !signature || extra) return false;
+  let expectedSignature: string;
+  try {
+    expectedSignature = bytesToBase64Url(await hmac(
+      requireSecret(getBoardEnv().BOARD_SESSION_SECRET, "관리자 세션"),
+      payload,
+    ));
+  } catch {
+    return false;
+  }
+  if (!(await safeEqual(signature, expectedSignature))) return false;
+  try {
+    const session = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payload))) as {
+      role?: unknown;
+      subject?: unknown;
+      exp?: unknown;
+    };
+    return session.role === "admin"
+      && session.subject === "temporary-editor"
+      && typeof session.exp === "number"
+      && session.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 export async function isAdminRequest(request: Request): Promise<boolean> {
+  if (await hasValidAdminCookie(request)) return true;
   const authenticatedEmail = request.headers.get("oai-authenticated-user-email")?.trim().toLowerCase();
   const authenticatedUserId = request.headers.get("oai-authenticated-user-id")?.trim();
   if (authenticatedEmail && authenticatedUserId) {
@@ -179,21 +224,22 @@ export async function getEditorSession(request: Request): Promise<{
   authorized: boolean;
   email: string | null;
 }> {
+  const temporaryEditor = await hasValidAdminCookie(request);
   const email = request.headers.get("oai-authenticated-user-email")?.trim().toLowerCase() || null;
   const userId = request.headers.get("oai-authenticated-user-id")?.trim() || null;
   return {
-    authenticated: Boolean(email && userId),
-    authorized: await isAdminRequest(request),
-    email,
+    authenticated: temporaryEditor || Boolean(email && userId),
+    authorized: temporaryEditor || await isAdminRequest(request),
+    email: temporaryEditor ? null : email,
   };
 }
 
 export function adminCookie(token: string, secure = true): string {
-  return `${ADMIN_COOKIE}=${token}; Path=/; HttpOnly;${secure ? " Secure;" : ""} SameSite=Strict; Max-Age=28800`;
+  return `${ADMIN_COOKIE}=${token}; Path=/; HttpOnly;${secure ? " Secure;" : ""} SameSite=Lax; Max-Age=28800`;
 }
 
 export function clearAdminCookie(secure = true): string {
-  return `${ADMIN_COOKIE}=; Path=/; HttpOnly;${secure ? " Secure;" : ""} SameSite=Strict; Max-Age=0`;
+  return `${ADMIN_COOKIE}=; Path=/; HttpOnly;${secure ? " Secure;" : ""} SameSite=Lax; Max-Age=0`;
 }
 
 export async function actorHash(request: Request, suffix = ""): Promise<string> {

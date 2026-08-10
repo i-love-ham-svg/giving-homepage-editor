@@ -29740,6 +29740,10 @@
             selectSocialCta(sectionId, provider);
             return;
           }
+          if (window.location.protocol !== "file:") {
+            window.top.location.assign(`/staff-login?provider=${encodeURIComponent(provider)}`);
+            return;
+          }
           const clientId = model.details.find((detail) => detail.id === providerConfigIds[provider])?.value?.trim();
           const redirectUri = model.details.find((detail) => detail.id === "account-redirect-uri")?.value?.trim();
           if (!clientId || !redirectUri) {
