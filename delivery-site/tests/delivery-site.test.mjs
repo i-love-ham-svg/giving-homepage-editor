@@ -17,6 +17,8 @@ test("builds the finished Songak community board shell", async () => {
   assert.match(client, /주민 글쓰기/);
   assert.match(worker, /content-security-policy/);
   assert.match(worker, /x-content-type-options/);
+  assert.match(worker, /representative-greeting-editor\.html/);
+  assert.match(worker, /cache-control/);
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 

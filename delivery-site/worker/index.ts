@@ -33,6 +33,13 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    if (request.method === "GET" && url.pathname === "/") {
+      const publicUrl = new URL("/songak/representative-greeting-editor.html", request.url);
+      publicUrl.search = url.search;
+      const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
+      return withSecurityHeaders(publicResponse, "/songak/representative-greeting-editor.html");
+    }
+
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
       const imageResponse = await handleImageOptimization(request, {
