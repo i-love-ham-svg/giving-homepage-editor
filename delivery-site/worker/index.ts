@@ -38,6 +38,8 @@ const worker = {
       // directly instead of redirecting visitors to the long internal asset URL.
       const publicUrl = new URL("/songak/representative-greeting-editor", request.url);
       publicUrl.search = url.search;
+      publicUrl.searchParams.set("mode", "view");
+      publicUrl.searchParams.set("editorRole", "public");
       const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
       return withSecurityHeaders(publicResponse, "/songak/representative-greeting-editor.html");
     }
