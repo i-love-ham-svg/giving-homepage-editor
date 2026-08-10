@@ -182,7 +182,7 @@ function withSecurityHeaders(response: Response, pathname = ""): Response {
   } else if (/^\/songak\/.*\.(?:css|js)$/.test(pathname)) {
     secured.headers.set("cache-control", "public, max-age=86400");
   } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-editor") || pathname.endsWith("/representative-greeting-public.html") || pathname.includes("/public-")) {
-    secured.headers.set("cache-control", "public, max-age=300, stale-while-revalidate=3600");
+    secured.headers.set("cache-control", "public, no-cache, must-revalidate");
   }
   return secured;
 }

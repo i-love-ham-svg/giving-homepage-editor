@@ -20,6 +20,8 @@ test("builds the finished Songak public site and community board shell", async (
   assert.match(worker, /x-content-type-options/);
   assert.match(worker, /representative-greeting-editor/);
   assert.match(worker, /cache-control/);
+  assert.match(worker, /representative-greeting-editor\.html[\s\S]*?public, no-cache, must-revalidate/);
+  assert.doesNotMatch(worker, /max-age=300|stale-while-revalidate=3600/);
   assert.match(publicPage, /SONGAK_PUBLIC_ROUTE_CONFIG/);
   assert.match(publicPage, /\/api\/site-content\/\$\{remoteSiteDocumentKey\}/);
   assert.match(publicPage, /saveAndPublishRemoteSnapshot/);
