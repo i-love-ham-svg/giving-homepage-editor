@@ -34,7 +34,9 @@ const worker = {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/") {
-      const publicUrl = new URL("/songak/representative-greeting-editor.html", request.url);
+      // Ask the asset binding for its clean HTML path so it returns the document
+      // directly instead of redirecting visitors to the long internal asset URL.
+      const publicUrl = new URL("/songak/representative-greeting-editor", request.url);
       publicUrl.search = url.search;
       const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
       return withSecurityHeaders(publicResponse, "/songak/representative-greeting-editor.html");
