@@ -1,6 +1,5 @@
-import { assertSameOrigin, clearAdminCookie, json } from "../../../../../lib/board-server";
+import { json } from "../../../../../lib/board-server";
 
-export async function POST(request: Request) {
-  assertSameOrigin(request);
-  return json({ ok: true }, { headers: { "set-cookie": clearAdminCookie(new URL(request.url).protocol === "https:") } });
+export async function POST() {
+  return json({ ok: true, signOutPath: "/signout-with-chatgpt?return_to=%2F" });
 }

@@ -92,6 +92,8 @@ export function BoardApp() {
   const [view, setView] = useState("card");
   const [status, setStatus] = useState("pending");
   const [admin, setAdmin] = useState(false);
+  const [adminSignInPath, setAdminSignInPath] = useState("/signin-with-chatgpt?return_to=%2F");
+  const [adminSignOutPath, setAdminSignOutPath] = useState("/signout-with-chatgpt?return_to=%2F");
   const [loading, setLoading] = useState(true);
   const [activePost, setActivePost] = useState<BoardPost | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
@@ -110,7 +112,6 @@ export function BoardApp() {
   const adminDialog = useRef<HTMLDialogElement>(null);
   const reportDialog = useRef<HTMLDialogElement>(null);
   const deleteDialog = useRef<HTMLDialogElement>(null);
-  const adminPassword = useRef<HTMLInputElement>(null);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -134,8 +135,12 @@ export function BoardApp() {
   }, [admin, category, page, search, sort, status, showToast]);
 
   useEffect(() => {
-    requestJson<{ admin: boolean }>("/api/board/admin/session")
-      .then((result) => setAdmin(result.admin))
+    requestJson<{ admin: boolean; signInPath: string; signOutPath: string }>("/api/board/admin/session")
+      .then((result) => {
+        setAdmin(result.admin);
+        setAdminSignInPath(result.signInPath);
+        setAdminSignOutPath(result.signOutPath);
+      })
       .catch(() => setAdmin(false));
   }, []);
 
@@ -268,29 +273,12 @@ export function BoardApp() {
     }
   }
 
-  async function loginAdmin(event: FormEvent) {
-    event.preventDefault();
-    try {
-      await requestJson("/api/board/admin/login", {
-        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: adminPassword.current?.value || "" }),
-      });
-      setAdmin(true);
-      setStatus("pending");
-      setPage(1);
-      adminDialog.current?.close();
-      if (adminPassword.current) adminPassword.current.value = "";
-      showToast("관리자 검수 화면을 열었습니다.");
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : "관리자 로그인을 확인해 주세요.");
-    }
+  function loginAdmin() {
+    window.location.assign(adminSignInPath);
   }
 
-  async function logoutAdmin() {
-    await requestJson("/api/board/admin/logout", { method: "POST" }).catch(() => null);
-    setAdmin(false);
-    setCategory("all");
-    setPage(1);
-    showToast("관리자 화면을 종료했습니다.");
+  function logoutAdmin() {
+    window.location.assign(adminSignOutPath);
   }
 
   async function moderate(nextStatus: PostStatus) {
@@ -488,7 +476,7 @@ export function BoardApp() {
         {activePost && <><DialogHeader title="게시글" onClose={closeDetail} /><article className="dialog-body detail-body"><div className="detail-meta"><span>{categoryLabel(activePost.category)}</span><time>{formatDate(activePost.publishedAt || activePost.createdAt)}</time><span>작성자 {activePost.author}</span><span>조회 {activePost.views}</span>{admin && <span className={`status-pill status-${activePost.status}`}>{statusLabels[activePost.status]}</span>}</div><h2>{activePost.title}</h2><div className="detail-content">{activePost.body}</div>{activePost.media.length > 0 && <div className="detail-media">{activePost.media.map((item) => <figure key={item.id}>{item.kind === "image" ? <img src={mediaUrl(item)} alt={item.alt || ""} /> : <video src={mediaUrl(item)} controls preload="metadata" />}{item.alt && <figcaption>{item.alt}</figcaption>}</figure>)}</div>}<div className="detail-tools"><button className="secondary-btn" type="button" onClick={() => void sharePost()}>공유하기</button><button className="ghost-btn" type="button" onClick={() => reportDialog.current?.showModal()}>신고</button><button className="ghost-btn" type="button" onClick={() => openWrite(activePost)}>수정</button><button className="ghost-btn danger-text" type="button" onClick={() => deleteDialog.current?.showModal()}>삭제</button></div>{admin && <section className="moderation-panel"><div><b>관리자 검수</b><span>개인정보·비방·광고·저작권 침해 여부를 확인하세요.</span></div>{activePost.contact && <p><b>작성자 연락처</b> {activePost.contact}</p>}<textarea value={moderationNote} onChange={(event) => setModerationNote(event.target.value)} maxLength={500} placeholder="반려 사유 또는 내부 메모(작성자에게 공개하지 않음)" /><div><button className="approve-btn" type="button" onClick={() => void moderate("published")}>공개 승인</button><button className="reject-btn" type="button" onClick={() => void moderate("rejected")}>반려</button><button className="hide-btn" type="button" onClick={() => void moderate("hidden")}>숨김</button></div></section>}</article></>}
       </dialog>
 
-      <dialog ref={adminDialog} className="small-dialog"><form onSubmit={loginAdmin}><DialogHeader title="관리자 로그인" onClose={() => adminDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">복지관 담당자만 이용하는 검수 화면입니다.</p><label className="field"><span>관리자 비밀번호</span><input ref={adminPassword} required type="password" autoComplete="current-password" /></label></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => adminDialog.current?.close()}>취소</button><button className="primary-btn" type="submit">로그인</button></div></form></dialog>
+      <dialog ref={adminDialog} className="small-dialog"><DialogHeader title="담당자 로그인" onClose={() => adminDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">허용된 담당자 계정으로 로그인하면 편집·저장·게시 기능을 이용할 수 있습니다.</p></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => adminDialog.current?.close()}>취소</button><button className="primary-btn" type="button" onClick={loginAdmin}>ChatGPT로 로그인</button></div></dialog>
       <dialog ref={reportDialog} className="small-dialog"><form onSubmit={submitReport}><DialogHeader title="게시글 신고" onClose={() => reportDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">개인정보 노출, 비방, 광고, 저작권 침해 등 확인이 필요한 이유를 알려주세요.</p><label className="field"><span>신고 사유</span><textarea required minLength={2} maxLength={300} value={reportReason} onChange={(event) => setReportReason(event.target.value)} /></label></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => reportDialog.current?.close()}>취소</button><button className="danger-btn" type="submit">신고 접수</button></div></form></dialog>
       <dialog ref={deleteDialog} className="small-dialog"><form onSubmit={deleteActivePost}><DialogHeader title="게시글 삭제" onClose={() => deleteDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">삭제한 게시글은 일반 화면에서 즉시 보이지 않습니다.</p>{!admin && <label className="field"><span>작성 시 입력한 비밀번호</span><input required type="password" minLength={6} maxLength={32} value={deletePassword} onChange={(event) => setDeletePassword(event.target.value)} /></label>}</div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => deleteDialog.current?.close()}>취소</button><button className="danger-btn" type="submit">삭제</button></div></form></dialog>
 

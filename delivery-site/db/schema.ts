@@ -80,3 +80,26 @@ export const rateLimits = sqliteTable("rate_limits", {
   primaryKey({ columns: [table.scope, table.actorHash, table.bucket] }),
   index("idx_rate_limits_updated_at").on(table.updatedAt),
 ]);
+
+export const siteDocuments = sqliteTable("site_documents", {
+  key: text("key").primaryKey(),
+  draftJson: text("draft_json").notNull().default("{}"),
+  publishedJson: text("published_json"),
+  revision: integer("revision").notNull().default(0),
+  updatedBy: text("updated_by").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  publishedAt: text("published_at"),
+});
+
+export const siteVersions = sqliteTable("site_versions", {
+  id: text("id").primaryKey(),
+  documentKey: text("document_key").notNull().references(() => siteDocuments.key),
+  revision: integer("revision").notNull(),
+  kind: text("kind", { enum: ["draft", "published", "restored"] }).notNull(),
+  contentJson: text("content_json").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  uniqueIndex("idx_site_versions_document_revision").on(table.documentKey, table.revision),
+  index("idx_site_versions_document_created").on(table.documentKey, table.createdAt),
+]);

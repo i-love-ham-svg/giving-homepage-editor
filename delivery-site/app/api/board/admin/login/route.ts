@@ -1,12 +1,8 @@
-import { adminCookie, assertSameOrigin, createAdminSession, json, readJson, routeError } from "../../../../../lib/board-server";
+import { json } from "../../../../../lib/board-server";
 
-export async function POST(request: Request) {
-  try {
-    assertSameOrigin(request);
-    const input = await readJson<{ password?: string }>(request, 10_000);
-    const token = await createAdminSession(String(input.password || ""));
-    return json({ ok: true }, { headers: { "set-cookie": adminCookie(token, new URL(request.url).protocol === "https:") } });
-  } catch (error) {
-    return routeError(error);
-  }
+export async function POST() {
+  return json(
+    { error: "담당자 로그인은 사이트의 ChatGPT 로그인을 이용해 주세요.", signInPath: "/signin-with-chatgpt?return_to=%2F" },
+    { status: 410 },
+  );
 }

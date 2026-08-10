@@ -8,6 +8,7 @@ type BoardEnv = {
   BOARD_ADMIN_PASSWORD?: string;
   BOARD_SESSION_SECRET?: string;
   BOARD_HASH_PEPPER?: string;
+  BOARD_EDITOR_EMAILS?: string;
 };
 
 type D1Row = Record<string, unknown>;
@@ -160,18 +161,31 @@ export async function createAdminSession(password: string): Promise<string> {
 }
 
 export async function isAdminRequest(request: Request): Promise<boolean> {
-  const token = cookieValue(request, ADMIN_COOKIE);
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) return false;
-  try {
-    const secret = requireSecret(getBoardEnv().BOARD_SESSION_SECRET, "관리자 세션");
-    const expected = bytesToBase64Url(await hmac(secret, payload));
-    if (!(await safeEqual(signature, expected))) return false;
-    const parsed = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payload))) as { role?: string; exp?: number };
-    return parsed.role === "admin" && Number(parsed.exp) > Date.now();
-  } catch {
-    return false;
+  const authenticatedEmail = request.headers.get("oai-authenticated-user-email")?.trim().toLowerCase();
+  const authenticatedUserId = request.headers.get("oai-authenticated-user-id")?.trim();
+  if (authenticatedEmail && authenticatedUserId) {
+    const allowlist = (getBoardEnv().BOARD_EDITOR_EMAILS || "")
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean);
+    return allowlist.includes(authenticatedEmail);
   }
+
+  return false;
+}
+
+export async function getEditorSession(request: Request): Promise<{
+  authenticated: boolean;
+  authorized: boolean;
+  email: string | null;
+}> {
+  const email = request.headers.get("oai-authenticated-user-email")?.trim().toLowerCase() || null;
+  const userId = request.headers.get("oai-authenticated-user-id")?.trim() || null;
+  return {
+    authenticated: Boolean(email && userId),
+    authorized: await isAdminRequest(request),
+    email,
+  };
 }
 
 export function adminCookie(token: string, secure = true): string {

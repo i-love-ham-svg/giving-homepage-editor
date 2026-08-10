@@ -57,3 +57,11 @@ pnpm test
 - `/api/board/admin/login`: 관리자 로그인
 - `/api/board/health`: 저장소 연결 상태 확인
 
+## 여러 복지관으로 재사용
+
+기관별 이름, 연락처, 색상과 담당 정보는 저장소 루트의
+`config/institutions/institution.example.json`을 복사해 관리합니다. 공동 작업 절차,
+환경변수, 개인정보 및 인수인계 기준은 `docs/MULTI_WELFARE_WORKFLOW.md`를 따릅니다.
+
+기관 설정 파일에는 비밀번호나 주민 데이터를 넣지 않습니다. 현재 기관 설정은
+협업 기준 문서이며, 화면 변경 후에는 편집기와 공개 화면을 반드시 함께 검수합니다.

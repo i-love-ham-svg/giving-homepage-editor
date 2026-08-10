@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/schemas/welfare-institution.json",
+  "title": "복지관 기관별 설정",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "status", "name", "contact", "brand", "links", "ownership"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "status": { "enum": ["draft", "review", "published"] },
+    "name": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ko", "en"],
+      "properties": { "ko": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["postalCode", "address", "phone", "fax", "email"],
+      "properties": {
+        "postalCode": { "type": "string" }, "address": { "type": "string", "minLength": 1 },
+        "phone": { "type": "string" }, "fax": { "type": "string" }, "email": { "type": "string", "format": "email" }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primaryColor", "accentColor", "logoPath"],
+      "properties": {
+        "primaryColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "accentColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "logoPath": { "type": "string", "minLength": 1 }
+      }
+    },
+    "links": {
+      "type": "object", "additionalProperties": false, "required": ["publicSite", "privacyPolicy", "directions"],
+      "properties": { "publicSite": { "type": "string", "format": "uri" }, "privacyPolicy": { "type": "string", "format": "uri" }, "directions": { "type": "string", "format": "uri" } }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false, "required": ["contentOwner", "technicalOwner", "lastVerifiedOn"],
+      "properties": { "contentOwner": { "type": "string", "minLength": 1 }, "technicalOwner": { "type": "string", "minLength": 1 }, "lastVerifiedOn": { "type": "string", "format": "date" } }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "./institution.schema.json",
+  "id": "sample-welfare-center",
+  "status": "draft",
+  "name": {
+    "ko": "샘플사회복지관",
+    "en": "Sample Community Welfare Center"
+  },
+  "contact": {
+    "postalCode": "00000",
+    "address": "담당자 확인 후 공개 주소 입력",
+    "phone": "000-000-0000",
+    "fax": "000-000-0000",
+    "email": "contact@example.org"
+  },
+  "brand": {
+    "primaryColor": "#24513f",
+    "accentColor": "#f4d94e",
+    "logoPath": "/assets/institutions/sample/logo.svg"
+  },
+  "links": {
+    "publicSite": "https://example.org",
+    "privacyPolicy": "https://example.org/privacy",
+    "directions": "https://example.org/directions"
+  },
+  "ownership": {
+    "contentOwner": "담당 부서 또는 담당자",
+    "technicalOwner": "개발 담당자",
+    "lastVerifiedOn": "2026-08-10"
+  }
+}
