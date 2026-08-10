@@ -72,3 +72,20 @@ test("ships durable site drafts, publishing, version restore, and server authori
   assert.match(versionsRoute, /listSiteVersions/);
   assert.match(restoreRoute, /restoreSiteVersion/);
 });
+
+test("keeps the public site read-only and gates the staff editor with SIWC", async () => {
+  const [page, editorPage, editorAccess, sessionRoute] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/editor/page.tsx", root), "utf8"),
+    readFile(new URL("app/editor/editor-access.tsx", root), "utf8"),
+    readFile(new URL("app/api/board/admin/session/route.ts", root), "utf8"),
+  ]);
+  assert.match(page, /mode=view/);
+  assert.doesNotMatch(page, /mode=edit/);
+  assert.match(editorPage, /requireChatGPTUser\("\/editor"\)/);
+  assert.match(editorPage, /force-dynamic/);
+  assert.match(editorAccess, /\/api\/board\/admin\/session/);
+  assert.match(editorAccess, /if \(!session\.admin\)/);
+  assert.match(editorAccess, /mode=edit/);
+  assert.match(sessionRoute, /return_to=%2Feditor/);
+});

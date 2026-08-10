@@ -14415,6 +14415,23 @@
       display: none !important;
     }
 
+    body.public-view-role .topbar,
+    body.public-view-role .staff-editor-dock,
+    body.public-view-role .staff-creator-return,
+    body.public-view-role .staff-section-manager,
+    body.public-view-role .staff-section-backdrop {
+      display: none !important;
+    }
+
+    body.public-view-role .app {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    body.public-view-role .workspace {
+      min-height: 100vh;
+      padding-top: 0;
+    }
+
     body.staff-editor-role .app {
       grid-template-rows: minmax(0, 1fr);
     }
@@ -35935,12 +35952,14 @@ function openStaffSectionManager() {
 }
 
 function setEditorRole(role = "developer", options = {}) {
+  const usePublicRole = role === "public" || role === "visitor" || role === "consumer";
   const useStaffRole = role === "staff" || role === "editor" || role === "manager";
-  document.body.classList.toggle("staff-editor-role", useStaffRole);
-  document.body.classList.toggle("developer-editor-role", !useStaffRole);
+  document.body.classList.toggle("public-view-role", usePublicRole);
+  document.body.classList.toggle("staff-editor-role", useStaffRole && !usePublicRole);
+  document.body.classList.toggle("developer-editor-role", !useStaffRole && !usePublicRole);
   document.body.classList.toggle("staff-role-preview", Boolean(useStaffRole && options.preview));
-  document.body.dataset.editorRole = useStaffRole ? "staff" : "developer";
-  if (!useStaffRole) closeStaffSectionManager({ restoreFocus: false });
+  document.body.dataset.editorRole = usePublicRole ? "public" : useStaffRole ? "staff" : "developer";
+  if (!useStaffRole || usePublicRole) closeStaffSectionManager({ restoreFocus: false });
   scheduleSectionStyleChoiceSync();
   requestAnimationFrame(() => {
     fitStage();
@@ -39149,14 +39168,15 @@ function syncSectionControls() {
     applyAllTitleIcons();
     syncContent();
     MobileViewportManager.syncAccessDevice();
-    const requestedEditorRole = String(window.SONGAK_EDITOR_ROLE || editorQuery.get("editorRole") || editorQuery.get("role") || "developer").toLowerCase();
+    const defaultEditorRole = ["localhost", "127.0.0.1"].includes(window.location.hostname) ? "developer" : "public";
+    const requestedEditorRole = String(window.SONGAK_EDITOR_ROLE || editorQuery.get("editorRole") || editorQuery.get("role") || defaultEditorRole).toLowerCase();
     setEditorRole(requestedEditorRole);
     window.SongakEditorAccess = Object.freeze({
       getRole: () => document.body.dataset.editorRole || "developer",
       setRole: (role) => setEditorRole(String(role || "developer").toLowerCase())
     });
     const queryViewport = editorQuery.get("viewport");
-    const requestedViewMode = editorQuery.get("mode") === "view";
+    const requestedViewMode = requestedEditorRole === "public" || editorQuery.get("mode") === "view";
     /* 공개 미리보기 직행 URL에는 viewport 쿼리가 없다. 이 경우 브라우저 폭을
        기준으로 자동 선택해 휴대폰에서 데스크톱 캔버스가 잘리지 않게 한다. */
     const automaticViewViewport = requestedViewMode ? MobileViewportManager.detectResponsiveViewport() : "desktop";

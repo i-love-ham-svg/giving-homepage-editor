@@ -2,6 +2,26 @@
 
 .editor-shell { width: 100%; height: 100dvh; overflow: hidden; }
 .editor-frame { display: block; width: 100%; height: 100%; border: 0; }
+.staff-login-link {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(31, 79, 60, .88);
+  box-shadow: 0 8px 24px rgba(18, 54, 40, .22);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  backdrop-filter: blur(10px);
+}
+.editor-access-message { display: grid; min-height: 100dvh; padding: 32px; place-content: center; gap: 14px; text-align: center; background: #f7faf8; }
+.editor-access-message h1, .editor-access-message p { margin: 0; }
+.editor-access-message p { color: #64776d; }
+.editor-access-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.editor-access-message a { display: inline-flex; min-height: 44px; padding: 0 18px; align-items: center; justify-content: center; border: 1px solid #d5e3db; border-radius: 999px; background: #fff; font-weight: 800; }
 
 :root {
   --ink: #15271f;
