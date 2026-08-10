@@ -1814,6 +1814,7 @@
       overflow: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
     .stage.mobile .homepage-menu.open .homepage-menu-subbar:not([hidden]) {
@@ -19230,9 +19231,6 @@
       state.homeMenu = normalizeHomeMenu(state.homeMenu);
       homepageMenu.dataset.layoutMode = state.homeMenu.layoutMode;
       ["cascade", "two-level", "mega", "disclosure", "sitemap"].forEach((mode) => homepageMenu.classList.toggle(`layout-${mode}`, state.homeMenu.layoutMode === mode));
-      if (isHomeMenuMobileSurface() && state.homeMenu.open && !state.expandedHomeMenuId) {
-        syncActiveHomeMenuExpansion();
-      }
       const menuAlign = state.homeMenu.align === "left" ? "flex-start" : state.homeMenu.align === "right" ? "flex-end" : "center";
       const menuMetrics = getHomeMenuVisualMetrics();
       const menuHeight = Math.max(38, menuMetrics.height);
@@ -19297,7 +19295,9 @@
     }
 
     function toggleHomeMenu() {
-      state.homeMenu.open = !state.homeMenu.open;
+      const opening = !state.homeMenu.open;
+      state.homeMenu.open = opening;
+      if (opening && !state.expandedHomeMenuId) syncActiveHomeMenuExpansion();
       renderHomeMenu({ syncInputs: false });
     }
 
@@ -24134,7 +24134,10 @@
       document.documentElement.style.setProperty("--stage-h", String(h));
       stage.style.setProperty("--stage-w", String(w));
       stage.style.setProperty("--stage-h", String(h));
-      stage.style.setProperty("--mobile-viewport-h", String(viewportProfile.h));
+      const visibleViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const visibleStageTop = Math.max(0, stage.getBoundingClientRect().top);
+      const visibleStageHeight = Math.max(320, (visibleViewportHeight - visibleStageTop) / Math.max(scale, .1));
+      stage.style.setProperty("--mobile-viewport-h", String(Math.min(viewportProfile.h, visibleStageHeight)));
       stageScale.style.width = `${w * scale}px`;
       stageScale.style.height = `${h * scale}px`;
       applyBackground();

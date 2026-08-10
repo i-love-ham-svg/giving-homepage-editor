@@ -55,6 +55,10 @@ assert.match(html, /function getHomeMenuSubbarEstimatedHeight\(expanded\)[\s\S]*
 assert.match(html, /\.stage\.mobile \.homepage-menu-item\.level-2 > \.homepage-menu-link\.active \{[\s\S]*?background: var\(--accent-strong\);/);
 assert.match(html, /\.stage\.mobile \.homepage-menu-item\.level-2 > \.homepage-menu-link::before/);
 assert.match(html, /\.stage\.mobile \.homepage-menu\[data-layout-mode="two-level"\][\s\S]*?border-bottom: 1px solid/);
+assert.match(html, /\.stage\.mobile \.homepage-menu\.open \.homepage-menu-list \{[\s\S]*?overflow: auto;[\s\S]*?touch-action: pan-y;/, "open mobile menu should own vertical touch scrolling");
+assert.match(html, /function toggleHomeMenu\(\) \{[\s\S]*?const opening = !state\.homeMenu\.open;[\s\S]*?if \(opening && !state\.expandedHomeMenuId\) syncActiveHomeMenuExpansion\(\);/, "active branch should expand only when opening the menu");
+assert.doesNotMatch(html, /function renderHomeMenu\(options = \{\}\) \{[\s\S]{0,500}?syncActiveHomeMenuExpansion\(\)/, "rendering must not reopen a branch the visitor explicitly collapsed");
+assert.match(html, /const visibleViewportHeight = window\.visualViewport\?\.height \?\? window\.innerHeight;[\s\S]*?--mobile-viewport-h/, "mobile menu height should use the visible viewport instead of the full page height");
 assert.match(html, /\.editable\s*\{[\s\S]*?position:\s*absolute/);
 assert.match(html, /<div class="main-intro-surface"[\s\S]*?class="main-intro-cta-row"[\s\S]*?data-main-intro-cta="program"[\s\S]*?data-main-intro-cta="consult"/);
 const decorationMarkup = html.match(/id="decorationPickerModal"[\s\S]*?<script/)?.[0] || "";
