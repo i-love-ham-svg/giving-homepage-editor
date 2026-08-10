@@ -11,9 +11,15 @@
   ]);
   const defaultMaxImageBytes = 15 * 1024 * 1024;
   const safeImageDataUrlPattern = /^data:image\/(?:png|jpe?g|webp|gif|avif|bmp);base64,[a-z0-9+/=\s]+$/i;
+  const safeSiteAssetUrlPattern = /^\/api\/site-assets\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png|webp|gif)$/i;
 
   function isSafeImageDataUrl(value) {
     return typeof value === "string" && safeImageDataUrlPattern.test(value);
+  }
+
+  function isSafeImageSource(value) {
+    return isSafeImageDataUrl(value)
+      || (typeof value === "string" && safeSiteAssetUrlPattern.test(value));
   }
 
   function validateImageFile(file, options = {}) {
@@ -47,7 +53,7 @@
     if (!asset || typeof asset !== "object") return asset ?? null;
     const next = { ...asset };
     fields.forEach((field) => {
-      if (field in next && next[field] != null && !isSafeImageDataUrl(next[field])) next[field] = null;
+      if (field in next && next[field] != null && !isSafeImageSource(next[field])) next[field] = null;
     });
     return next;
   }
@@ -79,7 +85,7 @@
     const source = String(markup ?? "").slice(0, 20_000);
     const imageMarkup = source.match(/<img\b[^>]*>/i)?.[0] ?? "";
     const imageSource = getAttribute(imageMarkup, "src");
-    if (isSafeImageDataUrl(imageSource)) {
+    if (isSafeImageSource(imageSource)) {
       return { type: "image", src: imageSource, lines: [] };
     }
 
@@ -106,6 +112,7 @@
     allowedImageTypes: Object.freeze([...allowedImageTypes]),
     defaultMaxImageBytes,
     isSafeImageDataUrl,
+    isSafeImageSource,
     validateImageFile,
     validateImageDimensions,
     sanitizeImageAsset,

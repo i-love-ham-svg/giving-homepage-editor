@@ -8,7 +8,41 @@
   <script>
     (() => {
       const params = new URLSearchParams(window.location.search);
-      const isPublicView = params.get("mode") === "view" && params.get("editorRole") !== "staff";
+      const publicRouteConfig = Object.freeze({
+        "/": { menuId: "home-menu-account" },
+        "/about": { menuId: "home-menu-intro-main" },
+        "/about/greeting": { menuId: "home-menu-intro-main" },
+        "/about/mission": { menuId: "home-menu-intro-mission" },
+        "/about/corporate": { menuId: "home-menu-intro-corporate" },
+        "/about/history": { menuId: "home-menu-intro-history" },
+        "/directions": { menuId: "home-menu-intro-location" },
+        "/about/facility": { menuId: "home-menu-intro-facility" },
+        "/about/organization": { menuId: "home-menu-intro-organization" },
+        "/programs": { menuId: "home-menu-business-program" },
+        "/programs/list": { menuId: "home-menu-business-program" },
+        "/programs/schedule": { menuId: "home-menu-business-schedule" },
+        "/programs/schedule-original": { menuId: "home-menu-business-schedule-original" },
+        "/programs/case-management": { menuId: "home-menu-business-process" },
+        "/programs/application": { menuId: "home-menu-business-application" },
+        "/participation": { menuId: "home-menu-participation-volunteer" },
+        "/participation/volunteer": { menuId: "home-menu-participation-volunteer" },
+        "/participation/donation": { menuId: "home-menu-participation-donation" },
+        "/news": { menuId: "home-menu-news-notice" },
+        "/news/notices": { menuId: "home-menu-news-notice" },
+        "/news/press": { menuId: "home-menu-news-press" },
+        "/news/videos": { menuId: "home-menu-news-video" },
+        "/news/gallery": { menuId: "home-menu-news-gallery" },
+        "/news/visitor-board": { menuId: "home-menu-news-visitor" },
+        "/privacy-policy": { sectionId: "footer", footerDocument: "privacy" },
+        "/email-refusal": { sectionId: "footer", footerDocument: "email" }
+      });
+      const normalizedPath = window.location.pathname !== "/" ? window.location.pathname.replace(/\/+$/, "") : "/";
+      const dynamicMenuMatch = normalizedPath.match(/^\/page\/(home-menu-[a-z0-9-]+)$/);
+      window.SONGAK_PUBLIC_ROUTE_CONFIG = publicRouteConfig;
+      window.SONGAK_PUBLIC_ROUTE = publicRouteConfig[normalizedPath]
+        || (dynamicMenuMatch ? { menuId: dynamicMenuMatch[1] } : null);
+      const isPublicView = Boolean(window.SONGAK_PUBLIC_ROUTE)
+        || (params.get("mode") === "view" && params.get("editorRole") !== "staff");
       if (isPublicView) return;
       document.documentElement.style.visibility = "hidden";
       fetch("/api/board/admin/session", { credentials: "same-origin", cache: "no-store" })
@@ -13136,6 +13170,7 @@
       color: var(--muted);
       font-size: 12px;
     }
+    body.public-view-role .footer-document-source { display: none; }
 
     .footer-document-source a { color: var(--strong); font-weight: 850; }
     .footer-document-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -15594,7 +15629,7 @@
       color: #fff;
       background: #438064;
       box-shadow: 0 14px 28px rgba(45, 102, 77, .2);
-      font: 900 28px/1 "Pretendard Variable", system-ui, sans-serif;
+      font: 900 28px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
       animation: editor-boot-bob 1.4s ease-in-out infinite;
     }
 
@@ -15614,7 +15649,7 @@
 
     .editor-boot-title {
       margin: 0;
-      font-family: "Hahmlet Variable", "Noto Serif KR", serif;
+      font-family: Georgia, "Times New Roman", serif;
       font-size: clamp(24px, 5vw, 32px);
       font-weight: 800;
       letter-spacing: -.045em;
@@ -15633,7 +15668,7 @@
     .editor-boot-message {
       margin: 14px auto 0;
       color: #587266;
-      font: 650 15px/1.65 "Pretendard Variable", system-ui, sans-serif;
+      font: 650 15px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
     }
 
     .editor-boot-message span + span {
@@ -15949,7 +15984,7 @@
                 <div class="placeholder-person" id="photoPlaceholder">
                   <div class="person-figure"></div>
                 </div>
-                <img id="photoImage" alt="가상의 복지관 대표자 콘셉트 이미지" hidden>
+                <img id="photoImage" alt="가상의 복지관 대표자 콘셉트 이미지" loading="lazy" decoding="async" hidden>
               </div>
               <span class="edit-label">대표자 사진 영역</span>
               <span class="handle move"></span>
@@ -17034,6 +17069,8 @@
 
     const viewportKeys = Object.keys(viewportProfiles);
     const saveStorageKey = "sacwcWebsiteEditor";
+    const remoteSiteDocumentKey = "songak-homepage";
+    let remoteSiteRevision = 0;
     const storageSchema = window.EditorStorageSchema;
     const storageRuntime = window.EditorStorageManager;
     const sectionRuntime = window.EditorSectionManager;
@@ -18312,7 +18349,7 @@
     }
 
     function normalizeHomeMenuLogo(logo) {
-      if (!logo || typeof logo !== "object" || !securityRuntime.isSafeImageDataUrl(logo.dataUrl)) return null;
+      if (!logo || typeof logo !== "object" || !securityRuntime.isSafeImageSource(logo.dataUrl)) return null;
       const naturalWidth = Number(logo.naturalWidth) || null;
       const naturalHeight = Number(logo.naturalHeight) || null;
       const ratio = naturalWidth && naturalHeight ? naturalWidth / naturalHeight : Number(logo.ratio) || 1;
@@ -18630,6 +18667,20 @@
         if (item.id === menuId) found = { item, meta };
       });
       return found;
+    }
+
+    function getPublicPathForMenuId(menuId) {
+      return Object.entries(window.SONGAK_PUBLIC_ROUTE_CONFIG || {})
+        .find(([, config]) => config?.menuId === menuId)?.[0]
+        || (/^home-menu-[a-z0-9-]+$/.test(menuId) ? `/page/${menuId}` : "");
+    }
+
+    function getPublicRouteForPath(pathname = window.location.pathname) {
+      const path = pathname !== "/" ? pathname.replace(/\/+$/, "") : "/";
+      const configured = window.SONGAK_PUBLIC_ROUTE_CONFIG?.[path];
+      if (configured) return configured;
+      const dynamic = path.match(/^\/page\/(home-menu-[a-z0-9-]+)$/);
+      return dynamic ? { menuId: dynamic[1] } : null;
     }
 
     function hasHomeMenuChildren(item) {
@@ -19483,6 +19534,9 @@
         : null;
       state.expandedHomeMenuId = null;
       state.expandedHomeSubMenuId = null;
+      if (document.body.dataset.editorRole === "public" && window.location.pathname !== "/") {
+        window.history.pushState({ menuId: "home-menu-account" }, "", "/");
+      }
       renderHomeMenu({ syncInputs: false });
       if (options.apply !== false) applySectionVisibility();
     }
@@ -19510,6 +19564,10 @@
         }
         return;
       }
+      const publicPath = document.body.dataset.editorRole === "public" ? getPublicPathForMenuId(menuId) : "";
+      if (publicPath && window.location.pathname !== publicPath) {
+        window.history.pushState({ menuId }, "", publicPath);
+      }
       state.activeHomeMenuId = menuId;
       state.expandedHomeMenuId = null;
       state.expandedHomeSubMenuId = null;
@@ -19531,6 +19589,19 @@
         renderHomeMenu({ syncInputs: false });
       }
     }
+
+    window.addEventListener("popstate", () => {
+      if (document.body.dataset.editorRole !== "public") return;
+      const route = getPublicRouteForPath();
+      window.SONGAK_PUBLIC_ROUTE = route;
+      if (route?.menuId && findHomeMenuItem(route.menuId)) {
+        closeFooterDocumentModal({ restoreFocus: false });
+        navigateToHomeMenuSection(route.menuId);
+        return;
+      }
+      // Footer document routes need their modal boot sequence rebuilt.
+      window.location.reload();
+    });
 
     const mainIntroKickerText = document.querySelector(".main-intro-kicker-text");
     const mainIntroTitleText = document.querySelector(".main-intro-title-text");
@@ -22258,7 +22329,7 @@
     }
 
     function replaceWithSafeImage(container, source, alt, className = "") {
-      if (!container || !securityRuntime.isSafeImageDataUrl(source)) return false;
+      if (!container || !securityRuntime.isSafeImageSource(source)) return false;
       const image = document.createElement("img");
       image.alt = alt;
       image.src = source;
@@ -22276,7 +22347,7 @@
       const refs = getGreetingRefs(sectionId);
       if (!refs.sealLayer) return;
       const storedSource = model.assets.seal?.dataUrl;
-      const descriptor = securityRuntime.isSafeImageDataUrl(storedSource)
+      const descriptor = securityRuntime.isSafeImageSource(storedSource)
         ? { type: "image", src: storedSource, lines: [] }
         : securityRuntime.sanitizeSealMarkup(legacyMarkup ?? model.sealHtml ?? refs.sealLayer.innerHTML);
 
@@ -24647,7 +24718,7 @@
     function isSafeEditorImageSource(source) {
       const value = String(source || "");
       const isProjectAssetUrl = /^\.\/assets\/(?:[a-z0-9_-]+\/)*[a-z0-9_.-]+$/i.test(value) && !value.includes("..");
-      return securityRuntime.isSafeImageDataUrl(value) || isProjectAssetUrl;
+      return securityRuntime.isSafeImageSource(value) || isProjectAssetUrl;
     }
 
     function loadImageFromDataUrl(dataUrl) {
@@ -25320,7 +25391,7 @@
         layer.innerHTML = `
           <div class="layer-content photo-frame">
             <div class="placeholder-person"><div class="person-figure"></div></div>
-            <img alt="대표자 사진" hidden>
+            <img alt="대표자 사진" loading="lazy" decoding="async" hidden>
           </div>
           <span class="edit-label">대표자 사진 영역</span>
           <span class="handle move"></span>
@@ -26223,7 +26294,7 @@
         tabletSpan = 6
       } = options;
       const imageMarkup = card.image?.dataUrl
-        ? `<img src="${escapeHtml(card.image.dataUrl)}" alt="${escapeHtml(card.headline)} 프로그램 이미지" style="--managed-image-fit:${card.image.fit === "contain" ? "contain" : "cover"};--managed-image-scale:${clamp(Number(card.image.scale) || 1, .2, 4)};--managed-image-opacity:${clamp(Number(card.image.opacity ?? 100), 0, 100) / 100}">`
+        ? `<img src="${escapeHtml(card.image.dataUrl)}" alt="${escapeHtml(card.headline)} 프로그램 이미지" loading="lazy" decoding="async" style="--managed-image-fit:${card.image.fit === "contain" ? "contain" : "cover"};--managed-image-scale:${clamp(Number(card.image.scale) || 1, .2, 4)};--managed-image-opacity:${clamp(Number(card.image.opacity ?? 100), 0, 100) / 100}">`
         : `<span class="program-card-image-placeholder">프로그램 이미지를 첨부해 주세요</span>`;
       const categoryOptions = model.categories
         .filter((category) => category.id !== "all")
@@ -29535,7 +29606,7 @@
                   return `
                     <article class="facility-detail-floor-panel${item.id === selectedId ? " is-facility-detail-selected" : ""}" data-essential-item-id="${escapeHtml(item.id)}" role="tabpanel">
                       <div class="facility-detail-floor-symbol${item.imageUrl ? " has-image" : ""}" data-essential-image-target role="button" tabindex="0" aria-label="${escapeHtml(item.title || item.badge || "층")} 사진 편집">
-                        ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="" style="--facility-image-fit:${item.imageFit === "contain" ? "contain" : "cover"};--facility-image-scale:${clamp(Number(item.imageScale) || 1, .2, 4)};--facility-image-opacity:${clamp(Number(item.imageOpacity ?? 100), 0, 100) / 100}">` : ""}
+                        ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async" style="--facility-image-fit:${item.imageFit === "contain" ? "contain" : "cover"};--facility-image-scale:${clamp(Number(item.imageScale) || 1, .2, 4)};--facility-image-opacity:${clamp(Number(item.imageOpacity ?? 100), 0, 100) / 100}">` : ""}
                         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" data-essential-image-input hidden>
                         <textarea class="essential-field essential-item-badge" rows="1" placeholder="층 이름" data-essential-item-field="badge" aria-label="층 이름">${escapeHtml(item.badge)}</textarea>
                         <button type="button" class="facility-detail-photo-edit essential-edit-only" data-essential-photo-edit aria-label="${escapeHtml(item.title || item.badge || "층")} 사진 편집">사진 편집</button>
@@ -29656,7 +29727,7 @@
           body = `${renderDetailBundleHeading(model)}
             <div class="detail-source-media">
               <a class="detail-source-link" data-detail-source-link href="${escapeHtml(model.detailAssetUrl)}" target="_blank" rel="noopener" aria-label="원본 시간표 이미지 크게 보기">
-                <img class="detail-source-image" data-detail-source-image src="${escapeHtml(model.detailAssetUrl)}" alt="${escapeHtml(model.detailAssetAlt)}">
+                <img class="detail-source-image" data-detail-source-image src="${escapeHtml(model.detailAssetUrl)}" alt="${escapeHtml(model.detailAssetAlt)}" loading="lazy" decoding="async">
               </a>
               <div class="detail-asset-editor essential-edit-only">
                 <button type="button" class="detail-bundle-action primary" data-detail-action="upload-source-image">이미지 첨부·교체</button>
@@ -29723,7 +29794,7 @@
           const teams = ["all", ...new Set(model.items.map((item) => item.badge).filter(Boolean))];
           body = `${renderDetailBundleHeading(model)}<div class="detail-filter-tabs" role="tablist">${teams.map((team) => `<button type="button" class="detail-filter-btn" data-detail-filter-team="${escapeHtml(team)}" aria-pressed="${team === "all"}">${team === "all" ? "전체" : escapeHtml(team)}</button>`).join("")}</div><div class="detail-team-grid">${model.items.map((item, index) => `<div data-detail-team-card="${escapeHtml(item.badge)}">${renderDetailBundleItemCard(item, index, model.items.length, "detail-team-card")}</div>`).join("")}</div>`;
         } else if (kind === "archive") {
-          body = `${renderDetailBundleHeading(model)}<div class="detail-filter-toolbar"><div class="detail-filter-field grow"><label>영상 검색</label><input type="search" data-detail-filter="video" placeholder="영상 제목과 설명 검색"></div><span class="detail-result-count" data-detail-result-count></span></div><div class="detail-video-grid">${model.items.map((item, index) => `<article class="detail-video-card" data-essential-item-id="${escapeHtml(item.id)}" data-detail-video-value="${escapeHtml(`${item.title} ${item.description}`.toLowerCase())}"><a class="detail-video-thumb" href="${escapeHtml(item.linkUrl || `https://www.youtube.com/watch?v=${item.meta}`)}" target="_blank" rel="noopener"><img src="${escapeHtml(item.imageUrl || `https://img.youtube.com/vi/${item.meta}/hqdefault.jpg`)}" alt="${escapeHtml(item.title)}"><span class="detail-video-play" aria-hidden="true">▶</span></a><div class="detail-video-copy"><textarea class="essential-field essential-item-badge" rows="1" data-essential-item-field="badge">${escapeHtml(item.badge)}</textarea><textarea class="essential-field essential-item-title" rows="2" data-essential-item-field="title">${escapeHtml(item.title)}</textarea><textarea class="essential-field essential-item-meta essential-edit-only" rows="1" data-essential-item-field="meta" aria-label="YouTube 영상 ID">${escapeHtml(item.meta)}</textarea><textarea class="essential-field essential-item-description" rows="2" data-essential-item-field="description">${escapeHtml(item.description)}</textarea><a class="detail-bundle-action subtle detail-video-link" href="${escapeHtml(item.linkUrl || `https://www.youtube.com/watch?v=${item.meta}`)}" target="_blank" rel="noopener">영상 보기</a>${renderFacilityDetailItemTools(index, model.items.length)}</div></article>`).join("")}</div>`;
+          body = `${renderDetailBundleHeading(model)}<div class="detail-filter-toolbar"><div class="detail-filter-field grow"><label>영상 검색</label><input type="search" data-detail-filter="video" placeholder="영상 제목과 설명 검색"></div><span class="detail-result-count" data-detail-result-count></span></div><div class="detail-video-grid">${model.items.map((item, index) => `<article class="detail-video-card" data-essential-item-id="${escapeHtml(item.id)}" data-detail-video-value="${escapeHtml(`${item.title} ${item.description}`.toLowerCase())}"><a class="detail-video-thumb" href="${escapeHtml(item.linkUrl || `https://www.youtube.com/watch?v=${item.meta}`)}" target="_blank" rel="noopener"><img src="${escapeHtml(item.imageUrl || `https://img.youtube.com/vi/${item.meta}/hqdefault.jpg`)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async"><span class="detail-video-play" aria-hidden="true">▶</span></a><div class="detail-video-copy"><textarea class="essential-field essential-item-badge" rows="1" data-essential-item-field="badge">${escapeHtml(item.badge)}</textarea><textarea class="essential-field essential-item-title" rows="2" data-essential-item-field="title">${escapeHtml(item.title)}</textarea><textarea class="essential-field essential-item-meta essential-edit-only" rows="1" data-essential-item-field="meta" aria-label="YouTube 영상 ID">${escapeHtml(item.meta)}</textarea><textarea class="essential-field essential-item-description" rows="2" data-essential-item-field="description">${escapeHtml(item.description)}</textarea><a class="detail-bundle-action subtle detail-video-link" href="${escapeHtml(item.linkUrl || `https://www.youtube.com/watch?v=${item.meta}`)}" target="_blank" rel="noopener">영상 보기</a>${renderFacilityDetailItemTools(index, model.items.length)}</div></article>`).join("")}</div>`;
         } else if (kind === "form") {
           body = `${renderDetailBundleHeading(model)}<div class="detail-application-layout"><form class="detail-application-form" data-detail-application-form novalidate><div class="detail-form-grid">${model.items.map((item, index) => {
             const options = String(item.meta || "").split("|").filter(Boolean);
@@ -31385,7 +31456,7 @@
 
     function renderHistoryEvent(item, index, total) {
       const imageMarkup = item.image?.dataUrl
-        ? `<img src="${escapeHtml(item.image.dataUrl)}" alt="${escapeHtml(item.image.alt || `${item.title} 콘셉트 이미지`)}" style="--managed-image-fit:${item.image.fit === "contain" ? "contain" : "cover"};--managed-image-scale:${clamp(Number(item.image.scale) || 1, .2, 4)};--managed-image-opacity:${clamp(Number(item.image.opacity ?? 100), 0, 100) / 100}">${item.image.caption ? `<span class="history-image-caption">${escapeHtml(item.image.caption)}</span>` : ""}`
+        ? `<img src="${escapeHtml(item.image.dataUrl)}" alt="${escapeHtml(item.image.alt || `${item.title} 콘셉트 이미지`)}" loading="lazy" decoding="async" style="--managed-image-fit:${item.image.fit === "contain" ? "contain" : "cover"};--managed-image-scale:${clamp(Number(item.image.scale) || 1, .2, 4)};--managed-image-opacity:${clamp(Number(item.image.opacity ?? 100), 0, 100) / 100}">${item.image.caption ? `<span class="history-image-caption">${escapeHtml(item.image.caption)}</span>` : ""}`
         : "";
       return `
         <article class="history-event-row" data-history-event-id="${escapeHtml(item.id)}">
@@ -33382,7 +33453,7 @@
     function renderGalleryMedia(item, compact = false) {
       const image = item?.image;
       return image?.dataUrl
-        ? `<img src="${escapeHtml(image.dataUrl)}" alt="${escapeHtml(item.title || "갤러리 사진")}" data-gallery-media-item-id="${escapeHtml(item.id)}" draggable="false" style="--gallery-image-fit:${image.fit === "contain" ? "contain" : "cover"};--gallery-image-scale:${clamp(image.scale ?? 1, .2, 4)};--gallery-image-x:${clamp(image.x ?? 0, -100, 100)}%;--gallery-image-y:${clamp(image.y ?? 0, -100, 100)}%;--gallery-image-opacity:${clamp(image.opacity ?? 100, 0, 100) / 100};opacity:${clamp(image.opacity ?? 100, 0, 100) / 100}">`
+        ? `<img src="${escapeHtml(image.dataUrl)}" alt="${escapeHtml(item.title || "갤러리 사진")}" data-gallery-media-item-id="${escapeHtml(item.id)}" draggable="false" loading="lazy" decoding="async" style="--gallery-image-fit:${image.fit === "contain" ? "contain" : "cover"};--gallery-image-scale:${clamp(image.scale ?? 1, .2, 4)};--gallery-image-x:${clamp(image.x ?? 0, -100, 100)}%;--gallery-image-y:${clamp(image.y ?? 0, -100, 100)}%;--gallery-image-opacity:${clamp(image.opacity ?? 100, 0, 100) / 100};opacity:${clamp(image.opacity ?? 100, 0, 100) / 100}">`
         : `<span class="gallery-placeholder">${compact ? "사진" : "사진을 첨부해 주세요"}</span>`;
     }
 
@@ -36321,8 +36392,11 @@ function syncSectionControls() {
       syncPhotoBackgroundControls();
     }
 
-    function renderAllGreetingPhotos() {
-      getSectionOrder().filter(isGreetingSection).forEach((sectionId) => renderPhotoFromState(sectionId));
+    function renderAllGreetingPhotos(options = {}) {
+      getSectionOrder()
+        .filter(isGreetingSection)
+        .filter((sectionId) => !options.visibleOnly || isSectionVisibleInCurrentView(sectionId))
+        .forEach((sectionId) => renderPhotoFromState(sectionId));
     }
 
     function restoreUploadedAssetPreviews(savedAssets, savedContent = {}) {
@@ -36732,6 +36806,106 @@ function syncSectionControls() {
       return storageRuntime.getByteLength(value);
     }
 
+    const siteAssetUploadCache = new Map();
+
+    async function uploadSiteAssetDataUrl(dataUrl) {
+      if (!securityRuntime.isSafeImageDataUrl(dataUrl)) return dataUrl;
+      if (siteAssetUploadCache.has(dataUrl)) return siteAssetUploadCache.get(dataUrl);
+      const mimeType = /^data:(image\/(?:png|jpe?g|webp|gif));base64,/i.exec(dataUrl)?.[1]?.toLowerCase();
+      if (!mimeType) return dataUrl;
+      const blob = await fetch(dataUrl).then((response) => response.blob());
+      const extension = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1];
+      const response = await fetch("/api/site-assets", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "content-type": mimeType,
+          "x-file-name": encodeURIComponent(`songak-homepage-image.${extension}`)
+        },
+        body: blob
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !securityRuntime.isSafeImageSource(payload.item?.url)) {
+        throw new Error(payload.error || "홈페이지 이미지를 서버에 저장하지 못했습니다.");
+      }
+      siteAssetUploadCache.set(dataUrl, payload.item.url);
+      return payload.item.url;
+    }
+
+    async function externalizeSnapshotImages(snapshot) {
+      const next = structuredClone(snapshot);
+      async function visit(value) {
+        if (!value || typeof value !== "object") return;
+        for (const [key, child] of Object.entries(value)) {
+          if (typeof child === "string" && securityRuntime.isSafeImageDataUrl(child)) {
+            value[key] = await uploadSiteAssetDataUrl(child);
+          } else if (child && typeof child === "object") {
+            await visit(child);
+          }
+        }
+      }
+      await visit(next);
+      return next;
+    }
+
+    function isPublicDocumentRequest() {
+      const role = String(editorQuery?.get("editorRole") || editorQuery?.get("role") || "").toLowerCase();
+      return Boolean(window.SONGAK_PUBLIC_ROUTE)
+        || editorQuery?.get("mode") === "view"
+        || ["public", "visitor", "consumer"].includes(role);
+    }
+
+    async function readRemoteSiteDocument() {
+      if (!/^https?:$/.test(window.location.protocol)) return null;
+      const draftQuery = isPublicDocumentRequest() ? "" : "?mode=draft";
+      try {
+        const response = await fetch(`/api/site-content/${remoteSiteDocumentKey}${draftQuery}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { accept: "application/json" }
+        });
+        if (!response.ok) return null;
+        const payload = await response.json();
+        remoteSiteRevision = Math.max(0, Number(payload.revision) || 0);
+        return payload.content && typeof payload.content === "object" ? payload.content : null;
+      } catch (error) {
+        console.warn("공개 홈페이지 저장본을 불러오지 못했습니다", error);
+        return null;
+      }
+    }
+
+    async function loadInitialSiteSnapshot() {
+      const remote = await readRemoteSiteDocument();
+      if (remote) return StorageManager.load(remote);
+      // Visitors must never inherit another device's browser-local draft. When no
+      // published document exists yet, the checked-in canonical design is used.
+      if (isPublicDocumentRequest()) return false;
+      return StorageManager.load();
+    }
+
+    async function saveAndPublishRemoteSnapshot(saved) {
+      if (!/^https?:$/.test(window.location.protocol) || document.body.dataset.editorRole !== "staff") return null;
+      const draftResponse = await fetch(`/api/site-content/${remoteSiteDocumentKey}`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ content: saved, expectedRevision: remoteSiteRevision })
+      });
+      const draft = await draftResponse.json().catch(() => ({}));
+      if (!draftResponse.ok) throw new Error(draft.error || "홈페이지 서버 저장에 실패했습니다.");
+      remoteSiteRevision = Math.max(0, Number(draft.revision) || remoteSiteRevision);
+      const publishResponse = await fetch(`/api/site-content/${remoteSiteDocumentKey}/publish`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ expectedRevision: remoteSiteRevision })
+      });
+      const published = await publishResponse.json().catch(() => ({}));
+      if (!publishResponse.ok) throw new Error(published.error || "홈페이지 게시에 실패했습니다.");
+      remoteSiteRevision = Math.max(0, Number(published.revision) || remoteSiteRevision);
+      return published;
+    }
+
     function setSaveButtonState(label = "저장", disabled = false) {
       if (!saveBtn) return;
       saveBtn.textContent = label;
@@ -37050,26 +37224,34 @@ function syncSectionControls() {
         }
       };
       let preparedSaved = saved;
+      let publishSaved = saved;
+      let localSaveSucceeded = false;
       try {
         const prepared = await prepareSavedDocumentForStorage(saved);
         preparedSaved = prepared.saved;
+        publishSaved = preparedSaved;
         localStorage.setItem(saveStorageKey, JSON.stringify(preparedSaved));
+        localSaveSucceeded = true;
         persistDetailPublishPayload();
-        const message = prepared.stats.optimizedImages > 0
-          ? "큰 이미지를 최적화해서 저장했습니다"
-          : prepared.stats.estimatedBytesAfter > saveStorageWarningBytes
-            ? "저장했습니다. 이미지가 많아 용량이 큽니다"
-            : "현재 편집 상태를 브라우저에 저장했습니다";
-        showToast(message);
       } catch (error) {
         const compactSaved = stripImageDataForCompactSave(preparedSaved);
         try {
           localStorage.setItem(saveStorageKey, JSON.stringify(compactSaved));
+          preparedSaved = compactSaved;
+          localSaveSucceeded = true;
           showToast("이미지 용량이 커서 파일명과 배치 정보만 저장했습니다");
         } catch (compactError) {
           console.warn("저장 공간 부족으로 편집 상태를 저장하지 못했습니다", compactError);
           showToast("저장 공간이 부족해 현재 상태를 저장하지 못했습니다");
         }
+      }
+      if (document.body.dataset.editorRole === "staff") {
+        publishSaved = await externalizeSnapshotImages(publishSaved);
+        await saveAndPublishRemoteSnapshot(publishSaved);
+        try { localStorage.setItem(saveStorageKey, JSON.stringify(publishSaved)); } catch (_) {}
+        showToast("저장한 내용을 방문자 홈페이지에 게시했습니다");
+      } else if (localSaveSucceeded) {
+        showToast("현재 편집 상태를 브라우저에 저장했습니다");
       }
       } catch (error) {
         console.warn("저장 중 오류가 발생했습니다", error);
@@ -37175,11 +37357,12 @@ function syncSectionControls() {
       showToast("소형폰, 휴대폰, 태블릿 기본 배치를 다시 생성했습니다");
     }
 
-    function loadSnapshot() {
+    function loadSnapshot(snapshot = null) {
       try {
-        const raw = localStorage.getItem(saveStorageKey);
-        if (!raw) return;
-        const saved = normalizeSavedDocument(JSON.parse(raw));
+        const raw = snapshot ? null : localStorage.getItem(saveStorageKey);
+        if (!snapshot && !raw) return false;
+        const source = snapshot ? structuredClone(snapshot) : JSON.parse(raw);
+        const saved = normalizeSavedDocument(source);
         const legacyIntroBody = "지역주민과 함께 소통하고 실천하여 동반 성장하는 송악사회복지관입니다. 복지서비스의 전문성과 주민 참여를 바탕으로 모두가 함께 잘 사는 따뜻한 지역사회를 만들어 갑니다.";
         const explicitIntroBody = "송악사회복지관은 당진시 송악읍 주민의 상담·돌봄·교육·여가·참여를 한곳에서 연결합니다. 아이와 가족, 어르신, 도움이 필요한 이웃 누구나 편하게 이용하고 함께할 수 있습니다.";
         if (saved.content?.mainIntroBody === legacyIntroBody) saved.content.mainIntroBody = explicitIntroBody;
@@ -37282,7 +37465,7 @@ function syncSectionControls() {
         const canonicalBackground = saved.document?.globals?.background;
         if (canonicalBackground) {
           const safeCanonicalBackground = structuredClone(canonicalBackground);
-          if (safeCanonicalBackground.imageDataUrl && !securityRuntime.isSafeImageDataUrl(safeCanonicalBackground.imageDataUrl)) {
+          if (safeCanonicalBackground.imageDataUrl && !securityRuntime.isSafeImageSource(safeCanonicalBackground.imageDataUrl)) {
             safeCanonicalBackground.imageDataUrl = null;
             safeCanonicalBackground.imageName = null;
             if (safeCanonicalBackground.mode === "image") safeCanonicalBackground.mode = "default";
@@ -37300,7 +37483,7 @@ function syncSectionControls() {
           state.background.colorEnabled = saved.assets.backgroundColorEnabled ?? (state.background.mode === "color");
           state.background.imageName = saved.assets.backgroundImageName ?? state.background.imageName;
           if (saved.assets.backgroundImageDataUrl != null) {
-            state.background.imageDataUrl = securityRuntime.isSafeImageDataUrl(saved.assets.backgroundImageDataUrl)
+            state.background.imageDataUrl = securityRuntime.isSafeImageSource(saved.assets.backgroundImageDataUrl)
               ? saved.assets.backgroundImageDataUrl
               : null;
           }
@@ -37395,12 +37578,14 @@ function syncSectionControls() {
         if (saved.content?.activeSection) state.activeSection = normalizeSectionId(saved.content.activeSection);
         state.selected = elements[state.selected] ? state.selected : sectionLayerMap[state.activeSection]?.[0] ?? "title";
         applyAllTitleIcons();
-        renderAllGreetingPhotos();
+        if (!isPublicDocumentRequest()) renderAllGreetingPhotos();
         renderAllSignatures();
         renderAllIdentityItems();
         syncContent();
+        return true;
       } catch (error) {
         console.warn("저장 상태를 불러오지 못했습니다", error);
+        return false;
       }
     }
 
@@ -39093,7 +39278,7 @@ function syncSectionControls() {
       console.error("[songak-editor-boot]", error);
     }
 
-    function initializeEditorApplication() {
+    async function initializeEditorApplication() {
       try {
 
     MainIntroManager.register("mainIntro", { content: MainIntroManager.getContent("mainIntro") });
@@ -39106,14 +39291,14 @@ function syncSectionControls() {
     essentialRuntime.BASE_SECTION_IDS.forEach((sectionId) => {
       EssentialManager.register(sectionId, { content: essentialRuntime.createDefaultModel(sectionId) });
     });
-    StorageManager.load();
+    await loadInitialSiteSnapshot();
     const officialNoticeMigrated = migrateOfficialNoticeTopTen();
     const officialSiteMigrated = migrateOfficialSiteContent();
     registerOfficialSupplementSections();
     applyConceptImageDefaults();
     getSectionOrder().filter(isHistorySection).forEach(renderHistorySection);
     getSectionOrder().filter((sectionId) => isEssentialSection(sectionId) && getEssentialModel(sectionId).facilityDetailKind === "selector").forEach(renderEssentialSection);
-    renderAllGreetingPhotos();
+    if (!isPublicDocumentRequest()) renderAllGreetingPhotos();
     const officialMenuMigrated = ensureOfficialSupplementMenuLinks();
     if (officialNoticeMigrated) renderEssentialSection("notice");
     if (officialSiteMigrated) {
@@ -39227,7 +39412,9 @@ function syncSectionControls() {
     syncContent();
     MobileViewportManager.syncAccessDevice();
     const defaultEditorRole = ["localhost", "127.0.0.1"].includes(window.location.hostname) ? "developer" : "public";
-    const requestedEditorRole = String(window.SONGAK_EDITOR_ROLE || editorQuery.get("editorRole") || editorQuery.get("role") || defaultEditorRole).toLowerCase();
+    const requestedEditorRole = String(window.SONGAK_PUBLIC_ROUTE
+      ? "public"
+      : window.SONGAK_EDITOR_ROLE || editorQuery.get("editorRole") || editorQuery.get("role") || defaultEditorRole).toLowerCase();
     setEditorRole(requestedEditorRole);
     window.SongakEditorAccess = Object.freeze({
       getRole: () => document.body.dataset.editorRole || "developer",
@@ -39235,6 +39422,7 @@ function syncSectionControls() {
     });
     const queryViewport = editorQuery.get("viewport");
     const requestedViewMode = ["public", "visitor", "consumer"].includes(requestedEditorRole) || editorQuery.get("mode") === "view";
+    if (requestedViewMode) document.title = "송악사회복지관 홈페이지";
     /* 공개 미리보기 직행 URL에는 viewport 쿼리가 없다. 이 경우 브라우저 폭을
        기준으로 자동 선택해 휴대폰에서 데스크톱 캔버스가 잘리지 않게 한다. */
     const automaticViewViewport = requestedViewMode
@@ -39278,6 +39466,20 @@ function syncSectionControls() {
         if (menuId && findHomeMenuItem(menuId)) state.activeHomeMenuId = menuId;
       }
     }
+    const publicRoute = window.SONGAK_PUBLIC_ROUTE || null;
+    if (publicRoute?.menuId && findHomeMenuItem(publicRoute.menuId)) {
+      state.activeHomeMenuId = publicRoute.menuId;
+      state.expandedHomeMenuId = null;
+      state.expandedHomeSubMenuId = null;
+    }
+    if (publicRoute?.sectionId && sectionLabels[publicRoute.sectionId]) {
+      state.activeHomeMenuId = null;
+      getSectionOrder().forEach((sectionId) => {
+        state.hiddenSections[sectionId] = sectionId !== publicRoute.sectionId;
+      });
+      state.activeSection = publicRoute.sectionId;
+      state.selected = sectionLayerMap[publicRoute.sectionId]?.[0] ?? state.selected;
+    }
     const querySection = editorQuery.get("previewSection");
     if (querySection && sectionLabels[querySection]) {
       state.activeHomeMenuId = null;
@@ -39289,6 +39491,10 @@ function syncSectionControls() {
     }
     lazySectionMountReady = true;
     applySectionVisibility();
+    renderAllGreetingPhotos({ visibleOnly: requestedViewMode });
+    if (publicRoute?.footerDocument) {
+      window.setTimeout(() => openFooterDocumentModal("footer", publicRoute.footerDocument), 0);
+    }
     if (isSectionVisibleInCurrentView("mainIntro")) MainIntroManager.refreshSizing();
     const initialSection = SectionManager.getVisibleIds().includes(state.activeSection) ? state.activeSection : SectionManager.getVisibleIds()[0] ?? "greeting";
     setActiveSection(initialSection, { selectLayer: true });

@@ -4,89 +4,44 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("builds the finished Songak community board shell", async () => {
+test("builds the finished Songak public site and community board shell", async () => {
   await access(new URL("dist/server/index.js", root));
   const [page, client, worker, packageJson, publicPage] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/board-app.tsx", root), "utf8"),
     readFile(new URL("worker/index.ts", root), "utf8"),
     readFile(new URL("package.json", root), "utf8"),
-    readFile(new URL("../outputs/representative-greeting-public.html", root), "utf8"),
+    readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
   ]);
   assert.match(page, /송악사회복지관/);
   assert.match(client, /복지관과 주민이/);
   assert.match(client, /주민 글쓰기/);
   assert.match(worker, /content-security-policy/);
   assert.match(worker, /x-content-type-options/);
-  assert.match(worker, /representative-greeting-public/);
+  assert.match(worker, /representative-greeting-editor/);
   assert.match(worker, /cache-control/);
-  assert.match(publicPage, /송악사회복지관 함께마당/);
-  assert.match(publicPage, /\/staff-login\?provider=kakao/);
-  assert.match(publicPage, /account-sns-photoreal-mobile-v2\.webp/);
-  assert.match(publicPage, /href="\/about"/);
-  assert.match(publicPage, /href="\/programs"/);
-  assert.match(publicPage, /href="\/participation"/);
-  assert.match(publicPage, /href="\/news"/);
-  assert.match(publicPage, /href="\/privacy-policy"/);
-  assert.match(publicPage, /이메일무단수집거부/);
-  assert.match(publicPage, /찾아오시는 길/);
-  assert.doesNotMatch(publicPage, /editor-[a-z-]+\.js|Hahmlet-Variable\.ttf|PretendardVariable\.woff2/);
+  assert.match(publicPage, /SONGAK_PUBLIC_ROUTE_CONFIG/);
+  assert.match(publicPage, /\/api\/site-content\/\$\{remoteSiteDocumentKey\}/);
+  assert.match(publicPage, /saveAndPublishRemoteSnapshot/);
+  assert.match(publicPage, /reconcileLazySectionMounts/);
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("serves every public menu and footer document as a separate lightweight page", async () => {
-  const pageFiles = [
-    "public-about.html",
-    "public-about-greeting.html",
-    "public-about-mission.html",
-    "public-about-corporate.html",
-    "public-about-history.html",
-    "public-about-facility.html",
-    "public-about-organization.html",
-    "public-programs.html",
-    "public-programs-list.html",
-    "public-programs-schedule.html",
-    "public-programs-schedule-original.html",
-    "public-programs-case-management.html",
-    "public-programs-application.html",
-    "public-participation.html",
-    "public-participation-volunteer.html",
-    "public-participation-donation.html",
-    "public-news.html",
-    "public-news-notices.html",
-    "public-news-press.html",
-    "public-news-videos.html",
-    "public-news-gallery.html",
-    "public-news-visitor-board.html",
-    "public-privacy.html",
-    "public-email-refusal.html",
-    "public-directions.html",
-  ];
-  const pages = await Promise.all(pageFiles.map((file) => readFile(new URL(`../outputs/${file}`, root), "utf8")));
-  const [worker, communityPage] = await Promise.all([
+test("serves every public menu and footer document through the canonical read-only renderer", async () => {
+  const [worker, communityPage, editor] = await Promise.all([
     readFile(new URL("worker/index.ts", root), "utf8"),
     readFile(new URL("app/community/page.tsx", root), "utf8"),
+    readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
   ]);
-
-  for (const page of pages) {
-    assert.match(page, /<html lang="ko">/);
-    assert.match(page, /\/songak\/public-site\.css/);
-    assert.match(page, /href="\/about"/);
-    assert.match(page, /href="\/programs"/);
-    assert.match(page, /href="\/participation"/);
-    assert.match(page, /href="\/news"/);
-    assert.match(page, /href="\/privacy-policy"/);
-    assert.match(page, /href="\/email-refusal"/);
-    assert.match(page, /href="\/directions"/);
-    assert.doesNotMatch(page, /representative-greeting-editor|editor-[a-z-]+\.js|mode=edit|<iframe/);
-  }
-
   assert.match(worker, /PUBLIC_PAGE_ROUTES/);
-  assert.match(worker, /"\/about": "\/songak\/public-about\.html"/);
-  assert.match(worker, /"\/about\/greeting": "\/songak\/public-about-greeting\.html"/);
-  assert.match(worker, /"\/programs\/case-management": "\/songak\/public-programs-case-management\.html"/);
-  assert.match(worker, /"\/participation\/volunteer": "\/songak\/public-participation-volunteer\.html"/);
-  assert.match(worker, /"\/news\/visitor-board": "\/songak\/public-news-visitor-board\.html"/);
+  for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/news/visitor-board", "/privacy-policy", "/email-refusal", "/directions"]) {
+    assert.match(worker, new RegExp(`"${route.replaceAll("/", "\\/")}": "\\/songak\\/representative-greeting-editor\\.html"`));
+  }
+  assert.match(editor, /"\/about\/greeting": \{ menuId: "home-menu-intro-main" \}/);
+  assert.match(editor, /"\/privacy-policy": \{ sectionId: "footer", footerDocument: "privacy" \}/);
+  assert.match(editor, /body\.public-view-role \.footer-document-source \{ display: none; \}/);
+  assert.match(editor, /publicRoute\?\.menuId/);
+  assert.match(editor, /publicRoute\?\.footerDocument/);
   assert.match(worker, /request\.method === "HEAD"/);
   assert.match(worker, /Response\.redirect\(url\.toString\(\), 308\)/);
   assert.match(worker, /LEGACY_PUBLIC_REDIRECTS[\s\S]*?facility-detail[\s\S]*?\/about\/facility/);

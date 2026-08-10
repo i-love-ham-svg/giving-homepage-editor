@@ -22,6 +22,7 @@ test("routes public staff entry and SNS buttons through the temporary login form
   assert.match(editor, /\["public", "visitor", "consumer"\]\.includes\(requestedEditorRole\)/);
   assert.match(editor, /body\.public-view-role \.mobile-preview-edit-btn/);
   assert.match(editor, /!document\.body\.classList\.contains\("public-view-role"\)/);
-  assert.match(worker, /representative-greeting-public/);
+  assert.match(worker, /representative-greeting-editor/);
+  assert.match(worker, /PUBLIC_PAGE_ROUTES/);
   assert.doesNotMatch(worker, /publicUrl\.searchParams\.set\("mode", "edit"\)/);
 });

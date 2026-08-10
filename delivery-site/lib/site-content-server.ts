@@ -11,7 +11,10 @@ type SiteContentRow = {
   published_at: string | null;
 };
 
-const MAX_CONTENT_BYTES = 1024 * 1024;
+// D1 limits a complete row to 2,000,000 bytes. site_documents keeps both the
+// draft and the published JSON in one row, so each copy must remain well below
+// half of that limit. Images belong in R2 through /api/site-assets.
+const MAX_CONTENT_BYTES = 900 * 1024;
 const documentKeyPattern = /^[a-z0-9][a-z0-9-]{0,63}$/;
 let schemaReady: Promise<unknown> | null = null;
 
@@ -61,7 +64,7 @@ function serializeContent(content: unknown): string {
   }
   const serialized = JSON.stringify(content);
   if (new TextEncoder().encode(serialized).byteLength > MAX_CONTENT_BYTES) {
-    throw new SiteContentError("편집 내용은 1MB까지 저장할 수 있습니다.", 413);
+    throw new SiteContentError("편집 내용은 900KB까지 저장할 수 있습니다. 이미지는 사이트 이미지 저장소에 올려 주세요.", 413);
   }
   return serialized;
 }

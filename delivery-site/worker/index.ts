@@ -24,32 +24,32 @@ interface ExecutionContext {
 }
 
 const PUBLIC_PAGE_ROUTES: Record<string, string> = {
-  "/": "/songak/representative-greeting-public.html",
-  "/about": "/songak/public-about.html",
-  "/about/greeting": "/songak/public-about-greeting.html",
-  "/about/mission": "/songak/public-about-mission.html",
-  "/about/corporate": "/songak/public-about-corporate.html",
-  "/about/history": "/songak/public-about-history.html",
-  "/about/facility": "/songak/public-about-facility.html",
-  "/about/organization": "/songak/public-about-organization.html",
-  "/programs": "/songak/public-programs.html",
-  "/programs/list": "/songak/public-programs-list.html",
-  "/programs/schedule": "/songak/public-programs-schedule.html",
-  "/programs/schedule-original": "/songak/public-programs-schedule-original.html",
-  "/programs/case-management": "/songak/public-programs-case-management.html",
-  "/programs/application": "/songak/public-programs-application.html",
-  "/participation": "/songak/public-participation.html",
-  "/participation/volunteer": "/songak/public-participation-volunteer.html",
-  "/participation/donation": "/songak/public-participation-donation.html",
-  "/news": "/songak/public-news.html",
-  "/news/notices": "/songak/public-news-notices.html",
-  "/news/press": "/songak/public-news-press.html",
-  "/news/videos": "/songak/public-news-videos.html",
-  "/news/gallery": "/songak/public-news-gallery.html",
-  "/news/visitor-board": "/songak/public-news-visitor-board.html",
-  "/privacy-policy": "/songak/public-privacy.html",
-  "/email-refusal": "/songak/public-email-refusal.html",
-  "/directions": "/songak/public-directions.html",
+  "/": "/songak/representative-greeting-editor.html",
+  "/about": "/songak/representative-greeting-editor.html",
+  "/about/greeting": "/songak/representative-greeting-editor.html",
+  "/about/mission": "/songak/representative-greeting-editor.html",
+  "/about/corporate": "/songak/representative-greeting-editor.html",
+  "/about/history": "/songak/representative-greeting-editor.html",
+  "/about/facility": "/songak/representative-greeting-editor.html",
+  "/about/organization": "/songak/representative-greeting-editor.html",
+  "/programs": "/songak/representative-greeting-editor.html",
+  "/programs/list": "/songak/representative-greeting-editor.html",
+  "/programs/schedule": "/songak/representative-greeting-editor.html",
+  "/programs/schedule-original": "/songak/representative-greeting-editor.html",
+  "/programs/case-management": "/songak/representative-greeting-editor.html",
+  "/programs/application": "/songak/representative-greeting-editor.html",
+  "/participation": "/songak/representative-greeting-editor.html",
+  "/participation/volunteer": "/songak/representative-greeting-editor.html",
+  "/participation/donation": "/songak/representative-greeting-editor.html",
+  "/news": "/songak/representative-greeting-editor.html",
+  "/news/notices": "/songak/representative-greeting-editor.html",
+  "/news/press": "/songak/representative-greeting-editor.html",
+  "/news/videos": "/songak/representative-greeting-editor.html",
+  "/news/gallery": "/songak/representative-greeting-editor.html",
+  "/news/visitor-board": "/songak/representative-greeting-editor.html",
+  "/privacy-policy": "/songak/representative-greeting-editor.html",
+  "/email-refusal": "/songak/representative-greeting-editor.html",
+  "/directions": "/songak/representative-greeting-editor.html",
 };
 
 const LEGACY_PUBLIC_REDIRECTS: Record<string, string> = {
@@ -95,7 +95,8 @@ const worker = {
       return Response.redirect(url.toString(), 308);
     }
 
-    if (url.pathname === "/songak/representative-greeting-editor" || url.pathname === "/songak/representative-greeting-editor.html") {
+    if ((url.pathname === "/songak/representative-greeting-editor" || url.pathname === "/songak/representative-greeting-editor.html")
+      && !(url.searchParams.get("mode") === "view" && url.searchParams.get("editorRole") !== "staff")) {
       const sessionUrl = new URL("/api/board/admin/session", request.url);
       const sessionResponse = await handler.fetch(new Request(sessionUrl, { headers: request.headers }), env, ctx);
       const session = await sessionResponse.clone().json().catch(() => ({ admin: false })) as { admin?: boolean };
@@ -113,10 +114,13 @@ const worker = {
       }
     }
 
-    const publicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname];
+    const dynamicPublicMenuPath = /^\/page\/home-menu-[a-z0-9-]+$/.test(url.pathname);
+    const publicAssetPath = PUBLIC_PAGE_ROUTES[url.pathname]
+      || (dynamicPublicMenuPath ? "/songak/representative-greeting-editor.html" : "");
     if ((request.method === "GET" || request.method === "HEAD") && publicAssetPath) {
-      // Public visitors receive only the selected read-only page. The full
-      // editor remains isolated behind the authenticated /editor route.
+      // All public routes use the exact same canonical renderer as the editor.
+      // The browser pathname selects a single read-only page inside that renderer,
+      // while edit controls and mutations remain isolated behind /editor.
       const publicUrl = new URL(publicAssetPath, request.url);
       const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
       return withSecurityHeaders(publicResponse, publicAssetPath);
