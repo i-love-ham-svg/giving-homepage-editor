@@ -14418,6 +14418,9 @@
     }
 
     body.public-view-role .topbar,
+    body.public-view-role .device-preview-toggle,
+    body.public-view-role .preview-return-btn,
+    body.public-view-role .mobile-preview-edit-btn,
     body.public-view-role .staff-editor-dock,
     body.public-view-role .staff-creator-return,
     body.public-view-role .staff-section-manager,
@@ -22528,7 +22531,8 @@
     function updateMobilePreviewEditPosition() {
       const show = isResponsiveViewport()
         && document.body.classList.contains("mobile-device-access")
-        && document.body.classList.contains("preview-mode");
+        && document.body.classList.contains("preview-mode")
+        && !document.body.classList.contains("public-view-role");
       mobilePreviewEditBtn.hidden = !show;
       if (!show) {
         mobilePreviewEditBtn.style.removeProperty("--mobile-preview-edit-left");

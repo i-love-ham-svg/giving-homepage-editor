@@ -20,6 +20,8 @@ test("routes public staff entry and SNS buttons through the temporary login form
   assert.match(editor, /\/staff-login\?provider=/);
   assert.match(editor, /state\.mode === "edit"/);
   assert.match(editor, /\["public", "visitor", "consumer"\]\.includes\(requestedEditorRole\)/);
+  assert.match(editor, /body\.public-view-role \.mobile-preview-edit-btn/);
+  assert.match(editor, /!document\.body\.classList\.contains\("public-view-role"\)/);
   assert.match(worker, /searchParams\.set\("mode", "view"\)/);
   assert.match(worker, /searchParams\.set\("editorRole", "public"\)/);
 });
