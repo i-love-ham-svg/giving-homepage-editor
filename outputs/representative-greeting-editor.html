@@ -39179,7 +39179,11 @@ function syncSectionControls() {
     const requestedViewMode = requestedEditorRole === "public" || editorQuery.get("mode") === "view";
     /* 공개 미리보기 직행 URL에는 viewport 쿼리가 없다. 이 경우 브라우저 폭을
        기준으로 자동 선택해 휴대폰에서 데스크톱 캔버스가 잘리지 않게 한다. */
-    const automaticViewViewport = requestedViewMode ? MobileViewportManager.detectResponsiveViewport() : "desktop";
+    const automaticViewViewport = requestedViewMode
+      ? MobileViewportManager.detectAccessDevice() === "mobile"
+        ? MobileViewportManager.detectResponsiveViewport()
+        : "desktop"
+      : "desktop";
     MobileViewportManager.setViewport(viewportProfiles[queryViewport] ? queryViewport : state.viewportLocked ?? automaticViewViewport);
     MobileViewportManager.setMode(requestedViewMode ? "view" : "edit");
     const requestedStylePage = editorQuery.get("stylePage") || "account";
