@@ -34,14 +34,11 @@ const worker = {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/") {
-      // Ask the asset binding for its clean HTML path so it returns the document
-      // directly instead of redirecting visitors to the long internal asset URL.
-      const publicUrl = new URL("/songak/representative-greeting-editor", request.url);
-      publicUrl.search = url.search;
-      publicUrl.searchParams.set("mode", "view");
-      publicUrl.searchParams.set("editorRole", "public");
+      // Public visitors receive a small read-only document; the full editor is
+      // loaded only inside the authenticated /editor route.
+      const publicUrl = new URL("/songak/representative-greeting-public", request.url);
       const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
-      return withSecurityHeaders(publicResponse, "/songak/representative-greeting-editor.html");
+      return withSecurityHeaders(publicResponse, "/songak/representative-greeting-public.html");
     }
 
     if (url.pathname === "/_vinext/image") {
@@ -76,7 +73,7 @@ function withSecurityHeaders(response: Response, pathname = ""): Response {
     secured.headers.set("cache-control", "public, max-age=604800");
   } else if (/^\/songak\/.*\.(?:css|js)$/.test(pathname)) {
     secured.headers.set("cache-control", "public, max-age=86400");
-  } else if (pathname.endsWith("/representative-greeting-editor.html")) {
+  } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-public.html")) {
     secured.headers.set("cache-control", "public, max-age=300, stale-while-revalidate=3600");
   }
   return secured;

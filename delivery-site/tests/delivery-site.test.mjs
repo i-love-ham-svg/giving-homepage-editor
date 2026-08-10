@@ -6,19 +6,24 @@ const root = new URL("../", import.meta.url);
 
 test("builds the finished Songak community board shell", async () => {
   await access(new URL("dist/server/index.js", root));
-  const [page, client, worker, packageJson] = await Promise.all([
+  const [page, client, worker, packageJson, publicPage] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/board-app.tsx", root), "utf8"),
     readFile(new URL("worker/index.ts", root), "utf8"),
     readFile(new URL("package.json", root), "utf8"),
+    readFile(new URL("../outputs/representative-greeting-public.html", root), "utf8"),
   ]);
   assert.match(page, /송악사회복지관/);
   assert.match(client, /복지관과 주민이/);
   assert.match(client, /주민 글쓰기/);
   assert.match(worker, /content-security-policy/);
   assert.match(worker, /x-content-type-options/);
-  assert.match(worker, /representative-greeting-editor\.html/);
+  assert.match(worker, /representative-greeting-public/);
   assert.match(worker, /cache-control/);
+  assert.match(publicPage, /송악사회복지관 함께마당/);
+  assert.match(publicPage, /\/staff-login\?provider=kakao/);
+  assert.match(publicPage, /account-sns-photoreal-mobile-v2\.webp/);
+  assert.doesNotMatch(publicPage, /editor-[a-z-]+\.js|Hahmlet-Variable\.ttf|PretendardVariable\.woff2/);
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
