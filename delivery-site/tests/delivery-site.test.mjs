@@ -23,6 +23,14 @@ test("builds the finished Songak community board shell", async () => {
   assert.match(publicPage, /송악사회복지관 함께마당/);
   assert.match(publicPage, /\/staff-login\?provider=kakao/);
   assert.match(publicPage, /account-sns-photoreal-mobile-v2\.webp/);
+  assert.match(publicPage, /id="about"/);
+  assert.match(publicPage, /id="programs"/);
+  assert.match(publicPage, /id="participation"/);
+  assert.match(publicPage, /id="news"/);
+  assert.match(publicPage, /href="#privacy"/);
+  assert.match(publicPage, /id="privacy"/);
+  assert.match(publicPage, /이메일무단수집거부/);
+  assert.match(publicPage, /찾아오시는 길/);
   assert.doesNotMatch(publicPage, /editor-[a-z-]+\.js|Hahmlet-Variable\.ttf|PretendardVariable\.woff2/);
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
