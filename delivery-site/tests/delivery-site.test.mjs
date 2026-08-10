@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -27,7 +27,7 @@ test("builds the finished Songak community board shell", async () => {
   assert.match(publicPage, /href="\/programs"/);
   assert.match(publicPage, /href="\/participation"/);
   assert.match(publicPage, /href="\/news"/);
-  assert.match(publicPage, /href="\/privacy"/);
+  assert.match(publicPage, /href="\/privacy-policy"/);
   assert.match(publicPage, /이메일무단수집거부/);
   assert.match(publicPage, /찾아오시는 길/);
   assert.doesNotMatch(publicPage, /editor-[a-z-]+\.js|Hahmlet-Variable\.ttf|PretendardVariable\.woff2/);
@@ -54,7 +54,7 @@ test("serves every public menu and footer document as a separate lightweight pag
     assert.match(page, /href="\/programs"/);
     assert.match(page, /href="\/participation"/);
     assert.match(page, /href="\/news"/);
-    assert.match(page, /href="\/privacy"/);
+    assert.match(page, /href="\/privacy-policy"/);
     assert.match(page, /href="\/email-refusal"/);
     assert.match(page, /href="\/directions"/);
     assert.doesNotMatch(page, /representative-greeting-editor|editor-[a-z-]+\.js|mode=edit|<iframe/);

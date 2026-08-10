@@ -1,4 +1,4 @@
-/** Cloudflare Worker entry point for the vinext-starter template. */
+﻿/** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 
@@ -29,7 +29,7 @@ const PUBLIC_PAGE_ROUTES: Record<string, string> = {
   "/programs": "/songak/public-programs.html",
   "/participation": "/songak/public-participation.html",
   "/news": "/songak/public-news.html",
-  "/privacy": "/songak/public-privacy.html",
+  "/privacy-policy": "/songak/public-privacy.html",
   "/email-refusal": "/songak/public-email-refusal.html",
   "/directions": "/songak/public-directions.html",
 };
