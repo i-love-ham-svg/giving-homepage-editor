@@ -121,8 +121,7 @@ const worker = {
       // All public routes use the exact same canonical renderer as the editor.
       // The browser pathname selects a single read-only page inside that renderer,
       // while edit controls and mutations remain isolated behind /editor.
-      const publicUrl = new URL(publicAssetPath, request.url);
-      const publicResponse = await env.ASSETS.fetch(new Request(publicUrl, request));
+      const publicResponse = await fetchPublicAssetWithoutBrowserRedirect(env.ASSETS, publicAssetPath, request);
       return withSecurityHeaders(publicResponse, publicAssetPath);
     }
 
@@ -141,6 +140,28 @@ const worker = {
     return withSecurityHeaders(await handler.fetch(request, env, ctx), url.pathname);
   },
 };
+
+async function fetchPublicAssetWithoutBrowserRedirect(assets: Fetcher, assetPath: string, request: Request): Promise<Response> {
+  let assetUrl = new URL(assetPath, request.url);
+
+  // Some production asset dispatchers canonicalize `page.html` to `page` even
+  // when local preview serves the file directly. Follow that redirect inside
+  // the Worker so a public URL never exposes the protected editor pathname.
+  for (let redirectCount = 0; redirectCount < 3; redirectCount += 1) {
+    const response = await assets.fetch(new Request(assetUrl, request));
+    if (response.status < 300 || response.status >= 400) return response;
+
+    const location = response.headers.get("location");
+    if (!location) return response;
+    const nextUrl = new URL(location, assetUrl);
+    if (nextUrl.origin !== assetUrl.origin || !nextUrl.pathname.startsWith("/songak/representative-greeting-editor")) {
+      return response;
+    }
+    assetUrl = nextUrl;
+  }
+
+  return new Response("Public page asset redirect loop", { status: 502 });
+}
 
 function withSecurityHeaders(response: Response, pathname = ""): Response {
   const secured = new Response(response.body, response);
