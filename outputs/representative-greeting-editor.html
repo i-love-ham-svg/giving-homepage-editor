@@ -362,7 +362,14 @@
 
     /* The menu list owns vertical touch scrolling while the full-screen mobile
        panel is open; lock the page scroller so overscroll cannot move content. */
-    html:has(body.home-menu-open),
+    html:has(body.home-menu-open) {
+      /* Keep the root scrollbar gutter while the panel is open. Removing the
+         root scrollbar refits the scaled stage and loses the reading place. */
+      overflow-x: hidden;
+      overflow-y: scroll;
+      overscroll-behavior: none;
+    }
+
     body.home-menu-open {
       overflow: hidden;
       overscroll-behavior: none;
@@ -38258,6 +38265,13 @@ function syncSectionControls() {
       event.stopPropagation();
       toggleHomeMenu();
     });
+    function preventHomeMenuBackgroundScroll(event) {
+      if (!state.homeMenu.open || !isHomeMenuMobileSurface()) return;
+      if (event.target.closest?.("#homepageMenuList")) return;
+      event.preventDefault();
+    }
+    homepageMenu.addEventListener("touchmove", preventHomeMenuBackgroundScroll, { passive: false });
+    homepageMenu.addEventListener("wheel", preventHomeMenuBackgroundScroll, { passive: false });
     function focusHomeMenuItem(menuId) {
       window.requestAnimationFrame?.(() => homepageMenu.querySelector(`[data-menu-id="${CSS.escape(menuId)}"]`)?.focus());
     }

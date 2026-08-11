@@ -164,14 +164,15 @@ try {
       clientHeight: list.clientHeight,
       touchAction: getComputedStyle(list).touchAction,
       bodyOverflow: getComputedStyle(document.body).overflow,
-      rootOverflow: getComputedStyle(document.documentElement).overflow
+      rootOverflow: getComputedStyle(document.documentElement).overflow,
+      rootOverflowY: getComputedStyle(document.documentElement).overflowY
     };
   });
   console.log("mobile-menu-scroll", JSON.stringify(scrollState));
   assert.ok(scrollState.scrollHeight > scrollState.clientHeight && scrollState.scrollTop > 0, "long menus should scroll inside the menu list");
   assert.equal(scrollState.touchAction, "pan-y");
   assert.equal(scrollState.bodyOverflow, "hidden");
-  assert.equal(scrollState.rootOverflow, "hidden");
+  assert.equal(scrollState.rootOverflowY, "scroll", "the root gutter should remain stable while the body is locked");
 
   // Use a real Chrome touch sequence, not a direct scrollTop assignment, so the
   // production mobile gesture path stays covered by the regression test.

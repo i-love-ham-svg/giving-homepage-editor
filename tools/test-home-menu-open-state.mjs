@@ -65,7 +65,9 @@ assert.doesNotMatch(mobileMenuHeightMarkup, /Math\.min\(profile\.h/, "a scrolled
 assert.match(html, /function toggleHomeMenu\(\)[\s\S]*?if \(opening\) \{[\s\S]*?syncVisibleMobileMenuHeight\(\)/, "opening should recompute menu height from the current stage position");
 assert.match(html, /function syncHomeMenuPageScroll\(menuOpen\)[\s\S]*?captureHomeMenuPageScroll\(\)[\s\S]*?restoreHomeMenuPageScroll/, "opening and closing the menu should preserve the inspected page position");
 assert.doesNotMatch(html, /const visibleStageHeight = Math\.max\(320,/, "mobile menu height must not exceed a short landscape or keyboard viewport");
-assert.match(html, /html:has\(body\.home-menu-open\),[\s\S]*?body\.home-menu-open \{[\s\S]*?overflow: hidden;[\s\S]*?overscroll-behavior: none;/, "open mobile menu should lock the document scroller");
+assert.match(html, /html:has\(body\.home-menu-open\) \{[\s\S]*?overflow-y: scroll;[\s\S]*?overscroll-behavior: none;/, "the open menu should retain the root scrollbar gutter");
+assert.match(html, /body\.home-menu-open \{[\s\S]*?overflow: hidden;[\s\S]*?overscroll-behavior: none;/, "the open mobile menu should lock body scrolling");
+assert.match(html, /homepageMenu\.addEventListener\("touchmove", preventHomeMenuBackgroundScroll, \{ passive: false \}\)/, "touches outside the menu list should not move the background page");
 assert.match(html, /window\.visualViewport\?\.addEventListener\("resize",[\s\S]*?scheduleFloatingEditorUi\(\{ fit: true \}\)/, "visible viewport resize should recompute the mobile menu panel height");
 assert.match(html, /\.editable\s*\{[\s\S]*?position:\s*absolute/);
 assert.match(html, /<div class="main-intro-surface"[\s\S]*?class="main-intro-cta-row"[\s\S]*?data-main-intro-cta="program"[\s\S]*?data-main-intro-cta="consult"/);
