@@ -86,9 +86,10 @@ for (const expected of [
   "data-detail-action=\"upload-source-image\"",
   "data-detail-source-image",
   "function bindDetailBundleInteractions",
-  "songak-application-drafts",
-  "songak-application-submissions"
+  "songak-application-drafts"
 ]) assert.match(html, new RegExp(expected));
+assert.doesNotMatch(html, /songak-application-submissions/);
+assert.match(html, /작성 내용은 전송되지 않았습니다/);
 
 assert.doesNotMatch(html, /id="topDetailBundleOriginalBtn"/);
 assert.doesNotMatch(html, /id="topDetailBundleExpandedBtn"/);
@@ -100,12 +101,12 @@ const detailPresentationSource = html.match(/function setDetailBundlePresentatio
 assert.doesNotMatch(detailPresentationSource, /clearHomeMenuView/);
 assert.match(detailPresentationSource, /state\.essentialSections\[id\]\.heights = \{\}/);
 assert.match(html, /schedule:\s*"home-menu-business-schedule"/);
-assert.match(html, /ensureDefaultDetailPresentations\(\);/);
+assert.match(html, /ensureDefaultDetailPresentations\(\{ render: !publicDocumentRequest \}\);/);
 assert.match(html, /const DEFAULT_DETAIL_PRESENTATION_VERSION = 4/);
 assert.match(html, /Number\(state\.detailPresentationVersion\) < 4[\s\S]*?model\.layoutStyle = "split"/);
 assert.match(html, /function retireLegacyAccountHeroSections\(\)/);
 assert.match(html, /\["schedule", "case", "organization", "video", "application", "account"\][\s\S]*?setDetailBundlePresentationMode\(pageKind, "detail"/);
-assert.match(html, /setFacilityPresentationMode\("detail", \{ select: false, history: false, silent: true \}\)/);
+assert.match(html, /setFacilityPresentationMode\("detail", \{ select: false, history: false, silent: true, render: options\.render \}\)/);
 assert.match(html, /detailPresentationVersion: state\.detailPresentationVersion/);
 assert.match(html, /state\.detailPresentationVersion = Math\.max\(0, Number\(saved\.content\?\.detailPresentationVersion\) \|\| 0\)/);
 assert.match(html, /found\.meta\.parent\.sectionIds = \[\.\.\.new Set/);
@@ -113,7 +114,7 @@ assert.match(html, /!detailIds\.includes\(sectionId\) && !originalIds\.includes\
 assert.match(html, /home-menu-business-schedule-original[\s\S]*?detailSectionKind === "source"/);
 assert.doesNotMatch(html.match(/function createDefaultHomeMenuItems\(\)[\s\S]*?function applyThreeLevelHomeMenuDefaults/)?.[0] || "", /home-menu-intro-floor/);
 assert.match(html, /legacyIds = new Set\(\[[\s\S]*?"home-menu-intro-floor"/);
-assert.match(html, /existing\?\.label === "시간표 원본"[\s\S]*?existing\.label = "인쇄용 시간표 원본"/);
+assert.match(html, /\["시간표 원본", "인쇄용 시간표 원본"\]\.includes\(existing\?\.label\)[\s\S]*?existing\.label = "인쇄용 프로그램 시간표"/);
 assert.match(html, /model\?\.detailPageKind \|\| \(model\?\.facilityDetailKind \? "facility"/);
 assert.match(html, /child\.sectionIds = \[\.\.\.activeIds\]/);
 assert.match(html, /if \(activeIds\.length\) delete child\.externalUrl/);

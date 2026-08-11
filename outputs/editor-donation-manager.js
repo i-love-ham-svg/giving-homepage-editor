@@ -144,7 +144,7 @@
     return normalizeModel({
       headline: "나눔의 마음이 모여 희망이 됩니다",
       description: "행복한 나눔의 손길이 따뜻한 송악 지역사회를 만듭니다.",
-      note: "농협 351-1172-9628-93 · 예금주 송악사회복지관 · 문의 041-353-5077",
+      note: "입금 전 계좌정보를 대표전화 041-353-5077로 확인해 주세요. 농협 351-1172-9628-93 · 예금주 송악사회복지관",
       cta: "후원 신청하기",
       cards: [
         { id: "donation-card-1", title: "기금 후원", icon: "recurring" },
@@ -179,7 +179,7 @@
     return {
       headline: String(model.headline || "나눔의 마음이 모여 희망이 됩니다"),
       description: String(model.description || "행복한 나눔의 손길이 따뜻한 송악 지역사회를 만듭니다."),
-      note: String(model.note || "농협 351-1172-9628-93 · 예금주 송악사회복지관 · 문의 041-353-5077"),
+      note: String(model.note || "입금 전 계좌정보를 대표전화 041-353-5077로 확인해 주세요. 농협 351-1172-9628-93 · 예금주 송악사회복지관"),
       cta: String(model.cta || "후원 신청하기"),
       decorations,
       nextDecorationId: Math.max(Number(model.nextDecorationId) || 1, maxDecorationId + 1),

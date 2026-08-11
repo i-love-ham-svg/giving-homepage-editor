@@ -29,6 +29,8 @@ assert.match(script, /\/api\/board\/posts/);
 assert.match(script, /\/api\/board\/media/);
 assert.match(server, /handleBoardRequest/);
 assert.match(server, /BOARD_ADMIN_PASSWORD/);
+assert.match(server, /normalizedPath\.startsWith\("songak\/"\)/);
+assert.match(server, /isCanonicalPublicRoute/);
 assert.match(editor, /label: "소통게시판"/);
 assert.match(editor, /new URL\("community-board\.html", window\.location\.href\)/);
 assert.match(editor, /window\.location\.assign\(getDeliveryBoardUrl\(\)\)/);

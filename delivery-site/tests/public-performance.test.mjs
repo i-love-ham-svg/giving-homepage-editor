@@ -16,6 +16,10 @@ test("keeps public boot non-blocking without removing any page renderer", async 
   assert.match(editor, /overlayHiddenAt/);
   assert.match(editor, /reconcileLazySectionMounts/);
   assert.match(editor, /renderAllGreetingPhotos\(\{ visibleOnly: requestedViewMode \}\)/);
+  assert.match(editor, /ensureDefaultDetailPresentations\(\{ render: !publicDocumentRequest \}\)/);
+  assert.match(editor, /\{ deferRender: publicDocumentRequest \}/);
+  assert.match(editor, /if \(!publicDocumentRequest\) \{\s+setupEditableSelectionDelegation\(\)/);
+  assert.match(editor, /if \(!publicDocumentRequest\) initializeHistory\(\)/);
 });
 
 test("requests only the responsive account hero selected for a public viewport", async () => {

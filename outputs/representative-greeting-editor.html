@@ -33,6 +33,7 @@
         "/news/videos": { menuId: "home-menu-news-video" },
         "/news/gallery": { menuId: "home-menu-news-gallery" },
         "/news/visitor-board": { menuId: "home-menu-news-visitor" },
+        "/community": { menuId: "home-menu-news-board" },
         "/privacy-policy": { sectionId: "footer", footerDocument: "privacy" },
         "/email-refusal": { sectionId: "footer", footerDocument: "email" }
       });
@@ -8843,6 +8844,7 @@
       font-size: 14px;
       font-weight: 900;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .gallery-headline-input {
@@ -8905,6 +8907,10 @@
       resize: none;
       line-height: 1.45;
     }
+
+    .gallery-base-text-input.gallery-eyebrow-input { line-height: 1.4; white-space: nowrap; }
+    .gallery-base-text-input.gallery-headline-input { line-height: 1.16; }
+    .gallery-base-text-input.gallery-description-input { line-height: 1.65; }
 
     .gallery-custom-text-input::-webkit-scrollbar,
     .gallery-base-text-input::-webkit-scrollbar {
@@ -10059,6 +10065,18 @@
       padding-inline: 14px;
     }
 
+    .stage.mobile .gallery-category-view,
+    .stage.tablet .gallery-category-view,
+    .stage.mobile .gallery-category-input,
+    .stage.tablet .gallery-category-input {
+      min-height: 44px;
+    }
+
+    .stage.mobile .gallery-base-text-box[data-gallery-base-text-field="eyebrow"],
+    .stage.tablet .gallery-base-text-box[data-gallery-base-text-field="eyebrow"] {
+      display: none !important;
+    }
+
     .stage.mobile .gallery-month-row,
     .stage.tablet .gallery-month-row {
       margin-top: 8px;
@@ -10924,9 +10942,7 @@
     .stage.desktop .gallery-grid > .gallery-item.gallery-row-size-4 { flex-basis: calc((100% - 42px) / 4); }
     .stage.desktop .gallery-grid > .gallery-item.gallery-row-size-5 { flex-basis: calc((100% - 56px) / 5); }
 
-    /* Mobile pages do not expose detailed category controls. */
-    .stage.mobile .gallery-categories,
-    .stage.tablet .gallery-categories,
+    /* Keep public category filters available; only editor card selectors stay hidden. */
     .stage.mobile .gallery-item-category-select,
     .stage.tablet .gallery-item-category-select {
       display: none !important;
@@ -11239,6 +11255,8 @@
       letter-spacing: -.045em;
       line-height: 1.22;
       text-align: center;
+      word-break: keep-all;
+      overflow-wrap: normal;
     }
 
     .essential-description {
@@ -13215,7 +13233,8 @@
       .footer-document-status { display: none; }
       .footer-document-body { padding: 14px; }
       .footer-document-source { align-items: flex-start; flex-direction: column; }
-      .footer-document-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .footer-document-grid { grid-template-columns: 1fr; gap: 10px; }
+      .footer-document-field { grid-column: 1 / -1; }
       .footer-document-field.span-2,
       .footer-document-field.full { grid-column: 1 / -1; }
       .footer-document-field textarea { min-height: 280px; }
@@ -13249,7 +13268,8 @@
     body:has(#stage.mobile) .footer-document-status { display: none; }
     body:has(#stage.mobile) .footer-document-body { padding: 13px; }
     body:has(#stage.mobile) .footer-document-source { align-items: flex-start; flex-direction: column; }
-    body:has(#stage.mobile) .footer-document-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
+    body:has(#stage.mobile) .footer-document-grid { grid-template-columns: 1fr; gap: 9px; }
+    body:has(#stage.mobile) .footer-document-field { grid-column: 1 / -1; }
     body:has(#stage.mobile) .footer-document-field.span-2,
     body:has(#stage.mobile) .footer-document-field.full { grid-column: 1 / -1; }
     body:has(#stage.mobile) .footer-document-field textarea { min-height: 260px; }
@@ -16350,7 +16370,7 @@
       <div class="footer-document-body">
         <div class="footer-document-source">
           <span id="footerDocumentSourceLabel">송악사회복지관 공식 공개 자료를 기준으로 구성했습니다.</span>
-          <a id="footerDocumentSourceLink" href="https://www.sacwc.kr/" target="_blank" rel="noopener noreferrer">공식 원문 확인</a>
+          <a id="footerDocumentSourceLink" href="https://www.sacwc.kr/" target="_blank" rel="noopener noreferrer">참고 자료 확인</a>
         </div>
         <div class="footer-document-grid">
           <label class="footer-document-field span-2">문서 제목
@@ -18290,7 +18310,7 @@
               children: [
                 { id: "home-menu-business-program", label: "프로그램 안내", sectionId: "program", sectionIds: ["program"], children: [] },
                 { id: "home-menu-business-schedule", label: "프로그램 일정표", sectionId: "schedule", sectionIds: ["schedule"], children: [] },
-                { id: "home-menu-business-schedule-original", label: "인쇄용 시간표 원본", sectionId: "essential6", sectionIds: ["essential6"], children: [] }
+                { id: "home-menu-business-schedule-original", label: "인쇄용 프로그램 시간표", sectionId: "essential6", sectionIds: ["essential6"], children: [] }
               ]
             },
             {
@@ -18346,7 +18366,7 @@
               id: "home-menu-news-boards", label: "게시판", sectionId: "essential8", sectionIds: ["essential8"],
               children: [
                 { id: "home-menu-news-visitor", label: "방문자 자유게시판", sectionId: "essential8", sectionIds: ["essential8"], children: [] },
-                { id: "home-menu-news-board", label: "소통게시판", sectionId: "", sectionIds: [], externalUrl: "delivery-board", children: [] }
+                { id: "home-menu-news-board", label: "소통게시판", sectionId: "essential8", sectionIds: ["essential8"], children: [] }
               ]
             }
           ]
@@ -19660,7 +19680,11 @@
       const sectionId = linked[0];
       setActiveSection(sectionId, { selectLayer: true });
       const firstLayerId = sectionLayerMap[sectionId]?.find((id) => elements[id] && !elements[id].hidden);
-      elements[firstLayerId]?.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      if (document.body.dataset.editorRole === "public") {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      } else {
+        elements[firstLayerId]?.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      }
       collapseHomeMenuAfterNavigation();
       window.requestAnimationFrame?.(collapseHomeMenuAfterNavigation);
       if (isHomeMenuMobileSurface()) {
@@ -23958,7 +23982,7 @@
       showToast(`${label} 편집 화면으로 전환했습니다`);
     }
 
-    function setViewport(viewport) {
+    function setViewport(viewport, options = {}) {
       viewport = normalizeViewportKey(viewport);
       const requestedViewport = viewport;
       const previousViewport = state.viewport;
@@ -23981,6 +24005,19 @@
       stage.classList.toggle("phone", viewport === "phone");
       stage.classList.toggle("tablet", viewport === "tablet");
       if (!isResponsiveViewport(viewport)) state.homeMenu.open = false;
+      // Public boot resolves the route before materializing sections, so it only
+      // applies viewport state here and performs one visible-section layout later.
+      if (options.deferRender === true) {
+        useBackgroundViewportLayout(viewport);
+        document.body.classList.toggle("mobile-editor-ui", isResponsiveViewport(viewport));
+        document.querySelectorAll("[data-viewport]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.viewport === viewport);
+          btn.disabled = state.viewportLocked !== null && btn.dataset.viewport !== state.viewportLocked;
+        });
+        syncStaffMobilePreviewButton();
+        clearTextMeasureCache();
+        return;
+      }
       renderHomeMenu({ syncInputs: false });
       getSectionOrder().filter(isGallerySection).forEach((sectionId) => {
         if (elements[sectionId]) renderGallerySection(sectionId);
@@ -24136,7 +24173,7 @@
     });
     publicDocumentMutationObserver.observe(stage, { childList: true, subtree: true });
 
-    function setMode(mode) {
+    function setMode(mode, options = {}) {
       const wasPreviewMode = state.mode === "view";
       state.mode = mode;
       if (mode === "edit") closeEssentialNoticeDetail({ restoreFocus: false });
@@ -24163,6 +24200,8 @@
       document.querySelectorAll("[data-mode]").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.mode === mode);
       });
+      // A deferred public boot applies semantics after its one visible-section render.
+      if (options.deferRender === true) return;
       Object.keys(state.historySections ?? {}).forEach((sectionId) => {
         if (elements[sectionId]) renderHistorySection(sectionId);
       });
@@ -27199,18 +27238,6 @@
         }, "schedule");
         changed = true;
       }
-      const currentGallery = state.gallerySections.gallery;
-      if (currentGallery && !currentGallery.items.some((item) => item.image?.dataUrl?.includes("official-sacwc"))) {
-        const officialGallery = galleryRuntime.createDefaultModel();
-        state.gallerySections.gallery = galleryRuntime.normalizeModel({
-          ...currentGallery,
-          items: currentGallery.items.map((item, index) => ({
-            ...item,
-            image: officialGallery.items[index]?.image ?? item.image
-          }))
-        });
-        changed = true;
-      }
       return changed;
     }
 
@@ -27302,7 +27329,7 @@
           { id: "corporate-official-care", badge: "복지연결", title: "복지사각지대 지원", meta: "지역 자원 연계", description: "지역기관과 협력해 복지 공백을 살피고 필요한 자원을 연결합니다." }
         ],
         ctaLabel: "운영법인 문의",
-        note: "공식 사이트에 별도 법인소개 전문이 없어 당진시 공개자료와 운영법인 관련 공개 보도를 기준으로 구성했습니다."
+        note: "운영법인과 임원 정보는 변동될 수 있으므로 자세한 사항은 대표전화 041-353-5077로 확인해 주세요."
       }, "organization");
     }
 
@@ -27312,57 +27339,57 @@
         label: "시설 층별 배치도",
         eyebrow: "FLOOR GUIDE",
         headline: "층별 공간을 한눈에 확인하세요",
-        description: "공식 시설현황에 공개된 층별 공간, 시설 수와 면적을 한 화면에 정리했습니다.",
+        description: "층별 공간과 주요 시설, 공간별 면적을 한 화면에서 확인할 수 있습니다.",
         details: [
           { label: "건립년도", value: "2020년" },
           { label: "규모", value: "부지 7,771㎡ · 연면적 2,406㎡" }
         ],
         items: [{
           id: "facility-plan-official-original",
-          badge: "공식 자료",
+          badge: "시설 안내",
           title: "송악사회복지관 층별 배치도",
           meta: "시설현황",
           description: "시설별 위치와 층별 구성, 공개된 공간별 면적을 자세히 확인하세요.",
-          detailContent: "송악사회복지관 공식 시설현황을 층별 배치 표로 구성했습니다.",
+          detailContent: "송악사회복지관의 주요 공간을 층별 배치 표로 안내합니다.",
           detailBlocks: [
             { id: "facility-plan-heading", type: "heading", text: "송악사회복지관 층별 배치도" },
             { id: "facility-plan-table", type: "table", tableWidth: 100, rows: [["층", "주요 시설"], ["3층", "옥상 · 게이트볼장 · 야외 테라스"], ["2층", "프로그램실 4·5·6 · 심리치료실 · 부모상담실 · 강당 · 청소년문화공간 · 노래방 1·2·3"], ["1층", "프로그램실 1·3 · 당구장 · 체력단련실 · 탁구장 · 사무실 · 관장실 · 식당 · 육아나눔터"], ["지하", "보일러실 · 전기실 · 창고 1·2 · 비상발전기실"], ["외부", "주차장(장애인 포함) · 농구장"]], columnWidths: [18, 82] },
             { id: "facility-plan-area-heading", type: "heading", text: "공개 시설 수와 면적" },
             { id: "facility-plan-area-table", type: "table", tableWidth: 100, rows: [["시설", "개소", "면적(㎡)"], ["관장실", "1", "23"], ["사무실", "1", "66"], ["상담실", "1", "23"], ["강당", "1", "162"], ["프로그램실", "6", "283"], ["체력단련실", "1", "142"], ["탁구장", "1", "75"], ["식당", "1", "188"], ["청소년문화공간", "1", "56"], ["심리치료실", "1", "27"], ["노래방", "3", "57"], ["육아나눔터", "1", "148"], ["노인회사무실", "1", "62"]], columnWidths: [54, 18, 28] },
-            { id: "facility-plan-link", type: "highlight", text: "송악사회복지관 공식 시설현황 원문 보기", linkUrl: "https://www.sacwc.kr/main/sub.html?pageCode=6" }
+            { id: "facility-plan-link", type: "highlight", text: "시설 이용 문의 041-353-5077", linkUrl: "tel:041-353-5077" }
           ],
           decorations: [createOfficialSupplementDecoration("facility-plan", "building", 0)]
         }],
         ctaLabel: "배치도 자세히 보기",
-        note: "공식 사이트에는 별도 도면 이미지가 게시되어 있지 않아 공개 표의 수치를 편집 가능한 층별 배치 표로 재구성했습니다."
+        note: "공간별 운영 여부와 이용 가능 시간은 방문 전에 대표전화 041-353-5077로 확인해 주세요."
       }, "notice");
     }
 
     function createOfficialScheduleOriginalModel() {
       return essentialRuntime.normalizeModel({
         template: "notice",
-        label: "프로그램 시간표 원본",
-        eyebrow: "ORIGINAL SCHEDULE",
-        headline: "공식 프로그램 시간표",
-        description: "공식 홈페이지에 게시된 3월 기준 프로그램 시간표 원본입니다.",
+        label: "인쇄용 프로그램 시간표",
+        eyebrow: "PROGRAM SCHEDULE",
+        headline: "인쇄용 프로그램 시간표",
+        description: "3월 기준 프로그램 시간표를 이미지로 확인할 수 있습니다.",
         details: [{ label: "기준", value: "3월 프로그램 시간표" }],
         items: [{
           id: "schedule-official-image",
-          badge: "공식 원본",
+          badge: "시간표",
           title: "요일·시간별 프로그램 시간표",
           meta: "3월 기준",
-          description: "요일과 시간대별 프로그램, 자율이용과 정비 시간을 원본 이미지로 확인하세요.",
-          detailContent: "공식 홈페이지에 게시된 3월 기준 프로그램 시간표입니다.",
+          description: "요일과 시간대별 프로그램, 자율이용과 정비 시간을 이미지로 확인하세요.",
+          detailContent: "3월 기준 프로그램 시간표입니다.",
           detailBlocks: [
             { id: "schedule-image-heading", type: "heading", text: "3월 기준 프로그램 시간표" },
-            { id: "schedule-image-original", type: "image", caption: "송악사회복지관 공식 프로그램 시간표 원본", media: { id: "program-schedule-original", kind: "image", name: "program-schedule-original.jpg", type: "image/jpeg", alt: "송악사회복지관 프로그램 시간표 원본", url: "./assets/official-sacwc/program-schedule-original.jpg" } },
+            { id: "schedule-image-original", type: "image", caption: "송악사회복지관 프로그램 시간표", media: { id: "program-schedule-original", kind: "image", name: "program-schedule-original.jpg", type: "image/jpeg", alt: "송악사회복지관 프로그램 시간표", url: "./assets/official-sacwc/program-schedule-original.jpg" } },
             { id: "schedule-image-note", type: "highlight", text: "프로그램 운영일과 모집 여부는 최신 공지 또는 대표전화 041-353-5077로 확인해 주세요." },
-            { id: "schedule-image-link", type: "paragraph", text: "송악사회복지관 공식 프로그램 시간표 보기", linkUrl: "https://www.sacwc.kr/main/sub.html?pageCode=24" }
+            { id: "schedule-image-link", type: "paragraph", text: "최신 공지사항 확인", linkUrl: "/news/notices" }
           ],
           decorations: [createOfficialSupplementDecoration("schedule", "calendar", 1, "#b87954")]
         }],
-        ctaLabel: "원본 시간표 보기",
-        note: "원본 이미지를 로컬 자산으로 저장해 파일 미리보기 환경에서도 확인할 수 있습니다."
+        ctaLabel: "시간표 크게 보기",
+        note: "이미지의 기준 시점과 현재 운영 일정이 다를 수 있으므로 최신 공지사항을 함께 확인해 주세요."
       }, "notice");
     }
 
@@ -27380,25 +27407,25 @@
         label: "영상으로 보는 복지관",
         eyebrow: "SONGAK VIDEO",
         headline: "영상으로 만나는 송악의 사람과 이야기",
-        description: "공식 홈페이지와 유튜브에 공개된 원본 영상 6편을 연결했습니다.",
-        details: [{ label: "공식 채널", value: "송악사회복지관 YouTube" }],
+        description: "송악사회복지관의 주요 활동 영상 6편을 한곳에서 확인할 수 있습니다.",
+        details: [{ label: "영상 채널", value: "송악사회복지관 YouTube" }],
         items: videos.map(([postId, videoId, title, description], index) => ({
           id: `video-official-${postId}`,
-          badge: "공식 영상",
+          badge: "복지관 영상",
           title,
           meta: "YouTube",
           description,
           detailContent: description,
           detailBlocks: [
             { id: `video-${postId}-heading`, type: "heading", text: title },
-            { id: `video-${postId}-thumbnail`, type: "image", caption: `${title} 공식 유튜브 썸네일`, media: { id: `youtube-${videoId}`, kind: "image", name: `${videoId}.jpg`, type: "image/jpeg", alt: `${title} 영상 썸네일`, url: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` } },
-            { id: `video-${postId}-watch`, type: "highlight", text: "유튜브에서 원본 영상 재생하기", linkUrl: `https://www.youtube.com/watch?v=${videoId}` },
-            { id: `video-${postId}-official`, type: "paragraph", text: "송악사회복지관 공식 게시글 보기", linkUrl: `https://www.sacwc.kr/main/sub.html?boardID=www16&num=${postId}&Mode=view` }
+            { id: `video-${postId}-thumbnail`, type: "image", caption: `${title} 유튜브 썸네일`, media: { id: `youtube-${videoId}`, kind: "image", name: `${videoId}.jpg`, type: "image/jpeg", alt: `${title} 영상 썸네일`, url: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` } },
+            { id: `video-${postId}-watch`, type: "highlight", text: "유튜브에서 영상 재생하기", linkUrl: `https://www.youtube.com/watch?v=${videoId}` },
+            { id: `video-${postId}-official`, type: "paragraph", text: "다른 활동 소식 둘러보기", linkUrl: "/news/gallery" }
           ],
           decorations: [createOfficialSupplementDecoration(`video-${postId}`, index % 2 ? "people" : "film", index, index % 2 ? "#3d7554" : "#b87954")]
         })),
-        ctaLabel: "공식 영상 보기",
-        note: "영상 저작권과 조회 기록을 보호하기 위해 원본은 송악사회복지관 공식 유튜브에서 재생됩니다."
+        ctaLabel: "영상 보기",
+        note: "영상은 YouTube에서 재생되며 해당 서비스의 이용정책이 적용됩니다."
       }, "notice");
     }
 
@@ -27420,7 +27447,7 @@
         label: "방문자 자유게시판",
         eyebrow: "VISITOR BOARD",
         headline: "주민의 의견을 듣고 함께 답합니다",
-        description: "공식 자유게시판에서 로그인 없이 공개된 상위 10개 글의 제목과 등록일을 옮겼습니다.",
+        description: "주민이 남긴 의견과 복지관 답변을 개인정보 없이 안전하게 확인할 수 있습니다.",
         details: [
           { label: "공개 범위", value: "제목 · 등록일 · 답변 구분" },
           { label: "개인정보", value: "작성자 실명 · 연락처 미수집" }
@@ -27430,18 +27457,18 @@
           badge,
           title,
           meta: date,
-          description: badge.includes("답변") ? "공식 자유게시판에 등록된 복지관 답변 글입니다." : "공식 자유게시판에 공개된 방문자 의견입니다.",
+          description: badge.includes("답변") ? "복지관에서 등록한 답변입니다." : "방문자가 남긴 공개 의견입니다.",
           detailContent: title,
           detailBlocks: [
             { id: `visitor-${id}-heading`, type: "heading", text: title },
             { id: `visitor-${id}-meta`, type: "paragraph", text: `${badge} · 등록일 ${date}` },
-            { id: `visitor-${id}-privacy`, type: "highlight", text: "원문 상세 내용은 작성자 보호와 공식 사이트 로그인 정책에 따라 이 페이지에 복제하지 않았습니다." },
-            { id: `visitor-${id}-link`, type: "paragraph", text: "송악사회복지관 공식 자유게시판 목록 보기", linkUrl: "https://www.sacwc.kr/main/sub.html?pageCode=20" }
+            { id: `visitor-${id}-privacy`, type: "highlight", text: "개인정보 보호를 위해 공개 목록에는 제목·등록일·답변 구분만 표시합니다." },
+            { id: `visitor-${id}-link`, type: "paragraph", text: "소통게시판 전체 보기", linkUrl: "/community" }
           ],
           decorations: [createOfficialSupplementDecoration(`visitor-${id}`, index % 3 === 0 ? "chat" : "leaf", index, index % 2 ? "#446a58" : "#b87954")]
         })),
         ctaLabel: "자유게시판 전체보기",
-        note: "공개 목록에 있던 개인 작성자 이름은 새 페이지에 복제하지 않고 ‘방문자’로 표기했습니다."
+        note: "개인정보 보호를 위해 작성자 이름과 연락처는 공개하지 않습니다."
       }, "notice");
     }
 
@@ -27468,12 +27495,12 @@
           badge: "언론보도",
           title,
           meta: date,
-          description: "공식 송악사회복지관 홈페이지에 등록된 언론보도입니다.",
+          description: "송악사회복지관의 활동을 소개한 언론보도입니다.",
           detailContent: title,
           detailBlocks: [
             { id: `press-${id}-title`, type: "heading", text: title },
             { id: `press-${id}-date`, type: "paragraph", text: `등록일 ${date}` },
-            { id: `press-${id}-link`, type: "highlight", text: "송악사회복지관 공식 언론보도 원문 보기", linkUrl: `https://www.sacwc.kr/board/board.php?boardID=www17&mode=view&idx=${id}` }
+            { id: `press-${id}-link`, type: "highlight", text: "보도 내용 확인", linkUrl: `https://www.sacwc.kr/board/board.php?boardID=www17&mode=view&idx=${id}` }
           ],
           decorations: [
             {
@@ -27485,7 +27512,7 @@
           nextDecorationId: 2
         })),
         ctaLabel: "언론보도 전체보기",
-        note: "기사 전문 저작권을 보호하기 위해 제목·등록일과 공식 원문 연결을 제공합니다."
+        note: "기사 내용은 각 보도 페이지에서 확인할 수 있으며, 연결된 사이트의 이용정책이 적용됩니다."
       }, "notice");
     }
 
@@ -27515,7 +27542,7 @@
           ["home-menu-intro-corporate", "운영법인 소개", "essential4"]
         ]],
         ["사업 안내", [
-          ["home-menu-business-schedule-original", "인쇄용 시간표 원본", "essential6"]
+          ["home-menu-business-schedule-original", "인쇄용 프로그램 시간표", "essential6"]
         ]],
         ["알림마당", [
           ["home-menu-news-press", "언론보도", "essential3"],
@@ -27536,8 +27563,8 @@
           }
           const linked = parent.children.some((child) => child.sectionId === sectionId || child.sectionIds?.includes(sectionId));
           const existing = parent.children.find((child) => child.id === id);
-          if (existing?.label === "시간표 원본" && id === "home-menu-business-schedule-original") {
-            existing.label = "인쇄용 시간표 원본";
+          if (["시간표 원본", "인쇄용 시간표 원본"].includes(existing?.label) && id === "home-menu-business-schedule-original") {
+            existing.label = "인쇄용 프로그램 시간표";
             changed = true;
           }
           if (!linked) {
@@ -30039,7 +30066,7 @@
               return;
             }
             model.detailAssetUrl = dataUrl;
-            model.detailAssetAlt = file.name.replace(/\.[^.]+$/, "") || (model.detailPageKind === "account" ? "SNS 로그인 환영 이미지" : "프로그램 시간표 원본");
+            model.detailAssetAlt = file.name.replace(/\.[^.]+$/, "") || (model.detailPageKind === "account" ? "SNS 로그인 환영 이미지" : "프로그램 시간표");
             if (model.detailPageKind === "account" && model.detailSectionKind === "social") {
               model.detailMobileAssetUrl = dataUrl;
               model.detailMobileAssetAlt = model.detailAssetAlt;
@@ -30068,10 +30095,24 @@
           event.preventDefault(); event.stopPropagation();
           if (!requireAuthenticationForAction("온라인 신청을 접수하려면 SNS 로그인이 필요합니다. 창을 닫아도 입력한 내용과 현재 페이지는 유지됩니다.", form.querySelector('[type="submit"]'))) return;
           if (!form.reportValidity()) return;
-          const payload = Object.fromEntries(new FormData(form).entries()); let receiptId = `LOCAL-${Date.now().toString(36).toUpperCase()}`;
-          try { const response = await fetch("/api/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); if (response.ok) { const data = await response.json(); receiptId = data.receiptId || data.id || receiptId; } else throw new Error("server unavailable"); }
-          catch (_) { const submissions = JSON.parse(localStorage.getItem("songak-application-submissions") || "[]"); submissions.push({ receiptId, submittedAt: new Date().toISOString(), payload }); localStorage.setItem("songak-application-submissions", JSON.stringify(submissions.slice(-50))); }
-          const receipt = form.querySelector("[data-detail-receipt]"); receipt.hidden = false; receipt.innerHTML = `<strong>${escapeHtml(receiptId)}</strong><span>신청이 접수되었습니다. 접수번호를 보관해 주세요.</span>`; form.reset();
+          const payload = Object.fromEntries(new FormData(form).entries());
+          const status = form.querySelector("[data-detail-form-status]");
+          if (status) status.textContent = "접수 내용을 전송하고 있습니다.";
+          try {
+            const response = await fetch("/api/applications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+            if (!response.ok) throw new Error("server unavailable");
+            const data = await response.json();
+            const receiptId = data.receiptId || data.receipt || data.id;
+            if (!receiptId) throw new Error("missing receipt");
+            const receipt = form.querySelector("[data-detail-receipt]");
+            receipt.hidden = false;
+            receipt.innerHTML = `<strong>${escapeHtml(receiptId)}</strong><span>신청이 접수되었습니다. 접수번호를 보관해 주세요.</span>`;
+            if (status) status.textContent = "온라인 신청 접수가 완료되었습니다.";
+            form.reset();
+          } catch (_) {
+            if (status) status.textContent = "온라인 접수 연결을 확인할 수 없습니다. 작성 내용은 전송되지 않았습니다. 대표전화 041-353-5077로 접수해 주세요.";
+            showToast("온라인 접수 연결을 확인할 수 없습니다. 대표전화로 문의해 주세요.");
+          }
         });
       }
       if (model.detailPageKind === "account" && model.detailSectionKind === "guide") {
@@ -33104,7 +33145,10 @@
       const minimumHeight = model.heroOnly ? 0 : 460;
       const estimated = galleryRuntime.estimateHeight(model, key);
       const measured = Number(model.heights?.[key]) || 0;
-      return measured > 0 ? Math.max(minimumHeight, measured) : Math.max(minimumHeight, estimated);
+      // A saved measurement can become stale when cards, fonts, or the responsive
+      // layout change. Never let that stale value shrink the public gallery below
+      // the current content estimate, otherwise the footer can overlap the cards.
+      return Math.max(minimumHeight, estimated, measured);
     }
 
     function ensureGalleryLayerMaps(sectionId) {
@@ -33136,7 +33180,8 @@
         getModel: getGalleryModel,
         getMinimumHeight: (_viewport, model) => model.heroOnly ? 0 : 460,
         releaseLayerHeight: true,
-        extraHeight: 0
+        extraHeight: 0,
+        allowViewMode: true
       });
     }
 
@@ -33420,15 +33465,16 @@
       const layout = getGalleryBaseTextLayout(model, field);
       const box = elements[sectionId]?.querySelector(`[data-gallery-base-text-field="${CSS.escape(field)}"]`);
       const input = box?.querySelector(".gallery-base-text-input");
-      const layerRect = box?.closest(".gallery-custom-text-layer")?.getBoundingClientRect();
-      if (!layout || !input || !layerRect?.height) return;
-      const measured = measureGalleryTextContent(input, layerRect, layout);
+      const layer = box?.closest(".gallery-custom-text-layer");
+      const layerSize = getUnscaledGalleryElementSize(layer);
+      if (!layout || !input || !layerSize?.height) return;
+      const measured = measureGalleryTextContent(input, layerSize, layout);
       if (!measured) return;
       if (!layout.manualSize) {
-        layout.w = clamp(measured.width / layerRect.width * 100, 6, 100 - layout.x);
+        layout.w = clamp(measured.width / layerSize.width * 100, 6, 100 - layout.x);
       }
       // A manually resized box may remain wider, but it must never hide approved copy.
-      layout.h = clamp(Math.max(layout.h, measured.height / layerRect.height * 100), 5, 100 - layout.y);
+      layout.h = clamp(Math.max(layout.h, measured.height / layerSize.height * 100), 5, 100 - layout.y);
       if (field === "headline") {
         const descriptionLayout = getGalleryBaseTextLayout(model, "description");
         if (descriptionLayout && !descriptionLayout.manualSize) {
@@ -33469,10 +33515,20 @@
       }
     }
 
-    function measureGalleryTextContent(input, layerRect, layout) {
-      if (!input || !layerRect?.width || !layerRect?.height || !layout) return null;
+    function getUnscaledGalleryElementSize(element) {
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        width: element.clientWidth || element.offsetWidth || rect.width,
+        height: element.clientHeight || element.offsetHeight || rect.height
+      };
+    }
+
+    function measureGalleryTextContent(input, layerSize, layout) {
+      if (!input || !layerSize?.width || !layerSize?.height || !layout) return null;
       const computed = getComputedStyle(input);
-      const maxWidth = Math.max(52, layerRect.width * (100 - layout.x) / 100 - 12);
+      const measureInset = 16;
+      const maxWidth = Math.max(52, layerSize.width * (100 - layout.x) / 100 - measureInset);
       const measure = document.createElement("div");
       measure.textContent = input.value || input.placeholder || " ";
       Object.assign(measure.style, {
@@ -33489,8 +33545,8 @@
       const rect = measure.getBoundingClientRect();
       measure.remove();
       return {
-        width: clamp(Math.ceil(rect.width) + 12, 52, maxWidth + 12),
-        height: Math.max(32, Math.ceil(rect.height) + 12)
+        width: clamp(Math.ceil(rect.width) + measureInset, 52, maxWidth + measureInset),
+        height: Math.max(32, Math.ceil(rect.height) + measureInset)
       };
     }
     function fitGalleryCustomTextToContent(sectionId, textId) {
@@ -33500,11 +33556,11 @@
       const input = box?.querySelector(".gallery-custom-text-input");
       const layout = getGalleryCustomTextLayout(customText);
       if (!customText || !box || !hero || !input || layout.manualSize) return;
-      const heroRect = hero.getBoundingClientRect();
-      const measured = measureGalleryTextContent(input, heroRect, layout);
+      const heroSize = getUnscaledGalleryElementSize(hero);
+      const measured = measureGalleryTextContent(input, heroSize, layout);
       if (!measured) return;
-      layout.w = clamp(measured.width / heroRect.width * 100, 6, 100 - layout.x);
-      layout.h = clamp(measured.height / heroRect.height * 100, 5, 100 - layout.y);
+      layout.w = clamp(measured.width / heroSize.width * 100, 6, 100 - layout.x);
+      layout.h = clamp(measured.height / heroSize.height * 100, 5, 100 - layout.y);
       applyGalleryCustomTextLayout(sectionId, textId);
     }
     function renderGalleryTextBoxControls() {
@@ -33902,7 +33958,7 @@
             <div class="gallery-hero-copy">
               <button type="button" class="gallery-upload-cta" data-gallery-action="add-item">${escapeHtml(model.uploadLabel)}</button>
             </div>
-            <div class="gallery-hero-collage" data-featured-count="${featuredCount}" aria-label="?? ??? ??">${featuredItems.map((item, index) => renderGalleryHeroTile(item, index, model)).join("")}</div>
+            <div class="gallery-hero-collage" data-featured-count="${featuredCount}" aria-label="갤러리 대표 사진">${featuredItems.map((item, index) => renderGalleryHeroTile(item, index, model)).join("")}</div>
             <div class="gallery-custom-text-layer">
               ${galleryRuntime.BASE_TEXT_FIELDS.map((field) => renderGalleryBaseText(model, field)).join("")}
               ${model.customTexts.map(renderGalleryCustomText).join("")}
@@ -33938,6 +33994,16 @@
       // restored font sizes never produce native scrollbars or truncated text.
       ["eyebrow", "headline", "description"].forEach((field) => fitGalleryBaseTextToContent(sectionId, field));
       refreshGallerySizing();
+      // The Korean display font can finish after the first render. Refit once
+      // it is ready so a wider/taller final glyph metric never clips the second
+      // headline line on desktop, tablet, or mobile.
+      if (document.fonts?.ready) {
+        document.fonts.ready.then(() => {
+          if (!elements[sectionId]?.isConnected) return;
+          ["eyebrow", "headline", "description"].forEach((field) => fitGalleryBaseTextToContent(sectionId, field));
+          refreshGallerySizing();
+        }).catch(() => {});
+      }
     }
 
     function handleGalleryImageInput(sectionId, input) {
@@ -35364,7 +35430,7 @@
       });
     }
 
-    function syncFacilityHomeMenuSections(mode = "single") {
+    function syncFacilityHomeMenuSections(mode = "single", options = {}) {
       const detailIds = facilityDetailKindOrder.map(getFacilityDetailSectionId).filter(Boolean);
       const activeIds = mode === "detail" && detailIds.length ? detailIds : ["facility", "essential5"];
       const facilityGroup = findHomeMenuItem("home-menu-intro-facilities")?.item;
@@ -35390,8 +35456,10 @@
         parent.sectionId = current[0] ?? activeIds[0] ?? "facility";
         parent.sectionIds = current;
       }
-      renderHomeMenu({ syncInputs: false });
-      renderHomeMenuEditor();
+      if (options.render !== false) {
+        renderHomeMenu({ syncInputs: false });
+        renderHomeMenuEditor();
+      }
     }
 
     function ensureFacilityDetailBundle(slot = "bottom", insertIndex = null) {
@@ -35428,13 +35496,15 @@
           state.essentialSections[sectionId].heights = {};
         }
       });
-      syncFacilityHomeMenuSections(useDetail ? "detail" : "single");
-      applySectionVisibility();
-      syncFacilityPresentationControls();
-      if (options.select !== false) {
-        setActiveSection(useDetail ? detailIds[0] : "facility", { selectLayer: true });
+      syncFacilityHomeMenuSections(useDetail ? "detail" : "single", { render: options.render });
+      if (options.render !== false) {
+        applySectionVisibility();
+        syncFacilityPresentationControls();
+        if (options.select !== false) {
+          setActiveSection(useDetail ? detailIds[0] : "facility", { selectLayer: true });
+        }
+        if (useDetail) refreshEssentialSizing();
       }
-      if (useDetail) refreshEssentialSizing();
       if (options.history !== false) recordHistory(useDetail ? "시설현황 상세 4섹션형 선택" : "시설현황 단일형 선택");
       if (options.silent !== true) showToast(useDetail ? "시설현황 상세 4개 섹션을 사용합니다" : "시설현황 단일형 레이아웃을 사용합니다");
       return useDetail ? detailIds : ["facility"];
@@ -35757,7 +35827,7 @@
       return detailIds;
     }
 
-    function syncDetailBundleMenu(pageKind, mode) {
+    function syncDetailBundleMenu(pageKind, mode, options = {}) {
       const menuIds = {
         schedule: "home-menu-business-schedule",
         case: "home-menu-business-process",
@@ -35798,8 +35868,10 @@
           delete sourceMenu.externalUrl;
         }
       }
-      renderHomeMenu({ syncInputs: false });
-      renderHomeMenuEditor();
+      if (options.render !== false) {
+        renderHomeMenu({ syncInputs: false });
+        renderHomeMenuEditor();
+      }
     }
 
     function isDetailBundleActive(pageKind) {
@@ -35846,12 +35918,14 @@
         state.hiddenSections[id] = !useDetail;
         if (useDetail && state.essentialSections[id]) state.essentialSections[id].heights = {};
       });
-      syncDetailBundleMenu(pageKind, useDetail ? "detail" : "original");
-      applySectionVisibility();
-      syncDetailBundleControls();
+      syncDetailBundleMenu(pageKind, useDetail ? "detail" : "original", { render: options.render });
       const target = useDetail ? detailIds[0] : originals[0];
-      if (options.select !== false && target) setActiveSection(target, { selectLayer: true });
-      if (useDetail) refreshEssentialSizing();
+      if (options.render !== false) {
+        applySectionVisibility();
+        syncDetailBundleControls();
+        if (options.select !== false && target) setActiveSection(target, { selectLayer: true });
+        if (useDetail) refreshEssentialSizing();
+      }
       if (options.history !== false) recordHistory(`${config.label} ${useDetail ? "상세 구성형" : "기본형"} 선택`);
       if (options.silent !== true) showToast(`${config.label} ${useDetail ? "상세 구성형" : "기본형"}을 사용합니다`);
       return useDetail ? detailIds : originals;
@@ -35970,7 +36044,7 @@
       state.homeMenu.items = prune(state.homeMenu.items);
     }
 
-    function ensureDefaultDetailPresentations() {
+    function ensureDefaultDetailPresentations(options = {}) {
       removeLegacyStandaloneDetailMenuItems();
       retireLegacyAccountHeroSections();
       upgradeAccountSnsPresentation();
@@ -35989,15 +36063,15 @@
         const facilityDetailActive = facilityDetailIds.length === facilityDetailKindOrder.length
           && Boolean(state.hiddenSections.facility)
           && facilityDetailIds.every((sectionId) => !state.hiddenSections[sectionId]);
-        syncFacilityHomeMenuSections(facilityDetailActive ? "detail" : "single");
+        syncFacilityHomeMenuSections(facilityDetailActive ? "detail" : "single", options);
         ["schedule", "case", "organization", "video", "application", "account"].forEach((pageKind) => {
-          syncDetailBundleMenu(pageKind, isDetailBundleActive(pageKind) ? "detail" : "original");
+          syncDetailBundleMenu(pageKind, isDetailBundleActive(pageKind) ? "detail" : "original", options);
         });
         return false;
       }
-      setFacilityPresentationMode("detail", { select: false, history: false, silent: true });
+      setFacilityPresentationMode("detail", { select: false, history: false, silent: true, render: options.render });
       ["schedule", "case", "organization", "video", "application", "account"].forEach((pageKind) => {
-        setDetailBundlePresentationMode(pageKind, "detail", { select: false, history: false, silent: true });
+        setDetailBundlePresentationMode(pageKind, "detail", { select: false, history: false, silent: true, render: options.render });
       });
       state.detailPresentationVersion = DEFAULT_DETAIL_PRESENTATION_VERSION;
       return true;
@@ -37380,7 +37454,7 @@ function syncSectionControls() {
       if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
         return new URL("community-board.html", window.location.href).href;
       }
-      return "/community-board";
+      return "/community?manage=1";
     }
 
     function openDeliveryBoard() {
@@ -39361,6 +39435,7 @@ function syncSectionControls() {
           boot.readyAt = performance.now();
         }
         document.body.dataset.editorBootState = "ready";
+        document.body.dataset.editorBootMs = String(Math.round(performance.now() - (Number(boot?.startedAt) || 0)));
         document.body.classList.remove("is-app-booting");
         overlay?.setAttribute("aria-busy", "false");
         overlay?.classList.add("is-ready");
@@ -39397,6 +39472,7 @@ function syncSectionControls() {
 
     async function initializeEditorApplication() {
       try {
+        const initializeStartedAt = performance.now();
 
     MainIntroManager.register("mainIntro", { content: MainIntroManager.getContent("mainIntro") });
     GreetingManager.register("greeting", { content: GreetingManager.getContent("greeting") });
@@ -39408,14 +39484,22 @@ function syncSectionControls() {
     essentialRuntime.BASE_SECTION_IDS.forEach((sectionId) => {
       EssentialManager.register(sectionId, { content: essentialRuntime.createDefaultModel(sectionId) });
     });
+    const snapshotStartedAt = performance.now();
     await loadInitialSiteSnapshot();
-    const officialNoticeMigrated = migrateOfficialNoticeTopTen();
-    const officialSiteMigrated = migrateOfficialSiteContent();
+    document.body.dataset.editorSnapshotMs = String(Math.round(performance.now() - snapshotStartedAt));
+    const publicDocumentRequest = isPublicDocumentRequest();
+    // The checked-in default managers already contain the official baseline.
+    // Once a staff snapshot exists it is authoritative; boot-time content
+    // replacement would otherwise resurrect deleted cards and overwrite edits.
+    const officialNoticeMigrated = false;
+    const officialSiteMigrated = false;
     registerOfficialSupplementSections();
     applyConceptImageDefaults();
-    getSectionOrder().filter(isHistorySection).forEach(renderHistorySection);
-    getSectionOrder().filter((sectionId) => isEssentialSection(sectionId) && getEssentialModel(sectionId).facilityDetailKind === "selector").forEach(renderEssentialSection);
-    if (!isPublicDocumentRequest()) renderAllGreetingPhotos();
+    if (!publicDocumentRequest) {
+      getSectionOrder().filter(isHistorySection).forEach(renderHistorySection);
+      getSectionOrder().filter((sectionId) => isEssentialSection(sectionId) && getEssentialModel(sectionId).facilityDetailKind === "selector").forEach(renderEssentialSection);
+      renderAllGreetingPhotos();
+    }
     const officialMenuMigrated = ensureOfficialSupplementMenuLinks();
     if (officialNoticeMigrated) renderEssentialSection("notice");
     if (officialSiteMigrated) {
@@ -39509,16 +39593,18 @@ function syncSectionControls() {
     };
     ensureOfficialMenuChild("복지관 소개", "미션·비전·슬로건", "essential2");
     ensureOfficialMenuChild("알림마당", "언론보도", "essential3");
-    ensureDefaultDetailPresentations();
-    setupEditableSelectionDelegation();
-    setupDrag();
-    setupPhotoPan();
-    setupToolbarDrag();
-    setupHomeMenuDrag();
-    setupHomeMenuItemReorder();
-    setupHomeMenuBrandDrag();
-    setupMenuEditorDrag();
-    setupBackgroundEditDrag();
+    ensureDefaultDetailPresentations({ render: !publicDocumentRequest });
+    if (!publicDocumentRequest) {
+      setupEditableSelectionDelegation();
+      setupDrag();
+      setupPhotoPan();
+      setupToolbarDrag();
+      setupHomeMenuDrag();
+      setupHomeMenuItemReorder();
+      setupHomeMenuBrandDrag();
+      setupMenuEditorDrag();
+      setupBackgroundEditDrag();
+    }
     applyTheme();
     renderHomeMenu();
     applyBackground();
@@ -39547,8 +39633,11 @@ function syncSectionControls() {
         ? MobileViewportManager.detectResponsiveViewport()
         : "desktop"
       : "desktop";
-    MobileViewportManager.setViewport(viewportProfiles[queryViewport] ? queryViewport : state.viewportLocked ?? automaticViewViewport);
-    MobileViewportManager.setMode(requestedViewMode ? "view" : "edit");
+    MobileViewportManager.setViewport(
+      viewportProfiles[queryViewport] ? queryViewport : state.viewportLocked ?? automaticViewViewport,
+      { deferRender: publicDocumentRequest }
+    );
+    MobileViewportManager.setMode(requestedViewMode ? "view" : "edit", { deferRender: publicDocumentRequest });
     const requestedStylePage = editorQuery.get("stylePage") || "account";
     if ((detailBundleRuntime?.PAGE_ORDER || []).includes(requestedStylePage)) {
       const facilityDetailIds = requestedStylePage === "facility" ? getFacilityDetailSectionIds() : [];
@@ -39606,6 +39695,7 @@ function syncSectionControls() {
       state.activeSection = querySection;
       state.selected = sectionLayerMap[querySection]?.[0] ?? state.selected;
     }
+    if (publicDocumentRequest) renderHomeMenu({ syncInputs: false, syncEditor: false });
     lazySectionMountReady = true;
     applySectionVisibility();
     renderAllGreetingPhotos({ visibleOnly: requestedViewMode });
@@ -39619,13 +39709,14 @@ function syncSectionControls() {
     if (!initialLayerIds.includes(state.selected) && initialLayerIds.some((id) => elements[id])) {
       selectLayer(initialLayerIds.find((id) => elements[id]));
     }
-    initializeHistory();
+    if (!publicDocumentRequest) initializeHistory();
     if (editorQuery.get("smoke") === "1") {
       window.setTimeout(() => {
         const result = runEditorRegressionSmoke();
         console.log("[editor-smoke]", JSON.stringify(result));
       }, 120);
     }
+        document.body.dataset.editorInitializeMs = String(Math.round(performance.now() - initializeStartedAt));
         completeEditorBoot();
       } catch (error) {
         failEditorBoot(error);

@@ -47,6 +47,7 @@ const PUBLIC_PAGE_ROUTES: Record<string, string> = {
   "/news/videos": "/songak/representative-greeting-editor.html",
   "/news/gallery": "/songak/representative-greeting-editor.html",
   "/news/visitor-board": "/songak/representative-greeting-editor.html",
+  "/community": "/songak/representative-greeting-editor.html",
   "/privacy-policy": "/songak/representative-greeting-editor.html",
   "/email-refusal": "/songak/representative-greeting-editor.html",
   "/directions": "/songak/representative-greeting-editor.html",
@@ -87,6 +88,17 @@ const worker = {
     if (url.pathname === "/community-board") {
       url.pathname = "/community";
       return Response.redirect(url.toString(), 308);
+    }
+
+    if (url.pathname === "/community" && url.searchParams.get("manage") === "1") {
+      const sessionUrl = new URL("/api/board/admin/session", request.url);
+      const sessionResponse = await handler.fetch(new Request(sessionUrl, { headers: request.headers }), env, ctx);
+      const session = await sessionResponse.clone().json().catch(() => ({ admin: false })) as { admin?: boolean };
+      if (!session.admin) {
+        const loginUrl = new URL("/staff-login", request.url);
+        return Response.redirect(loginUrl.toString(), 302);
+      }
+      return withSecurityHeaders(await handler.fetch(request, env, ctx), url.pathname);
     }
 
     const legacyPublicPath = LEGACY_PUBLIC_REDIRECTS[url.pathname];

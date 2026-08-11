@@ -29,19 +29,20 @@ test("builds the finished Songak public site and community board shell", async (
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("serves every public menu and footer document through the canonical read-only renderer", async () => {
-  const [worker, communityPage, editor, viteConfig] = await Promise.all([
+test("serves every public menu, board, and footer document through the canonical read-only renderer", async () => {
+  const [worker, editor, viteConfig] = await Promise.all([
     readFile(new URL("worker/index.ts", root), "utf8"),
-    readFile(new URL("app/community/page.tsx", root), "utf8"),
     readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
     readFile(new URL("vite.config.ts", root), "utf8"),
   ]);
   assert.match(worker, /PUBLIC_PAGE_ROUTES/);
   assert.match(viteConfig, /assets: \{ html_handling: "none" as const \}/);
-  for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/news/visitor-board", "/privacy-policy", "/email-refusal", "/directions"]) {
+  for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/news/visitor-board", "/community", "/privacy-policy", "/email-refusal", "/directions"]) {
     assert.match(worker, new RegExp(`"${route.replaceAll("/", "\\/")}": "\\/songak\\/representative-greeting-editor\\.html"`));
   }
   assert.match(editor, /"\/about\/greeting": \{ menuId: "home-menu-intro-main" \}/);
+  assert.match(editor, /"\/community": \{ menuId: "home-menu-news-board" \}/);
+  assert.match(editor, /home-menu-news-board", label: "소통게시판", sectionId: "essential8", sectionIds: \["essential8"\]/);
   assert.match(editor, /"\/privacy-policy": \{ sectionId: "footer", footerDocument: "privacy" \}/);
   assert.match(editor, /body\.public-view-role \.footer-document-source \{ display: none; \}/);
   assert.match(editor, /publicRoute\?\.menuId/);
@@ -50,7 +51,20 @@ test("serves every public menu and footer document through the canonical read-on
   assert.match(worker, /Response\.redirect\(url\.toString\(\), 308\)/);
   assert.match(worker, /LEGACY_PUBLIC_REDIRECTS[\s\S]*?facility-detail[\s\S]*?\/about\/facility/);
   assert.match(worker, /representative-greeting-editor[\s\S]*?session\.admin[\s\S]*?\/staff-login/);
-  assert.match(communityPage, /<BoardApp \/>/);
+  assert.match(worker, /url\.pathname === "\/community" && url\.searchParams\.get\("manage"\) === "1"[\s\S]*?session\.admin[\s\S]*?handler\.fetch\(request/);
+});
+
+test("keeps public gallery sizing content-driven and preserves staff images", async () => {
+  const editor = await readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8");
+  assert.match(editor, /return Math\.max\(minimumHeight, estimated, measured\);/);
+  assert.match(editor, /name: "gallery"[\s\S]*?allowViewMode: true/);
+  assert.match(editor, /document\.fonts\?\.ready[\s\S]*?fitGalleryBaseTextToContent/);
+  assert.match(editor, /getUnscaledGalleryElementSize[\s\S]*?clientWidth[\s\S]*?clientHeight/);
+  assert.match(editor, /gallery-base-text-input\.gallery-headline-input \{ line-height: 1\.16; \}/);
+  assert.doesNotMatch(editor, /currentGallery && !currentGallery\.items\.some\([\s\S]*?official-sacwc/);
+  assert.match(editor, /const officialNoticeMigrated = false;/);
+  assert.match(editor, /const officialSiteMigrated = false;/);
+  assert.doesNotMatch(editor, /const officialSiteMigrated = migrateOfficialSiteContent\(\)/);
 });
 
 test("ships durable board storage, moderation, and media routes", async () => {

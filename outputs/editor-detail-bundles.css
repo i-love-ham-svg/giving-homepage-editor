@@ -11,6 +11,7 @@
 .essential-section-content[data-detail-page-kind] textarea.essential-field { height:auto!important; min-height:0!important; field-sizing:content; }
 .detail-bundle-inner { width:min(1100px,calc(100% - 40px)); margin:0 auto; }
 .detail-bundle-section { padding:clamp(40px,5vw,64px) 0; }
+.stage.desktop .essential-section-content[data-detail-page-kind="schedule"][data-detail-section-kind="source"] .detail-bundle-section { padding-top:96px; }
 .detail-bundle-section.alt { background:#f7faf7; }
 .detail-bundle-heading { margin-bottom:30px; }
 .detail-bundle-heading .essential-headline { width:100%; margin:0; padding:0!important; border:0; color:var(--detail-ink)!important; background:transparent; font-family:"Noto Serif KR",Batang,serif!important; font-size:clamp(28px,4vw,44px)!important; font-weight:700!important; line-height:1.25!important; letter-spacing:-.04em; }

@@ -58,7 +58,19 @@ function isInside(parent, child) {
 function resolveRequestPath(url) {
   const parsed = new URL(url, `http://${host}`);
   const pathname = decodeURIComponent(parsed.pathname);
-  const requested = pathname === "/" ? defaultFile : pathname.replace(/^\/+/, "");
+  const normalizedPath = pathname.replace(/^\/+/, "");
+  // The production editor is mounted below /songak/ via its <base> element.
+  // Mirror that mount locally so the exact deployment HTML can be reviewed
+  // without rewriting asset URLs or silently booting with missing scripts.
+  const mountedPath = normalizedPath === "songak"
+    ? ""
+    : normalizedPath.startsWith("songak/")
+      ? normalizedPath.slice("songak/".length)
+      : normalizedPath;
+  const isCanonicalPublicRoute = mountedPath === ""
+    || /^(?:about|programs|participation|news)(?:\/|$)/.test(mountedPath)
+    || ["directions", "community", "privacy-policy", "email-refusal"].includes(mountedPath);
+  const requested = isCanonicalPublicRoute ? defaultFile : mountedPath;
   const resolved = resolve(outputRoot, requested);
   if (!isInside(outputRoot, resolved)) return null;
   if (existsSync(resolved) && statSync(resolved).isDirectory()) {
