@@ -17192,6 +17192,7 @@
     const saveSchemaVersion = storageSchema?.SCHEMA_VERSION ?? 3;
     const saveStorageWarningBytes = 4200000;
     const saveImageOptimizeMinBytes = 650000;
+    const remotePublishSafeBytes = 850 * 1024;
     const responsiveViewportKeys = ["phoneSmall", "phone", "tablet"];
     const legacyViewportHeights = {
       desktop: 900,
@@ -37281,6 +37282,10 @@ function syncSectionControls() {
       return storageRuntime.stripImageDataForCompactSave(saved);
     }
 
+    function compactForRemotePublish(saved) {
+      return storageRuntime.compactForRemotePublish(saved);
+    }
+
     function persistDetailPublishPayload() {
       const payload = {};
       Object.values(state.essentialSections || {}).forEach((model) => {
@@ -37430,8 +37435,13 @@ function syncSectionControls() {
       }
       if (document.body.dataset.editorRole === "staff") {
         publishSaved = await externalizeSnapshotImages(publishSaved);
+        publishSaved = compactForRemotePublish(publishSaved);
+        const remoteSnapshotBytes = getStorageByteLength(JSON.stringify(publishSaved));
+        document.body.dataset.remoteSnapshotBytes = String(remoteSnapshotBytes);
+        if (remoteSnapshotBytes > remotePublishSafeBytes) {
+          throw new Error(`홈페이지 게시 데이터가 안전 용량을 초과했습니다 (${remoteSnapshotBytes} bytes).`);
+        }
         await saveAndPublishRemoteSnapshot(publishSaved);
-        try { localStorage.setItem(saveStorageKey, JSON.stringify(publishSaved)); } catch (_) {}
         showToast("저장한 내용을 방문자 홈페이지에 게시했습니다");
       } else if (localSaveSucceeded) {
         showToast("현재 편집 상태를 브라우저에 저장했습니다");
