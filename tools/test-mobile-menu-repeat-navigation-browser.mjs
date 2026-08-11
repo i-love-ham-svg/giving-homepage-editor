@@ -81,7 +81,9 @@ async function openMenu() {
     };
   });
   assert.ok(before.toggleTop >= -1 && before.toggleBottom <= 845, "the sticky mobile menu button must remain in the visible viewport");
-  await page.locator("#homepageMenuToggle").click();
+  // The sticky toggle is already visible. Dispatch the tap in place so the
+  // automation does not scroll its absolute source box into view first.
+  await page.evaluate(() => document.querySelector("#homepageMenuToggle")?.click());
   await page.waitForSelector("#homepageMenu.open #homepageMenuList");
   assert.equal(await page.locator("#homepageMenuToggle").getAttribute("aria-expanded"), "true");
   const after = await page.evaluate(() => {
@@ -102,7 +104,7 @@ async function openMenu() {
 }
 
 async function closeMenuAndAssertScroll(expectedScrollY) {
-  await page.locator("#homepageMenuToggle").click();
+  await page.evaluate(() => document.querySelector("#homepageMenuToggle")?.click());
   await page.waitForFunction(() => !document.querySelector("#homepageMenu")?.classList.contains("open"));
   const state = await page.evaluate(() => ({
     bodyLocked: document.body.classList.contains("home-menu-open"),
