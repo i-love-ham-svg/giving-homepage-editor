@@ -37286,6 +37286,20 @@ function syncSectionControls() {
       return storageRuntime.compactForRemotePublish(saved);
     }
 
+    function createRemoteSnapshotByteReport(saved) {
+      const byteMap = (value) => Object.fromEntries(Object.entries(value ?? {}).map(([key, child]) => [key, getStorageByteLength(JSON.stringify(child))]));
+      return {
+        total: getStorageByteLength(JSON.stringify(saved)),
+        topLevel: byteMap(saved),
+        content: byteMap(saved.content),
+        document: byteMap(saved.document),
+        sectionTypes: Object.fromEntries(Object.entries((saved.document?.sections ?? []).reduce((groups, section) => {
+          (groups[section.type] ??= []).push(section);
+          return groups;
+        }, {})).map(([type, sections]) => [type, getStorageByteLength(JSON.stringify(sections))]))
+      };
+    }
+
     function persistDetailPublishPayload() {
       const payload = {};
       Object.values(state.essentialSections || {}).forEach((model) => {
@@ -37438,6 +37452,7 @@ function syncSectionControls() {
         publishSaved = compactForRemotePublish(publishSaved);
         const remoteSnapshotBytes = getStorageByteLength(JSON.stringify(publishSaved));
         document.body.dataset.remoteSnapshotBytes = String(remoteSnapshotBytes);
+        document.body.dataset.remoteSnapshotReport = JSON.stringify(createRemoteSnapshotByteReport(publishSaved));
         if (remoteSnapshotBytes > remotePublishSafeBytes) {
           throw new Error(`홈페이지 게시 데이터가 안전 용량을 초과했습니다 (${remoteSnapshotBytes} bytes).`);
         }

@@ -108,11 +108,33 @@
       delete compactSaved.theme;
     }
     if (compactSaved.content) {
-      delete compactSaved.content.activeSection;
-      delete compactSaved.content.sectionOrder;
-      delete compactSaved.content.homeMenu;
-      delete compactSaved.content.sectionAppearances;
+      [
+        "activeSection",
+        "sectionOrder",
+        "homeMenu",
+        "sectionAppearances",
+        "mainIntroKicker",
+        "mainIntroTitle",
+        "mainIntroBody",
+        "mainIntroRightText",
+        "mainIntroRightTextVisible",
+        "title",
+        "titleIcon",
+        "body",
+        "identityLayoutScope",
+        "identityItems",
+        "organization",
+        "roleNameHtml",
+        "signatureText",
+        "signatureLanguage",
+        "signatureStyle",
+        "signatureMode",
+        "signatureSizes"
+      ].forEach((key) => delete compactSaved.content[key]);
     }
+    delete compactSaved.responsive;
+    if (compactSaved.document) delete compactSaved.document.responsive;
+    if (compactSaved.document?.globals) delete compactSaved.document.globals.responsive;
 
     compactSaved.storage = {
       ...compactSaved.storage,

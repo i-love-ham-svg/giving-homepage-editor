@@ -162,6 +162,10 @@ const remoteSource = {
     nextGalleryId: 2,
     nextEssentialId: 9,
     pageDecorationModel: { cards: [{ id: "decoration-1" }], decorations: [], nextDecorationId: 2 },
+    mainIntroTitle: "송악사회복지관",
+    title: "대표자 인사말",
+    identityItems: [{ id: "identity-1", text: "김형철" }],
+    signatureText: "김형철",
     homeMenu: { brand: "송악사회복지관" },
     sectionAppearances: { gallery: { background: "#f7f2fb" } },
     mainIntroSections: [{ sectionId: "mainIntro", content: canonicalSections[0].content }],
@@ -188,6 +192,9 @@ assert(!compactRemote.content.gallerySections, "remote compact should remove dup
 assert(!compactRemote.content.essentialSections, "remote compact should remove duplicated essential sections");
 assert(!compactRemote.content.homeMenu, "remote compact should remove duplicated home menu");
 assert(!compactRemote.content.sectionAppearances, "remote compact should remove duplicated section appearances");
+assert(!compactRemote.content.mainIntroTitle, "remote compact should remove duplicated main intro scalar content");
+assert(!compactRemote.content.identityItems, "remote compact should remove duplicated representative identity content");
+assert(!compactRemote.content.signatureText, "remote compact should remove duplicated signature content");
 assert(compactRemote.content.pageDecorationModel.cards.length === 1, "remote compact should preserve page decorations");
 assert(compactRemote.content.detailPresentationVersion === 8, "remote compact should preserve detail presentation version");
 assert(compactRemote.layouts.desktop.globalOverlay.w === 7, "remote compact should preserve non-section layout entries");
