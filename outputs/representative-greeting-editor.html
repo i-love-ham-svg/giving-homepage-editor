@@ -117,6 +117,13 @@
       box-sizing: border-box;
     }
 
+    html {
+      /* Keep the public canvas width stable while the mobile menu locks the
+         document scroller. Otherwise desktop mobile emulation loses the
+         scrollbar gutter, refits the stage, and moves the visitor's place. */
+      scrollbar-gutter: stable;
+    }
+
     [hidden] {
       display: none !important;
     }
@@ -19306,6 +19313,47 @@
       window.requestAnimationFrame(syncHomeMobileMenuPanelMetrics);
     }
 
+    let homeMenuPageScrollY = null;
+    let homeMenuPageScrollTargetY = null;
+    let homeMenuPageScrollFrame = 0;
+
+    function captureHomeMenuPageScroll() {
+      if (homeMenuPageScrollY !== null) return homeMenuPageScrollY;
+      homeMenuPageScrollY = Math.max(0, window.scrollY || window.pageYOffset || 0);
+      homeMenuPageScrollTargetY = null;
+      return homeMenuPageScrollY;
+    }
+
+    function setHomeMenuPageScrollTarget(top) {
+      if (homeMenuPageScrollY === null) return;
+      homeMenuPageScrollTargetY = Math.max(0, Number(top) || 0);
+    }
+
+    function restoreHomeMenuPageScroll(top, expectedOpen) {
+      const targetTop = Math.max(0, Number(top) || 0);
+      window.scrollTo(0, targetTop);
+      if (!window.requestAnimationFrame) return;
+      if (homeMenuPageScrollFrame) window.cancelAnimationFrame(homeMenuPageScrollFrame);
+      homeMenuPageScrollFrame = window.requestAnimationFrame(() => {
+        homeMenuPageScrollFrame = 0;
+        if (Boolean(state.homeMenu.open) !== expectedOpen) return;
+        window.scrollTo(0, targetTop);
+      });
+    }
+
+    function syncHomeMenuPageScroll(menuOpen) {
+      if (menuOpen) {
+        const retainedTop = captureHomeMenuPageScroll();
+        restoreHomeMenuPageScroll(retainedTop, true);
+        return;
+      }
+      if (homeMenuPageScrollY === null) return;
+      const restoreTop = homeMenuPageScrollTargetY ?? homeMenuPageScrollY;
+      homeMenuPageScrollY = null;
+      homeMenuPageScrollTargetY = null;
+      restoreHomeMenuPageScroll(restoreTop, false);
+    }
+
     function renderHomeMenu(options = {}) {
       if (!homepageMenu || !homepageMenuBrand || !homepageMenuList || !homepageMenuToggle) return;
       state.homeMenu = normalizeHomeMenu(state.homeMenu);
@@ -19352,9 +19400,11 @@
       syncHomeMenuMeasuredHeight(menuHeight);
       scheduleHomeMenuMeasuredHeight(menuHeight);
       const menuOpen = isHomeMenuMobileSurface() && state.homeMenu.open;
+      if (menuOpen) captureHomeMenuPageScroll();
       homepageMenu.classList.toggle("open", menuOpen);
       stage.classList.toggle("home-menu-open", menuOpen);
       document.body.classList.toggle("home-menu-open", menuOpen);
+      syncHomeMenuPageScroll(menuOpen);
       homepageMenuToggle.setAttribute("aria-expanded", String(menuOpen));
       homepageMenuToggle.setAttribute("aria-label", menuOpen ? "홈페이지 메뉴 닫기" : "홈페이지 메뉴 열기");
       scheduleHomeMobileMenuPanelMetrics();
@@ -19376,11 +19426,13 @@
 
     function toggleHomeMenu() {
       const opening = !state.homeMenu.open;
-      state.homeMenu.open = opening;
       if (opening) {
+        captureHomeMenuPageScroll();
+        updateHomeMenuStickyPosition();
         syncVisibleMobileMenuHeight();
         if (!state.expandedHomeMenuId) syncActiveHomeMenuExpansion();
       }
+      state.homeMenu.open = opening;
       renderHomeMenu({ syncInputs: false });
     }
 
@@ -19654,6 +19706,7 @@
       if (found.item.externalUrl) {
         collapseHomeMenuAfterNavigation();
         if (isHomeMenuMobileSurface()) {
+          setHomeMenuPageScrollTarget(0);
           state.homeMenu.open = false;
           renderHomeMenu({ syncInputs: false });
         }
@@ -19689,6 +19742,7 @@
       collapseHomeMenuAfterNavigation();
       window.requestAnimationFrame?.(collapseHomeMenuAfterNavigation);
       if (isHomeMenuMobileSurface()) {
+        setHomeMenuPageScrollTarget(0);
         state.homeMenu.open = false;
         renderHomeMenu({ syncInputs: false });
       }
@@ -24228,12 +24282,16 @@
       scheduleSectionStyleChoiceSync();
     }
 
-    function syncVisibleMobileMenuHeight(profile = viewportProfiles[normalizeViewportKey(state.viewport)] ?? viewportProfiles.desktop, scale = state.scale || 1) {
+    function syncVisibleMobileMenuHeight(_profile = viewportProfiles[normalizeViewportKey(state.viewport)] ?? viewportProfiles.desktop, scale = state.scale || 1) {
       const visibleViewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      const visibleStageTop = Math.max(0, stage.getBoundingClientRect().top);
-      const stickyTop = Number.parseFloat(getComputedStyle(stage).getPropertyValue("--home-menu-sticky-y")) || 0;
-      const visibleStageHeight = Math.max(180, (visibleViewportHeight - visibleStageTop) / Math.max(scale, .1) - stickyTop);
-      stage.style.setProperty("--mobile-viewport-h", String(Math.min(profile.h, visibleStageHeight)));
+      /* This custom property is the visible viewport bottom in stage
+         coordinates, not the menu's remaining height. The CSS subtracts the
+         sticky menu top exactly once and separately clamps to the stage end. */
+      const visibleStageBottom = Math.max(
+        180,
+        (visibleViewportHeight - stage.getBoundingClientRect().top) / Math.max(scale, .1)
+      );
+      stage.style.setProperty("--mobile-viewport-h", String(visibleStageBottom));
     }
 
     function fitStage() {
@@ -24256,12 +24314,12 @@
       document.documentElement.style.setProperty("--stage-h", String(h));
       stage.style.setProperty("--stage-w", String(w));
       stage.style.setProperty("--stage-h", String(h));
-      syncVisibleMobileMenuHeight(viewportProfile, scale);
       stageScale.style.width = `${w * scale}px`;
       stageScale.style.height = `${h * scale}px`;
+      updateHomeMenuStickyPosition();
+      syncVisibleMobileMenuHeight(viewportProfile, scale);
       applyBackground();
       updateBackgroundFloatPosition();
-      updateHomeMenuStickyPosition();
       if (state.photoRefine.open) updatePhotoRefineModalFrame();
       if (!processIconPickerModal.hidden) updateProcessIconPickerFrame();
       if (!historyIconPickerModal.hidden) updateHistoryIconPickerFrame();

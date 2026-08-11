@@ -20,7 +20,7 @@ assert.match(html, /id: "home-menu-business-program-group"[\s\S]*?id: "home-menu
 assert.match(html, /id: "home-menu-business-case-group"[\s\S]*?id: "home-menu-business-process"/);
 assert.match(html, /id: "home-menu-news-media"[\s\S]*?id: "home-menu-news-video", label: "영상 아카이브"/);
 assert.doesNotMatch(defaultMenuMarkup, /externalUrl: "(?:facility-detail|program-schedule|case-management-detail|organization-staff|video-archive|online-application)\.html/);
-assert.match(html, /function ensureDefaultDetailPresentations\(\)/);
+assert.match(html, /function ensureDefaultDetailPresentations\((?:options = \{\})?\)/);
 assert.match(html, /function applyThreeLevelHomeMenuDefaults\(\)[\s\S]*?target\.children = \[\.\.\.structuredClone\(group\.children\), \.\.\.customChildren\]/);
 assert.match(html, /id: "home-menu-business-application", label: "온라인 신청·문의"/);
 assert.match(html, /applyThreeLevelHomeMenuDefaults\(\);[\s\S]*?const ensureOfficialMenuChild/);
@@ -59,8 +59,11 @@ assert.match(html, /\.stage\.mobile \.homepage-menu\.open \.homepage-menu-list \
 assert.match(html, /\.stage\.mobile \.homepage-menu\.open \.homepage-menu-list \{[\s\S]*?position: absolute;[\s\S]*?top: 104px;[\s\S]*?bottom: 20px;/, "mobile menu list should stay constrained to the visible menu panel");
 assert.match(html, /function toggleHomeMenu\(\) \{[\s\S]*?const opening = !state\.homeMenu\.open;[\s\S]*?if \(opening\) \{[\s\S]*?if \(!state\.expandedHomeMenuId\) syncActiveHomeMenuExpansion\(\);/, "active branch should expand only when opening the menu");
 assert.doesNotMatch(html, /function renderHomeMenu\(options = \{\}\) \{[\s\S]{0,500}?syncActiveHomeMenuExpansion\(\)/, "rendering must not reopen a branch the visitor explicitly collapsed");
-assert.match(html, /function syncVisibleMobileMenuHeight\([\s\S]*?const visibleViewportHeight = window\.visualViewport\?\.height \?\? window\.innerHeight;[\s\S]*?--mobile-viewport-h/, "mobile menu height should use the visible viewport instead of the full page height");
+const mobileMenuHeightMarkup = html.match(/function syncVisibleMobileMenuHeight\([\s\S]*?^    \}/m)?.[0] || "";
+assert.match(mobileMenuHeightMarkup, /const visibleStageBottom = Math\.max\([\s\S]*?visibleViewportHeight - stage\.getBoundingClientRect\(\)\.top[\s\S]*?--mobile-viewport-h/, "mobile menu height should use the viewport bottom in stage coordinates");
+assert.doesNotMatch(mobileMenuHeightMarkup, /Math\.min\(profile\.h/, "a scrolled mobile menu must not be capped at the initial device height");
 assert.match(html, /function toggleHomeMenu\(\)[\s\S]*?if \(opening\) \{[\s\S]*?syncVisibleMobileMenuHeight\(\)/, "opening should recompute menu height from the current stage position");
+assert.match(html, /function syncHomeMenuPageScroll\(menuOpen\)[\s\S]*?captureHomeMenuPageScroll\(\)[\s\S]*?restoreHomeMenuPageScroll/, "opening and closing the menu should preserve the inspected page position");
 assert.doesNotMatch(html, /const visibleStageHeight = Math\.max\(320,/, "mobile menu height must not exceed a short landscape or keyboard viewport");
 assert.match(html, /html:has\(body\.home-menu-open\),[\s\S]*?body\.home-menu-open \{[\s\S]*?overflow: hidden;[\s\S]*?overscroll-behavior: none;/, "open mobile menu should lock the document scroller");
 assert.match(html, /window\.visualViewport\?\.addEventListener\("resize",[\s\S]*?scheduleFloatingEditorUi\(\{ fit: true \}\)/, "visible viewport resize should recompute the mobile menu panel height");

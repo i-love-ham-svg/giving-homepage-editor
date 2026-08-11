@@ -98,3 +98,10 @@ Run the SNS login image/layout/toolbar test and the semantic section appearance 
 & "$env:USERPROFILE\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" tools\test-sns-auth-browser.mjs
 & "$env:USERPROFILE\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" tools\test-section-appearance-browser.mjs
 ```
+
+Run the mobile menu tests after changing public navigation, touch scrolling, or responsive menu layout. The repeated-navigation test covers selecting a page, inspecting it below the fold, reopening and closing the menu without losing position, and selecting a second page.
+
+```powershell
+& "$env:USERPROFILE\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" tools\test-mobile-menu-regression-browser.mjs
+& "$env:USERPROFILE\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" tools\test-mobile-menu-repeat-navigation-browser.mjs
+```
