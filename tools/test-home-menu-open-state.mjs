@@ -41,6 +41,8 @@ assert.match(html, /homepage-menu-subbar\.layout-mega[\s\S]*?repeat\(auto-fit, m
 assert.match(html, /quickMode = level === 1 && state\.homeMenu\.layoutMode !== "cascade"/);
 assert.match(html, /homepage-menu-subbar\.layout-two-level \.homepage-subbar-link[\s\S]*?min-height: 56px[\s\S]*?flex-direction: column/);
 assert.match(html, /className = "homepage-quick-group-label"[\s\S]*?className = "homepage-quick-destination-label"/);
+assert.match(html, /\.stage\.desktop \.homepage-menu\[data-layout-mode="two-level"\] \.homepage-menu-subbar \.homepage-subbar-link\.active,[\s\S]*?background: var\(--accent-strong\);[\s\S]*?-webkit-text-fill-color: currentColor;/, "desktop two-level selection should keep a visible active background");
+assert.match(html, /\.stage\.desktop \.homepage-menu\[data-layout-mode="two-level"\][\s\S]*?\.homepage-subbar-link\.active \.homepage-quick-group-label,[\s\S]*?color: inherit;/, "desktop selected group label should inherit the readable active text color");
 assert.match(html, /state\.homeMenu\.layoutMode === "mega"[\s\S]*?tallestGroupItems \* 44/);
 assert.match(html, /value="disclosure">표준 드롭다운형/);
 assert.match(html, /value="sitemap">전체 펼침형/);

@@ -1568,6 +1568,21 @@
       background: var(--accent-strong);
     }
 
+    /* Keep the selected two-level destination readable: the layout's transparent
+       base background has higher specificity than the shared active rule. */
+    .stage.desktop .homepage-menu[data-layout-mode="two-level"] .homepage-menu-subbar .homepage-subbar-link.active,
+    .stage.desktop .homepage-menu[data-layout-mode="two-level"] .homepage-menu-subbar .homepage-subbar-link[aria-current="page"] {
+      color: #fff;
+      background: var(--accent-strong);
+      opacity: 1;
+      -webkit-text-fill-color: currentColor;
+    }
+
+    .stage.desktop .homepage-menu[data-layout-mode="two-level"] .homepage-menu-subbar .homepage-subbar-link.active .homepage-quick-group-label,
+    .stage.desktop .homepage-menu[data-layout-mode="two-level"] .homepage-menu-subbar .homepage-subbar-link[aria-current="page"] .homepage-quick-group-label {
+      color: inherit;
+    }
+
     .homepage-subbar-link.has-children::after {
       content: "›";
       font-size: 13px;
