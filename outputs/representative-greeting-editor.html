@@ -14834,6 +14834,42 @@
       opacity: 1;
     }
 
+    /* Responsive open-state rules can be more specific than the shared shell
+       even when the stage is tablet-sized. Reassert the current branch after
+       them so reopening cannot return it to a pale background with white text. */
+    .stage:is(.desktop, .tablet, .mobile) .homepage-menu .homepage-menu-item.level-1 > .homepage-menu-link.contains-active,
+    .stage:is(.desktop, .tablet, .mobile) .homepage-menu .homepage-menu-item.level-1 > .homepage-menu-link.contains-active:hover,
+    .stage:is(.desktop, .tablet, .mobile) .homepage-menu .homepage-menu-item.level-1 > .homepage-menu-link.contains-active:focus-visible {
+      border-color: #1f5a46;
+      color: #fff;
+      background: #1f5a46;
+      opacity: 1;
+      -webkit-text-fill-color: #fff;
+      box-shadow: none;
+    }
+
+    .stage:is(.desktop, .tablet, .mobile) .homepage-menu .homepage-menu-item.level-1 > .homepage-menu-link.contains-active::after {
+      color: #fff;
+      opacity: 1;
+    }
+
+    /* A submenu's generic pale card background is declared after the shared
+       active rule. Keep the current leaf opaque when a dropdown is closed and
+       opened again, including after route history and saved-theme restores. */
+    .homepage-menu .homepage-submenu .homepage-menu-link.active,
+    .homepage-menu .homepage-submenu .homepage-menu-link.active:hover,
+    .homepage-menu .homepage-submenu .homepage-menu-link.active:focus-visible,
+    .homepage-menu .homepage-submenu .homepage-menu-link[aria-current="page"],
+    .homepage-menu .homepage-submenu .homepage-menu-link[aria-current="page"]:hover,
+    .homepage-menu .homepage-submenu .homepage-menu-link[aria-current="page"]:focus-visible {
+      border-color: #1f5a46;
+      color: #fff;
+      background: #1f5a46;
+      opacity: 1;
+      -webkit-text-fill-color: #fff;
+      box-shadow: none;
+    }
+
     .stage.mobile .homepage-menu-item.level-2 > .homepage-menu-link.has-children::after {
       flex-basis: 26px;
       width: 26px;

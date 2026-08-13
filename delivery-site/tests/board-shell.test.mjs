@@ -56,6 +56,8 @@ test("uses the renewed Songak shell for the community board route", async () => 
   assert.match(styles, /\.board-homepage-menu-shell \.homepage-menu-item\.level-1\.expanded > \.homepage-submenu/);
   assert.match(styles, /\.board-homepage-menu-shell \.homepage-menu-link\.contains-active \{[^}]*color: #fff;[^}]*background: #1f5a46;[^}]*opacity: 1;[^}]*-webkit-text-fill-color: #fff/);
   assert.match(styles, /\.board-homepage-menu-shell \.homepage-menu-item\.level-1 > \.homepage-menu-link\.contains-active \{[^}]*color: #fff;[^}]*background: #1f5a46/);
+  assert.match(styles, /\.homepage-menu-item\.level-1\.expanded > \.homepage-menu-link\.contains-active,[\s\S]*?background: #1f5a46;[^}]*-webkit-text-fill-color: #fff/);
+  assert.match(styles, /\.board-homepage-menu-shell \.homepage-submenu \.homepage-menu-link\.active,[\s\S]*?\.homepage-menu-link\[aria-current="page"\][\s\S]*?background: #1f5a46;[^}]*opacity: 1;[^}]*-webkit-text-fill-color: #fff/);
   assert.match(styles, /\.homepage-menu-item\.level-1\.expanded > \.homepage-menu-link:not\(\.contains-active\)/);
   assert.match(styles, /\.contact-grid\s*\{/);
   assert.doesNotMatch(styles, /\.site-header\s*\{|\.header-nav\s*\{|\.mobile-nav-panel\s*\{/);

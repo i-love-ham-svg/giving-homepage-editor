@@ -114,8 +114,8 @@ try {
     <div class="stage desktop view-mode">
       <nav class="homepage-menu" data-layout-mode="selected-dropdown">
         <div class="homepage-menu-list">
-          <div class="homepage-menu-item level-1 contains-active">
-            <button class="homepage-menu-link has-children contains-active" aria-expanded="false">복지관 소개</button>
+          <div class="homepage-menu-item level-1 contains-active expanded">
+            <button class="homepage-menu-link has-children contains-active expanded" aria-expanded="true">복지관 소개</button>
             <div class="homepage-submenu">
               <div class="homepage-menu-item level-2">
                 <button class="homepage-menu-link active" aria-current="page">미션·비전·슬로건</button>
@@ -154,6 +154,27 @@ try {
   assert.ok(
     contrastRatio(parseColor(hoveredBranchStyle.color), parseColor(hoveredBranchStyle.backgroundColor)) >= 4.5,
     "hover must not erase the selected ancestor contrast"
+  );
+
+  const activeDropdownLeaf = page.locator(".homepage-submenu .homepage-menu-link[aria-current='page']");
+  await activeDropdownLeaf.hover();
+  const activeDropdownLeafStyle = await activeDropdownLeaf.evaluate((element) => {
+    const computed = getComputedStyle(element);
+    return {
+      color: computed.color,
+      backgroundColor: computed.backgroundColor,
+      opacity: computed.opacity,
+      ariaCurrent: element.getAttribute("aria-current")
+    };
+  });
+  const dropdownLeafForeground = parseColor(activeDropdownLeafStyle.color);
+  const dropdownLeafBackground = parseColor(activeDropdownLeafStyle.backgroundColor);
+  assert.equal(activeDropdownLeafStyle.ariaCurrent, "page", "the reopened dropdown leaf must remain current");
+  assert.ok(dropdownLeafBackground.a >= 0.99, `reopened dropdown leaf background must be opaque (${activeDropdownLeafStyle.backgroundColor})`);
+  assert.ok(Number(activeDropdownLeafStyle.opacity) >= 0.99, "reopened dropdown leaf should remain fully opaque");
+  assert.ok(
+    contrastRatio(dropdownLeafForeground, dropdownLeafBackground) >= 4.5,
+    `reopened dropdown leaf contrast is too low (${activeDropdownLeafStyle.color} on ${activeDropdownLeafStyle.backgroundColor})`
   );
 
   console.log("desktop menu active contrast browser tests OK");

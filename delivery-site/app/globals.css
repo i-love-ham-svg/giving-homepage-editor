@@ -149,6 +149,12 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .board-homepage-menu-shell .homepage-menu[data-layout-mode="cascade"] .homepage-menu-item.child-open > .homepage-submenu,
 .board-homepage-menu-shell .homepage-menu[data-layout-mode="unified"] .homepage-menu-item.level-1.expanded > .homepage-submenu { display: grid; }
 .board-homepage-menu-shell .homepage-submenu .homepage-menu-link { justify-content: flex-start; width: 100%; min-height: 42px; white-space: normal; text-align: left; }
+.board-homepage-menu-shell .homepage-submenu .homepage-menu-link.active,
+.board-homepage-menu-shell .homepage-submenu .homepage-menu-link.active:hover,
+.board-homepage-menu-shell .homepage-submenu .homepage-menu-link.active:focus-visible,
+.board-homepage-menu-shell .homepage-submenu .homepage-menu-link[aria-current="page"],
+.board-homepage-menu-shell .homepage-submenu .homepage-menu-link[aria-current="page"]:hover,
+.board-homepage-menu-shell .homepage-submenu .homepage-menu-link[aria-current="page"]:focus-visible { border-color: #1f5a46; color: #fff; background: #1f5a46; opacity: 1; -webkit-text-fill-color: #fff; box-shadow: none; }
 .board-homepage-menu-shell .homepage-submenu .homepage-submenu { top: -8px; left: calc(100% + 8px); }
 .board-homepage-menu-shell .homepage-menu-subbar { display: grid; width: 100%; max-width: 100%; margin: 6px 0 0; padding: 10px 10px 8px; grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; border-top: 2px solid rgba(47, 104, 81, .34); border-radius: 0 0 10px 10px; background: rgba(47, 104, 81, .04); }
 .board-homepage-menu-shell .homepage-subbar-item { position: relative; display: flex; min-width: 0; }
@@ -405,6 +411,10 @@ dialog::backdrop { background: rgba(13,35,26,.62); backdrop-filter: blur(5px); }
   .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-menu-link.has-children::after { color: var(--green); content: "−"; }
   .board-homepage-menu-shell .homepage-menu-item.level-1 > .homepage-menu-link.contains-active { border-color: #1f5a46; color: #fff; background: #1f5a46; opacity: 1; -webkit-text-fill-color: #fff; box-shadow: none; }
   .board-homepage-menu-shell .homepage-menu-item.level-1 > .homepage-menu-link.contains-active::after { color: #fff; opacity: 1; }
+  .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-menu-link.contains-active,
+  .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-menu-link.contains-active:hover,
+  .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-menu-link.contains-active:focus-visible { border-color: #1f5a46; color: #fff; background: #1f5a46; opacity: 1; -webkit-text-fill-color: #fff; box-shadow: none; }
+  .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-menu-link.contains-active::after { color: #fff; opacity: 1; }
   .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-menu-link:not(.contains-active) { color: var(--green); background: rgba(47, 104, 81, .08); box-shadow: inset 3px 0 0 var(--green); }
   .board-homepage-menu-shell .homepage-submenu { position: static; display: none; min-width: 0; padding: 12px 14px 14px; gap: 8px; border: 0; border-top: 1px solid rgba(47, 104, 81, .18); border-radius: 0; background: rgba(47, 104, 81, .035); box-shadow: none; }
   .board-homepage-menu-shell .homepage-menu-item.level-1.expanded > .homepage-submenu,

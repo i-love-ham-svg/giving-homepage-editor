@@ -61,7 +61,7 @@
         "category": "css-specificity",
         "relatedCategories": ["duplicate-source", "missing-regression-test"],
         "confirmed": true,
-        "details": "현재 leaf는 active/aria-current이지만 상위 branch는 contains-active이다. 기본 selected-dropdown PC 규칙과 BoardApp 규칙에 contains-active 고대비 계약이 없어 옅거나 흰색으로 표시되고, 기존 테스트는 two-level leaf만 검사했다."
+        "details": "현재 leaf의 active 규칙과 그 뒤의 일반 submenu 배경 규칙이 같은 specificity여서 7% 반투명 배경이 진녹색 선택 배경만 덮었다. 모바일·태블릿에는 expanded/contains-active의 옅은 배경 규칙도 더 높은 specificity로 상위 선택 배경을 덮었다. 상태·aria는 정상이었고 기존 검사는 two-level leaf와 닫힌 상위 branch만 측정해 실제 selected-dropdown 재열기를 놓쳤다."
       },
       "invariants": [
         {
@@ -74,7 +74,11 @@
         },
         {
           "assertionId": "navigation.active.contrast",
-          "statement": "선택 메뉴의 글자와 배경 대비는 PC·태블릿·모바일에서 4.5:1 이상이다."
+          "statement": "상위 branch와 다시 연 하위 드롭다운의 현재 leaf는 모두 불투명 배경이며 글자와 배경 대비가 PC·태블릿·모바일에서 4.5:1 이상이다."
+        },
+        {
+          "assertionId": "navigation.active.reopen",
+          "statement": "현재 페이지에서 메뉴를 열기·닫기·재열기하고 새로고침·뒤로가기·앞으로가기를 반복해도 하위 현재 leaf의 선택 배경이 흰색이나 반투명으로 돌아가지 않는다."
         },
         {
           "assertionId": "navigation.active.survives-pipeline",
@@ -101,6 +105,10 @@
         {
           "file": "delivery-site/tests/board-shell.test.mjs",
           "status": "pass"
+        },
+        {
+          "file": "tools/test-public-selected-dropdown-browser.mjs",
+          "status": "pass"
         }
       ],
       "risk": "high",
@@ -116,8 +124,18 @@
       "history": [
         {
           "date": "2026-08-13",
+          "event": "verified-reopen-matrix",
+          "note": "동일 specificity 하위 배경과 반응형 expanded 배경의 덮어쓰기를 후행 고대비 불변식으로 차단. 1329·820·390·320에서 열기·닫기·재열기·새로고침·뒤로·앞으로·재열기 테스트와 실제 43217 3회 재열기 계산 스타일 검증 통과"
+        },
+        {
+          "date": "2026-08-13",
+          "event": "regression-reopened",
+          "note": "/programs에서 사업 안내 메뉴를 다시 열면 현재 leaf 프로그램 안내가 흰 글자와 7% 반투명 배경으로 표시됨. 기존 검사는 상위 branch만 측정해 이 상태를 놓쳤으므로 verified/full-pass를 취소하고 실제 재열기 행렬을 추가함"
+        },
+        {
+          "date": "2026-08-13",
           "event": "root-cause-confirmed",
-          "note": "selected-dropdown 상위 branch의 contains-active 고대비 규칙과 회귀검사가 누락된 것을 확인"
+          "note": "selected-dropdown 하위 leaf의 진한 active 배경이 뒤의 동일 specificity 일반 submenu 배경에 덮이고, 반응형 상위 branch도 expanded 옅은 배경에 덮이는 실제 CSS cascade와 재열기 회귀검사 누락을 확인"
         },
         {
           "date": "2026-08-13",

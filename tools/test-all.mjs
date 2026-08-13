@@ -49,7 +49,10 @@ const tests = [
   // not acceptance criteria. Canonical board QA runs against delivery-site.
   "tools/test-community-board-page.mjs",
   "tools/test-detail-pages.mjs",
-  "tools/test-desktop-menu-active-contrast-browser.mjs"
+  "tools/test-desktop-menu-active-contrast-browser.mjs",
+  // Exercise the real route state through open, close, reopen, reload and
+  // history traversal so a pale generic submenu style cannot mask the leaf.
+  "tools/test-public-selected-dropdown-browser.mjs"
 ];
 
 const failures = [];
