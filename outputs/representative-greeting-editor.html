@@ -1394,7 +1394,6 @@
 
     .homepage-menu-edit,
     .homepage-menu-move {
-      min-width: 44px;
       min-height: 44px;
       display: none;
       min-width: calc(var(--home-menu-font-size, 14px) * 2.45);
@@ -1476,8 +1475,6 @@
     }
 
     .homepage-menu-link {
-      min-height: 44px;
-      font-size: clamp(15px, 1.15vw, 16px);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1519,7 +1516,6 @@
     }
 
     .homepage-submenu {
-      min-width: 200px;
       position: absolute;
       top: calc(100% + 8px);
       left: 0;
@@ -1551,10 +1547,8 @@
     }
 
     .homepage-submenu .homepage-menu-link {
-      min-height: 44px;
       justify-content: flex-start;
       width: 100%;
-      min-height: 34px;
       min-height: 44px;
       padding: 0 11px;
       border-radius: 6px;
@@ -1725,7 +1719,6 @@
     }
 
     .homepage-subbar-link {
-      min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -25667,10 +25660,6 @@
       });
     }
 
-    function setupMenuEditorDrag() {
-      // The menu editor is anchored under the actual menu; the menu itself moves via setupHomeMenuDrag().
-    }
-
     function setupHomeMenuDrag() {
       if (!homepageMenuMoveBtn || homepageMenuMoveBtn.dataset.dragBound === "true") return;
       homepageMenuMoveBtn.dataset.dragBound = "true";
@@ -41710,7 +41699,6 @@ function syncSectionControls() {
       setupHomeMenuDrag();
       setupHomeMenuItemReorder();
       setupHomeMenuBrandDrag();
-      setupMenuEditorDrag();
       setupBackgroundEditDrag();
     }
     applyTheme();

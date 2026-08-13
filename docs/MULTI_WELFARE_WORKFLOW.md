@@ -66,7 +66,8 @@ pnpm build
 
 | 이름 | 용도 | Git 커밋 |
 |---|---|---|
-| `BOARD_ADMIN_PASSWORD` | 담당자 관리자 로그인 | 금지 |
+| `TEMP_EDITOR_ID` | 임시 담당자 로그인 아이디 | 금지 |
+| `TEMP_EDITOR_PASSWORD` | 임시 담당자 로그인 비밀번호 | 금지 |
 | `BOARD_SESSION_SECRET` | 로그인 세션 서명(32자 이상) | 금지 |
 | `BOARD_HASH_PEPPER` | 작성자 식별값 보호 | 금지 |
 | D1 `DB` | 게시글·감사 기록 영구 저장 | 바인딩 이름만 허용 |
@@ -92,4 +93,3 @@ pnpm build
 - [ ] 공개 방문자 화면에서 관리자 기능 비노출 확인
 - [ ] PC·모바일 검수와 자동 테스트 통과
 - [ ] 개인정보 정책, 백업, 장애 대응 담당자 기록
-

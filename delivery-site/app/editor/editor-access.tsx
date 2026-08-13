@@ -27,7 +27,7 @@ export default function EditorAccess() {
       v: "20260812-community-surface",
     });
     if (surface) editorParams.set("surface", surface);
-    setEditorSrc(`/songak/representative-greeting-editor.html?${editorParams}`);
+    const nextEditorSrc = `/songak/representative-greeting-editor.html?${editorParams}`;
 
     fetch(`/api/board/admin/session?returnTo=${encodeURIComponent(returnTo)}`, { cache: "no-store" })
       .then((response) => {
@@ -40,6 +40,9 @@ export default function EditorAccess() {
           window.location.replace(value.signInPath || `/staff-login?returnTo=${encodeURIComponent(returnTo)}`);
           return;
         }
+        // The authenticated session is the first render that needs the iframe,
+        // so commit the derived URL with the async session result.
+        setEditorSrc(nextEditorSrc);
         setSession(value);
       })
       .catch(() => active && setFailed(true));

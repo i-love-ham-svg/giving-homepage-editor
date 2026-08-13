@@ -54,7 +54,8 @@ pnpm test
 
 ## 주요 경로
 
-- `/`: 공개 게시판
+- `/`: 공개 홈페이지
+- `/community`: 소통게시판
 - `/api/board/posts`: 게시글 조회·작성
 - `/api/board/media`: 미디어 업로드
 - `/api/board/admin/login`: 관리자 로그인

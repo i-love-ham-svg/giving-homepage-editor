@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { CSSProperties, Fragment, ReactNode, useEffect, useState } from "react";
 
 export type MenuLayoutMode = "selected-dropdown" | "cascade" | "two-level" | "mega" | "disclosure" | "sitemap" | "unified";
@@ -110,7 +111,7 @@ function destinationEntries(item: SharedMenuItem): DestinationEntry[] {
   });
 }
 
-export function HomepageNavigation({ navigation, currentPath }: Props) {
+function HomepageNavigationContent({ navigation, currentPath }: Props) {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState("");
   const [expandedBranchIds, setExpandedBranchIds] = useState<string[]>([]);
@@ -137,13 +138,8 @@ export function HomepageNavigation({ navigation, currentPath }: Props) {
     };
   }, [open]);
 
-  useEffect(() => {
-    setExpandedId("");
-    setExpandedBranchIds([]);
-  }, [currentPath, navigation.layoutMode]);
-
   const brand = (
-    <a
+    <Link
       key="homepage-menu-brand"
       className={`homepage-menu-brand logo-${navigation.logoShape}`}
       href="/"
@@ -152,13 +148,13 @@ export function HomepageNavigation({ navigation, currentPath }: Props) {
       onClick={() => setOpen(false)}
     >
       {navigation.brandMode === "logo" && navigation.logoDataUrl
-        ? <img src={navigation.logoDataUrl} alt={navigation.brand} />
+        ? <Image src={navigation.logoDataUrl} alt={navigation.brand} width={240} height={56} unoptimized />
         : navigation.brand}
-    </a>
+    </Link>
   );
 
   const mobileBrand = (
-    <a
+    <Link
       className={`homepage-menu-mobile-brand logo-${navigation.logoShape}`}
       href="/"
       aria-label="송악사회복지관 홈페이지로 이동"
@@ -166,9 +162,9 @@ export function HomepageNavigation({ navigation, currentPath }: Props) {
       onClick={() => setOpen(false)}
     >
       {navigation.brandMode === "logo" && navigation.logoDataUrl
-        ? <img src={navigation.logoDataUrl} alt={navigation.brand} />
+        ? <Image src={navigation.logoDataUrl} alt={navigation.brand} width={240} height={56} unoptimized />
         : navigation.brand}
-    </a>
+    </Link>
   );
 
   const renderCascadeItems = (items: SharedMenuItem[], level: number): ReactNode => items.map((item) => {
@@ -285,4 +281,11 @@ export function HomepageNavigation({ navigation, currentPath }: Props) {
       </nav>
     </div>
   );
+}
+
+// Route and layout changes define a new menu interaction session. Remounting
+// the local disclosure state prevents an old expanded branch from leaking into
+// the next route without an effect-driven reset render.
+export function HomepageNavigation(props: Props) {
+  return <HomepageNavigationContent key={`${props.currentPath}:${props.navigation.layoutMode}`} {...props} />;
 }

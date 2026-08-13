@@ -75,6 +75,10 @@ test("renders the community menu with the exact homepage menu contract", async (
   assert.match(menu, /document\.body\.style\.overflow = "hidden"/);
   assert.match(menu, /setOpen\(false\); setExpandedId\(""\)/);
   assert.match(menu, /data-homepage-brand-link/);
+  assert.match(menu, /<Link[\s\S]*?data-homepage-brand-link/);
+  assert.doesNotMatch(menu, /<a[\s\S]*?data-homepage-brand-link/);
+  assert.match(menu, /<HomepageNavigationContent key=\{`\$\{props\.currentPath\}:\$\{props\.navigation\.layoutMode\}`\}/);
+  assert.doesNotMatch(menu, /useEffect\(\(\) => \{\s*setExpandedId\(""\)/);
   assert.match(menu, /usesDropdown = \["selected-dropdown", "cascade", "unified"\]\.includes/);
   assert.match(menu, /export function HomepageBreadcrumb/);
   assert.match(menu, /findNavigationTrail\(item\.children, normalizedCurrentPath\)/);
@@ -106,8 +110,7 @@ test("keeps every durable board interaction behind the renewed shell", async () 
   assert.match(board, /\{admin && \(\s*<div className="admin-console">/);
   assert.match(board, /담당자 게시물 관리/);
   assert.match(board, /\{admin && <section className="moderation-panel">/);
-  assert.match(board, /requestJson<\{ ok: boolean \}>\("\/api\/board\/admin\/logout", \{ method: "POST" \}\)/);
-  assert.match(board, /window\.location\.assign\("\/community"\)/);
+  assert.doesNotMatch(board, /function logoutAdmin\(/);
   assert.match(board, /params\.get\("manage"\) === "1"/);
   assert.match(board, /!adminDialog\.current\.open[\s\S]*?adminDialog\.current\.showModal\(\)/);
   assert.doesNotMatch(board, /adminSignOutPath|signout-with-chatgpt/);

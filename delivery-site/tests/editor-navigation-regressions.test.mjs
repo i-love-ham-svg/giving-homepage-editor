@@ -40,3 +40,14 @@ test("opens only the canonical community board from the editor", async () => {
   assert.match(editor, /home-menu-news-board", label: "소통게시판", sectionId: "", sectionIds: \[\], externalUrl: "delivery-board"/);
   assert.match(editor, /function retireLegacyVisitorBoard\(\)[\s\S]*?removeEssentialSection\("essential8"\)/);
 });
+
+test("classifies the representative greeting menu without changing the combined about surface", async () => {
+  const [editor, board] = await Promise.all([
+    readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
+    readFile(new URL("app/board-app.tsx", root), "utf8"),
+  ]);
+
+  assert.match(editor, /id: "home-menu-intro-main", label: "대표자 인사말", sectionId: "greeting", sectionIds: \["mainIntro", "greeting"\]/);
+  assert.doesNotMatch(editor, /label: "메인 소개·대표자 인사말"/);
+  assert.match(board, /id: "home-menu-intro-main", label: "대표자 인사말", href: "\/about"/);
+});

@@ -19,6 +19,10 @@ function assertAllowed(value, values, label) {
   assert.ok(Array.isArray(values) && values.includes(value), `${label} contains unsupported value: ${value}`);
 }
 
+function sourcePath(entry) {
+  return String(entry || "").split("#", 1)[0];
+}
+
 for (const record of registry.records) {
   assert.match(record.id, /^[A-Z]+(?:-[A-Z]+)*-\d{3}$/, `invalid change id: ${record.id}`);
   assert.ok(!ids.has(record.id), `duplicate change id: ${record.id}`);
@@ -54,6 +58,15 @@ for (const record of registry.records) {
 
   assert.ok(Array.isArray(record.sourceOfTruth) && record.sourceOfTruth.length > 0, `${record.id} must identify source of truth`);
   assert.ok(Array.isArray(record.implementationFiles) && record.implementationFiles.length > 0, `${record.id} must identify implementation files`);
+  for (const source of record.sourceOfTruth) {
+    const sourceFile = sourcePath(source);
+    assert.ok(sourceFile, `${record.id} has an empty source-of-truth path`);
+    assert.ok(fs.existsSync(path.join(root, sourceFile)), `${record.id} source of truth does not exist: ${sourceFile}`);
+  }
+  for (const implementationFile of record.implementationFiles) {
+    assert.ok(implementationFile?.trim(), `${record.id} has an empty implementation file path`);
+    assert.ok(fs.existsSync(path.join(root, implementationFile)), `${record.id} implementation file does not exist: ${implementationFile}`);
+  }
   assert.ok(Array.isArray(record.tests) && record.tests.length > 0, `${record.id} must define regression tests`);
   for (const test of record.tests) {
     assert.ok(test.file?.trim(), `${record.id} has a test without file`);

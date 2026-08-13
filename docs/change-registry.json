@@ -758,7 +758,8 @@
       ],
       "sourceOfTruth": [
         "outputs/representative-greeting-editor.html#openTextToolbar",
-        "delivery-site/app/editor-community-surface-adapter.ts",
+        "outputs/editor-community-surface-manager.js",
+        "delivery-site/lib/community-editor-contract.ts",
         "delivery-site/app/board-app.tsx"
       ],
       "implementationFiles": [
@@ -854,11 +855,14 @@
         }
       ],
       "sourceOfTruth": [
-        "delivery-site/app/editor-community-surface-adapter.ts",
+        "outputs/editor-community-surface-manager.js",
+        "delivery-site/lib/community-editor-contract.ts",
         "delivery-site/app/board-app.tsx"
       ],
       "implementationFiles": [
-        "delivery-site/app/editor-community-surface-adapter.ts",
+        "outputs/editor-community-surface-manager.js",
+        "delivery-site/lib/community-editor-contract.ts",
+        "delivery-site/app/board-app.tsx",
         "delivery-site/tests/editor-community-surface-adapter.test.mjs"
       ],
       "tests": [
@@ -959,6 +963,184 @@
           "date": "2026-08-13",
           "event": "follow-up-proposed",
           "note": "공개 화면에는 영향이 없고 담당자 320px 편집 UX 개선 후보로 분리했다. 공개 배포 승인 없음"
+        }
+      ]
+    },
+    {
+      "id": "CONTENT-GREETING-LABEL-001",
+      "recordType": "content",
+      "title": "대표자 인사말 메뉴명과 대표 섹션 분류 정합화",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "복지관 소개 하위 메뉴의 '메인 소개·대표자 인사말'을 '대표자 인사말'로 줄이고 섹션 분류도 확인해 달라는 요청.",
+      "primaryTaxonomyId": "section.greeting.menu-label",
+      "relatedTaxonomyIds": [
+        "layout.navigation.breadcrumb",
+        "system.test.regression"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board", "editor-shell"],
+        "routes": ["/about", "/about/greeting"],
+        "sections": ["mainIntro", "greeting"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff"],
+        "modes": ["view", "edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "content-error",
+        "relatedCategories": ["route-mapping", "missing-regression-test"],
+        "confirmed": true,
+        "details": "복합 메뉴명이 길고 메뉴 목적의 대표 분류가 모호했다. 공개 /about의 기존 합성 화면은 유지하되 메뉴의 primary sectionId와 표시는 greeting으로 고정했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "content.greeting.label",
+          "statement": "복지관 소개 첫 하위 메뉴에는 '대표자 인사말'만 표시한다."
+        },
+        {
+          "assertionId": "content.greeting.primary-section",
+          "statement": "해당 메뉴의 대표 sectionId는 greeting이다."
+        },
+        {
+          "assertionId": "content.greeting.combined-surface",
+          "statement": "공개 /about 화면은 mainIntro와 greeting 두 섹션을 기존 순서로 함께 표시한다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#state.homeMenu",
+        "delivery-site/app/board-app.tsx#fallbackNavigation"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "delivery-site/app/board-app.tsx",
+        "delivery-site/tests/editor-navigation-regressions.test.mjs",
+        "tools/test-public-breadcrumb-browser.mjs"
+      ],
+      "tests": [
+        {
+          "file": "delivery-site/tests/editor-navigation-regressions.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-public-breadcrumb-browser.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "medium",
+      "dependencies": ["NAV-CONTEXT-TRAIL-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "메뉴명·대표 sectionId·합성 화면 계약을 분리하고 경로·4뷰포트 현재 위치와 정적 계약을 확인했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "MAINT-CODE-CLEANUP-001",
+      "recordType": "architecture",
+      "title": "기능 불변 코드·문서·자산 메타데이터 정리",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "릴리스 후보 확정 전 중복 코드와 잔여물을 정리해야 한다는 요청.",
+      "primaryTaxonomyId": "system.maintenance.code-cleanup",
+      "relatedTaxonomyIds": [
+        "system.test.regression",
+        "system.storage.schema"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board", "editor-shell", "operational"],
+        "routes": ["all-public-menu-destinations", "/editor", "/community"],
+        "sections": ["shared.navigation", "community.external-surface"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff", "creator"],
+        "modes": ["view", "edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "duplicate-source",
+        "relatedCategories": ["missing-regression-test", "content-error"],
+        "confirmed": true,
+        "details": "사문화 CSS 선언과 빈 초기화 함수, 미사용 상수·함수, 린트 경고, 오래된 운영 문서 경로·환경변수, 존재하지 않는 변경이력 소스 경로, 개인 PC 임시 자산 경로가 함께 남아 있었다."
+      },
+      "invariants": [
+        {
+          "assertionId": "maintenance.cleanup.behavior-preserved",
+          "statement": "정리 전후 공개 메뉴·breadcrumb·편집기·소통게시판 기능과 저장 계약은 동일하다."
+        },
+        {
+          "assertionId": "maintenance.cleanup.registry-paths",
+          "statement": "변경 이력의 sourceOfTruth와 implementationFiles는 모두 저장소에 실제 존재한다."
+        },
+        {
+          "assertionId": "maintenance.cleanup.portable-assets",
+          "statement": "추적 자산 매니페스트에는 개인 PC 임시 절대경로가 없다."
+        },
+        {
+          "assertionId": "maintenance.cleanup.release-gates",
+          "statement": "린트·타입·전체 회귀검사·빌드·3-way 자산 동기화가 모두 통과한다."
+        }
+      ],
+      "sourceOfTruth": [
+        "docs/change-registry.json",
+        "tools/test-all.mjs",
+        "delivery-site/package.json"
+      ],
+      "implementationFiles": [
+        "delivery-site/app/board-app.tsx",
+        "delivery-site/app/editor/editor-access.tsx",
+        "delivery-site/app/homepage-navigation.tsx",
+        "delivery-site/lib/community-editor-contract.ts",
+        "outputs/representative-greeting-editor.html",
+        "outputs/assets/official-sacwc/manifest.json",
+        "tools/test-change-registry.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-all.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/board-shell.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-change-registry.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "medium",
+      "dependencies": ["NAV-ACTIVE-CONTRAST-001", "QA-PUBLIC-MATRIX-001", "QA-STAFF-EDITOR-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "안전한 기계적 정리만 적용하고 위험한 메뉴 CSS 통합·퇴역 파일·저장 데이터 참조 가능 자산 삭제는 후속으로 분리했다. 공개 배포는 하지 않음"
         }
       ]
     }

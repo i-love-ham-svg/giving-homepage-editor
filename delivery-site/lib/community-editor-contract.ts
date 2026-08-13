@@ -222,13 +222,6 @@ const LAYOUT_DEFAULTS: Record<CommunityEditorViewport, CommunityLayout> = Object
   phoneSmall: { contentWidth: 92, paddingTop: 36, paddingBottom: 40, infoColumns: 1, gap: 10 },
 });
 
-const BACKGROUND_LAYOUT_DEFAULTS: Record<CommunityEditorViewport, CommunityBackgroundLayout> = Object.freeze({
-  desktop: { imageX: 0, imageY: 0, imageW: 100, imageH: 100, imageScale: 1, cropX: 0, cropY: 0, cropW: 100, cropH: 100 },
-  tablet: { imageX: 0, imageY: 0, imageW: 100, imageH: 100, imageScale: 1, cropX: 0, cropY: 0, cropW: 100, cropH: 100 },
-  phone: { imageX: 0, imageY: 0, imageW: 100, imageH: 100, imageScale: 1, cropX: 0, cropY: 0, cropW: 100, cropH: 100 },
-  phoneSmall: { imageX: 0, imageY: 0, imageW: 100, imageH: 100, imageScale: 1, cropX: 0, cropY: 0, cropW: 100, cropH: 100 },
-});
-
 function defaultTextStyles(): CommunityEditorSurface["textStyles"] {
   return Object.fromEntries(VIEWPORTS.map((viewport) => {
     const styles = Object.fromEntries(TEXT_TARGET_IDS.map((targetId) => {
