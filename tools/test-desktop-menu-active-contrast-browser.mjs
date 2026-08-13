@@ -51,7 +51,7 @@ try {
         <div class="homepage-menu-subbar">
           <button class="homepage-subbar-link active" aria-current="page">
             <small class="homepage-quick-group-label">기관 안내</small>
-            <span class="homepage-quick-destination-label">메인 소개·대표자 인사말</span>
+            <span class="homepage-quick-destination-label">대표자 인사말</span>
           </button>
         </div>
         <div class="homepage-menu-item level-1 contains-active">

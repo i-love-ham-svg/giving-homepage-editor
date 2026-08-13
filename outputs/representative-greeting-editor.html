@@ -18852,7 +18852,7 @@
               id: "home-menu-intro-guide", label: "기관 안내", sectionId: "mainIntro",
               sectionIds: ["mainIntro", "greeting", "essential2", "essential4", "history", "location"],
               children: [
-                { id: "home-menu-intro-main", label: "메인 소개·대표자 인사말", sectionId: "mainIntro", sectionIds: ["mainIntro", "greeting"], children: [] },
+                { id: "home-menu-intro-main", label: "대표자 인사말", sectionId: "greeting", sectionIds: ["mainIntro", "greeting"], children: [] },
                 { id: "home-menu-intro-mission", label: "미션·비전·슬로건", sectionId: "essential2", sectionIds: ["essential2"], children: [] },
                 { id: "home-menu-intro-corporate", label: "운영법인 소개", sectionId: "essential4", sectionIds: ["essential4"], children: [] },
                 { id: "home-menu-intro-history", label: "연혁", sectionId: "history", sectionIds: ["history"], children: [] },
@@ -41423,8 +41423,10 @@ function syncSectionControls() {
         });
         const introMenuItem = state.homeMenu.items.find((item) => item.label === "복지관 소개");
         const combinedIntroItem = introMenuItem?.children?.find((item) => item.id === "home-menu-intro-main");
-        assert(getHomeMenuLinkedSectionIds(combinedIntroItem).includes("mainIntro")
-          && getHomeMenuLinkedSectionIds(combinedIntroItem).includes("greeting"), "메인 소개와 대표자 인사말이 한 페이지 메뉴로 연결되지 않았습니다");
+        assert(combinedIntroItem?.label === "대표자 인사말"
+          && combinedIntroItem?.sectionId === "greeting"
+          && getHomeMenuLinkedSectionIds(combinedIntroItem).includes("mainIntro")
+          && getHomeMenuLinkedSectionIds(combinedIntroItem).includes("greeting"), "대표자 인사말 메뉴의 대표 분류와 연결 섹션이 올바르지 않습니다");
         assert(Boolean(inlineSignatureSizeControl && inlineSignatureSizeRange && inlineSignatureSizeValue), "대표자 서명 크기 조절 도구가 없습니다");
         assert(getSignatureSize("greeting", "desktop") >= 18, "대표자 서명 크기 기본값이 올바르지 않습니다");
 

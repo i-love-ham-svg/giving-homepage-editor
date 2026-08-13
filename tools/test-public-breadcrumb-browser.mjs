@@ -12,7 +12,7 @@ const executablePath = [
 const origin = process.env.SONGAK_QA_ORIGIN || "http://127.0.0.1:43216";
 const routes = [
   ["/", ["홈"]],
-  ["/about", ["복지관 소개", "메인 소개·대표자 인사말"]],
+  ["/about", ["복지관 소개", "대표자 인사말"]],
   ["/about/mission", ["복지관 소개", "미션·비전·슬로건"]],
   ["/about/corporate", ["복지관 소개", "운영법인 소개"]],
   ["/about/history", ["복지관 소개", "연혁"]],

@@ -337,7 +337,7 @@ const publicNavigation: SharedNavigation = {
     label: "복지관 소개",
     href: "/about",
     children: [
-      { id: "home-menu-intro-main", label: "메인 소개·대표자 인사말", href: "/about", children: [] },
+      { id: "home-menu-intro-main", label: "대표자 인사말", href: "/about", children: [] },
       { id: "home-menu-intro-mission", label: "미션·비전·슬로건", href: "/about/mission", children: [] },
       { id: "home-menu-intro-corporate", label: "운영법인 소개", href: "/about/corporate", children: [] },
       { id: "home-menu-intro-history", label: "연혁", href: "/about/history", children: [] },
