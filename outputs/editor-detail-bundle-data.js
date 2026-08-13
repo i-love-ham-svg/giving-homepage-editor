@@ -10,6 +10,9 @@
   const BUNDLES = {
     facility: {
       label: "시설현황", originalIds: ["facility", "essential5"], kinds: ["hero", "facts", "selector", "callout"],
+      // The original facility editor called this section "guide" while the
+      // shared detail renderer calls the same fact-card presentation "facts".
+      kindAliases: { guide: "facts" },
       models: {
         hero: { template: "facility", label: "시설현황 · 메인 소개", eyebrow: "FACILITIES", headline: "시설을 한눈에 확인하세요", description: "층별 공간과 주요 편의시설, 이용 문의 정보를 실제 방문 전에 확인할 수 있습니다.", ctaLabel: "층별 안내 보기", detailSecondaryCta: "시설 이용 문의" },
         facts: { template: "facility", label: "시설현황 · 기본 안내", headline: "기본 이용 안내", description: "시설별 운영시간은 프로그램과 대관 일정에 따라 달라질 수 있습니다.", details: [
@@ -95,7 +98,6 @@
     account: {
       label: "로그인·회원가입", originalIds: [], kinds: ["social", "guide"],
       models: {
-        hero: { template: "volunteer", label: "SNS 회원 · 메인 소개", eyebrow: "STAFF LOGIN", headline: "복지관 담당자 로그인", description: "로그인 버튼을 누른 뒤 복지관에 전달된 임시 아이디와 비밀번호를 입력해 주세요.", ctaLabel: "로그인하기", detailSecondaryCta: "이용 안내" },
         social: { template: "volunteer", label: "SNS 회원 · 인증 선택", headline: "로그인·회원가입", description: "", note: "", socialLayout: "drive-split", detailAssetUrl: "./assets/generated/account-sns-photoreal-v1.webp", detailAssetAlt: "송악사회복지관 앞에서 함께 웃는 어르신과 복지관 직원의 실사 이미지", detailMobileAssetUrl: "./assets/generated/account-sns-photoreal-mobile-v2.webp", detailMobileAssetAlt: "모바일 화면용 송악사회복지관 어르신과 복지관 직원의 실사 이미지", detailAssetFit: "cover", details: [
           { id: "account-kakao-client", label: "카카오 REST API 키", value: "" },
           { id: "account-naver-client", label: "네이버 Client ID", value: "" },
@@ -107,11 +109,21 @@
     }
   };
 
-  function createModel(pageKind, sectionKind) {
-    const source = BUNDLES[pageKind]?.models?.[sectionKind];
-    if (!source) return null;
-    return { ...structuredClone(source), detailPageKind: pageKind, detailSectionKind: sectionKind, detailDesignVersion: 5, detailSelectedFilter: "all", items: structuredClone(source.items || []), details: structuredClone(source.details || []), note: source.note || "", ctaLabel: source.ctaLabel || "" };
+  function resolveSectionKind(pageKind, sectionKind) {
+    const config = BUNDLES[pageKind];
+    const requested = String(sectionKind || "");
+    if (!config || !requested) return "";
+    if (config.models?.[requested]) return requested;
+    const canonical = config.kindAliases?.[requested] || "";
+    return config.models?.[canonical] ? canonical : "";
   }
 
-  window.SongakDetailBundles = Object.freeze({ BUNDLES, PAGE_ORDER: Object.keys(BUNDLES), createModel });
+  function createModel(pageKind, sectionKind) {
+    const canonicalKind = resolveSectionKind(pageKind, sectionKind);
+    const source = BUNDLES[pageKind]?.models?.[canonicalKind];
+    if (!source) return null;
+    return { ...structuredClone(source), detailPageKind: pageKind, detailSectionKind: canonicalKind, detailDesignVersion: 5, detailSelectedFilter: "all", items: structuredClone(source.items || []), details: structuredClone(source.details || []), note: source.note || "", ctaLabel: source.ctaLabel || "" };
+  }
+
+  window.SongakDetailBundles = Object.freeze({ BUNDLES, PAGE_ORDER: Object.keys(BUNDLES), createModel, resolveSectionKind });
 }());

@@ -96,6 +96,20 @@
 .detail-video-card { overflow:hidden; }
 .detail-video-thumb { position:relative; aspect-ratio:16/9; overflow:hidden; display:block; background:#dfeae3; }
 .detail-video-thumb img { width:100%; height:100%; display:block; object-fit:cover; }
+.detail-video-thumb::before {
+  content:"영상 썸네일";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:var(--detail-brand);
+  background:linear-gradient(145deg,#e8f2ed,#d7e8df);
+  font-size:15px;
+  font-weight:850;
+  opacity:0;
+}
+.detail-video-thumb.thumbnail-unavailable::before { opacity:1; }
+.detail-video-thumb.thumbnail-unavailable img { display:none; }
 .detail-video-play { position:absolute; inset:50% auto auto 50%; width:58px; height:58px; display:grid; place-items:center; transform:translate(-50%,-50%); border-radius:50%; color:#fff; background:rgba(28,76,52,.88); font-size:22px; }
 .detail-video-copy { position:relative; padding:20px; }
 .detail-video-copy .essential-item-badge { color:var(--detail-brand); font-weight:850; }

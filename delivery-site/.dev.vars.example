@@ -2,4 +2,5 @@ TEMP_EDITOR_ID=replace-with-a-temporary-editor-id
 TEMP_EDITOR_PASSWORD=replace-with-a-strong-temporary-password
 BOARD_SESSION_SECRET=replace-with-at-least-32-random-characters
 BOARD_HASH_PEPPER=replace-with-another-random-secret
+APPLICATION_HASH_PEPPER=replace-with-a-third-random-secret
 BOARD_EDITOR_EMAILS=manager@example.com

@@ -12,10 +12,12 @@
     "dev": "vinext dev",
     "prebuild": "pnpm sync:editor",
     "build": "vinext build",
+    "postbuild": "node scripts/verify-editor-assets.mjs",
     "start": "vinext start",
     "test": "node --test tests/*.test.mjs",
     "verify:deployment": "node scripts/verify-public-snapshot.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "verify:editor-assets": "node scripts/verify-editor-assets.mjs",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern public --ignore-pattern cloudflare-env.d.ts",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

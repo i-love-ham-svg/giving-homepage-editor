@@ -106,7 +106,7 @@ export async function uploadMedia(request: Request): Promise<BoardMedia> {
 export async function serveMedia(request: Request, id: string): Promise<Response> {
   await ensureBoardSchema();
   const { DB, MEDIA } = getBoardEnv();
-  const row = await DB.prepare("SELECT object_key, content_type, original_name, status FROM media WHERE id = ? AND status != 'deleted'").bind(id)
+  const row = await DB.prepare("SELECT object_key, content_type, original_name, status FROM media WHERE id = ? AND status IN ('temporary', 'attached')").bind(id)
     .first<{ object_key: string; content_type: string; original_name: string; status: string }>();
   if (!row) return json({ error: "첨부파일을 찾을 수 없습니다." }, { status: 404 });
   if (row.status === "temporary" && !(await isAdminRequest(request))) {

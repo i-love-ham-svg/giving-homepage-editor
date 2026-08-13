@@ -23,8 +23,7 @@ await page.waitForTimeout(900);
 
 const noticeDestinations = [
   ["home-menu-news-notice", "notice"],
-  ["home-menu-news-press", "essential3"],
-  ["home-menu-news-visitor", "essential8"]
+  ["home-menu-news-press", "essential3"]
 ];
 
 let noticeClickCount = 0;
@@ -55,9 +54,13 @@ await page.evaluate(() => navigateToHomeMenuSection("home-menu-business-program"
 const programAction = page.locator(".program-card-cta-action.program-view-only").first();
 if (await programAction.count()) {
   const pageCountBefore = context.pages().length;
+  const programHref = await programAction.getAttribute("href");
+  if (programHref !== "/programs/application?type=program") issues.push("프로그램 CTA가 정식 공개 주소를 사용하지 않음");
   await programAction.click();
-  await page.waitForLoadState("domcontentloaded");
-  if (!page.url().includes("stylePage=application") || !page.url().includes("type=program")) issues.push("프로그램 CTA가 신청 페이지로 이동하지 않음");
+  await page.waitForFunction(() => new URL(window.location.href).searchParams.get("type") === "program");
+  const programApplicationUrl = new URL(page.url());
+  if (programApplicationUrl.protocol !== "file:" && programApplicationUrl.pathname !== "/programs/application") issues.push("프로그램 CTA가 신청 페이지로 이동하지 않음");
+  if (programApplicationUrl.searchParams.get("type") !== "program") issues.push("프로그램 CTA의 신청 유형이 유지되지 않음");
   if (context.pages().length !== pageCountBefore) issues.push("프로그램 CTA가 새 창을 생성함");
 } else {
   issues.push("프로그램 방문자 CTA가 없음");

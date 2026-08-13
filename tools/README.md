@@ -22,6 +22,21 @@ http://127.0.0.1:43185/representative-greeting-editor.html?smoke=1
 
 The smoke check runs `window.runEditorRegressionSmoke()` inside the page and writes the result to `window.__editorRegressionSmokeResult`.
 
+## Integrated Community Board and Application QA
+
+The static editor server does not host a board, application API, board API, or board media. Its `/community`, retired board-file, `/api/board/*`, `/board-media/*`, and `/api/applications` routes intentionally return HTTP 410 so they cannot become fallback applications.
+
+Run board QA only from the integrated site:
+
+```powershell
+Set-Location delivery-site
+pnpm dev
+```
+
+Open the exact local URL printed by that server and append `/community`. Application POST/authorized GET QA uses `/api/applications` on the same integrated server.
+
+`tools/test-board-manager.mjs`, `tools/test-board-store.mjs`, and `tools/application-store.mjs` are archival standalone fixtures and are intentionally excluded from `tools/test-all.mjs`. They may be deleted together with the retired `outputs/community-board.*` and `outputs/editor-board-manager.js` files once those artifacts are no longer needed for migration history; they are never a delivery acceptance gate.
+
 ## Storage Schema Test
 
 Run the storage schema migration checks without opening the browser.
@@ -84,7 +99,7 @@ Run the real-browser DOM budget, route mount/unmount, and authentication-dialog 
 
 ## Full Stability Test
 
-Run every local manager and storage regression test.
+Run every supported editor regression test plus the canonical integrated-board routing test.
 
 ```powershell
 & "$env:USERPROFILE\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" tools\test-all.mjs

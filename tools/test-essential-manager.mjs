@@ -15,6 +15,11 @@ assert.equal(manager.isSection("essential3"), true);
 assert.equal(manager.isSection("program"), false);
 assert.equal(manager.isBaseSection("footer"), true);
 assert.deepEqual(Array.from(manager.FOOTER_LAYOUTS), ["info", "simple", "compact", "split"]);
+assert.deepEqual(Array.from(manager.SOCIAL_LOGIN_LAYOUTS), ["fresh-split", "drive-split", "immersive", "mobile-curve"]);
+for (const socialLayout of manager.SOCIAL_LOGIN_LAYOUTS) {
+  assert.equal(manager.normalizeModel({ template: "volunteer", socialLayout }, "volunteer").socialLayout, socialLayout);
+}
+assert.equal(manager.normalizeModel({ template: "volunteer", socialLayout: "legacy-layout" }, "volunteer").socialLayout, "drive-split");
 
 for (const template of manager.BASE_SECTION_IDS) {
   const model = manager.createDefaultModel(template);

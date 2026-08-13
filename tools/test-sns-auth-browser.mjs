@@ -21,6 +21,7 @@ try {
     { name: "small-mobile", width: 320, height: 740 }
   ]) {
     const page = await browser.newPage({ viewport });
+    await page.addInitScript(() => localStorage.removeItem("sacwcWebsiteEditor"));
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(`${editorUrl}?mode=view&stylePage=account`, { waitUntil: "commit" });
@@ -126,6 +127,7 @@ try {
       const configTrigger = document.querySelector(".sns-auth-config-trigger");
       const configDialog = document.querySelector("[data-sns-auth-config-dialog]");
       const imagePicker = document.querySelector(".sns-auth-image-picker");
+      const layoutPicker = document.querySelector(".sns-auth-layout-picker");
       const fileInput = document.querySelector(".sns-auth-visual-editor [data-detail-source-file]");
       const panel = document.querySelector(".sns-auth-panel");
       const editActions = document.querySelector(".sns-auth-edit-actions");
@@ -139,6 +141,7 @@ try {
         configTriggerVisible: Boolean(configTrigger) && getComputedStyle(configTrigger).display !== "none" && configTrigger.offsetHeight >= 44,
         configDialogClosed: Boolean(configDialog) && !configDialog.open,
         imagePickerCollapsed: Boolean(imagePicker) && !imagePicker.open,
+        layoutPickerCollapsed: Boolean(layoutPicker) && !layoutPicker.open,
         accountStyleChoiceRemoved: !document.querySelector('.section-style-choice[data-page-kind="account"]'),
         fileInputAvailable: Boolean(fileInput) && fileInput.getAttribute("accept") === "image/*",
         layoutChoices: document.querySelectorAll("[data-sns-layout-value]").length,
@@ -154,7 +157,7 @@ try {
         }
       };
     });
-    if (!editState.imageControlVisible || !editState.configTriggerVisible || !editState.configDialogClosed || !editState.imagePickerCollapsed || !editState.accountStyleChoiceRemoved || !editState.fileInputAvailable || !editState.appearanceNested || !editState.actionsAboveLoginBox || editState.actionControlCount !== 3 || editState.layoutChoices !== 0 || editState.imageChoices !== 3 || editState.imageFontChoices !== 2) throw new Error(`${viewport.name} SNS edit controls failure ${JSON.stringify(editState)}`);
+    if (!editState.imageControlVisible || !editState.configTriggerVisible || !editState.configDialogClosed || !editState.imagePickerCollapsed || !editState.layoutPickerCollapsed || !editState.accountStyleChoiceRemoved || !editState.fileInputAvailable || !editState.appearanceNested || !editState.actionsAboveLoginBox || editState.actionControlCount !== 4 || editState.layoutChoices !== 4 || editState.imageChoices !== 3 || editState.imageFontChoices !== 2) throw new Error(`${viewport.name} SNS edit controls failure ${JSON.stringify(editState)}`);
     const metricsMatch = (viewMetric, editMetric) => ["width", "height"].every((key) => Math.abs(viewMetric[key] - editMetric[key]) <= 1)
       && viewMetric.fontSize === editMetric.fontSize
       && viewMetric.lineHeight === editMetric.lineHeight;
@@ -170,6 +173,45 @@ try {
       ))) {
       throw new Error(`${viewport.name} edit-preview geometry mismatch ${JSON.stringify({ view: state.viewMetrics, edit: editState.editMetrics })}`);
     }
+    for (const socialLayout of ["fresh-split", "drive-split", "immersive", "mobile-curve"]) {
+      const persistence = await page.evaluate(async (requestedLayout) => {
+        document.querySelector(`[data-sns-layout-value="${requestedLayout}"]`)?.click();
+        await new Promise((resolveFrame) => requestAnimationFrame(() => resolveFrame()));
+        const findSocialSectionId = () => Object.keys(state.essentialSections).find((sectionId) => {
+          const model = state.essentialSections[sectionId];
+          return model?.detailPageKind === "account" && model?.detailSectionKind === "social";
+        });
+        const sectionId = findSocialSectionId();
+        const renderedLayout = document.querySelector(".sns-auth-layout")?.dataset.snsLayout;
+        const buttonHeights = [...document.querySelectorAll(".sns-auth-button")].map((button) => button.getBoundingClientRect().height);
+        await window.EditorModules.storage.save();
+        const saved = JSON.parse(localStorage.getItem("sacwcWebsiteEditor"));
+        const storedLayout = saved.content.essentialSections.find((entry) => entry.sectionId === sectionId)?.content?.socialLayout;
+        state.essentialSections[sectionId].socialLayout = "drive-split";
+        renderEssentialSection(sectionId);
+        const restored = window.EditorModules.storage.load(saved);
+        const restoredSectionId = findSocialSectionId();
+        return {
+          renderedLayout,
+          storedLayout,
+          restored,
+          restoredModelLayout: state.essentialSections[restoredSectionId]?.socialLayout,
+          restoredDomLayout: document.querySelector(".sns-auth-layout")?.dataset.snsLayout,
+          buttonHeights,
+          overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 2
+        };
+      }, socialLayout);
+      if (!persistence.restored
+        || persistence.renderedLayout !== socialLayout
+        || persistence.storedLayout !== socialLayout
+        || persistence.restoredModelLayout !== socialLayout
+        || persistence.restoredDomLayout !== socialLayout
+        || persistence.buttonHeights.length !== 3
+        || persistence.buttonHeights.some((height) => height < 44)
+        || persistence.overflow) {
+        throw new Error(`${viewport.name} ${socialLayout} persistence failure ${JSON.stringify(persistence)}`);
+      }
+    }
     await page.locator(".sns-auth-config-trigger").click();
     const configDialogState = await page.evaluate(() => {
       const dialog = document.querySelector("[data-sns-auth-config-dialog]");
@@ -183,7 +225,7 @@ try {
       desktop: document.querySelector(".sns-auth-desktop-image")?.getAttribute("src"),
       mobile: document.querySelector(".sns-auth-mobile-image")?.getAttribute("src")
     }));
-    if (!selectedImages.desktop?.includes("account-sns-pop-v1.webp") || !selectedImages.mobile?.includes("account-sns-pop-mobile-v1.webp")) throw new Error(`${viewport.name} paired image switch failure ${JSON.stringify(selectedImages)}`);
+    if (!selectedImages.desktop?.includes("account-sns-pop-v1.webp") || !selectedImages.mobile?.includes("account-sns-pop-mobile-v2.webp")) throw new Error(`${viewport.name} paired image switch failure ${JSON.stringify(selectedImages)}`);
     await page.locator('.sns-auth-image-choice[data-sns-image-value*="account-sns-character-desktop-v4.webp"]').evaluate((button) => button.click());
     await page.waitForTimeout(120);
     const selectedCharacterImages = await page.evaluate(() => ({

@@ -26,7 +26,12 @@ const staffDockMarkup = html.match(/<div class="staff-editor-dock"[\s\S]*?<\/div
 assert.ok(staffDockMarkup, "staff editor dock markup missing");
 assert.doesNotMatch(staffDockMarkup, /섹션 구성|제작자 화면|staffSectionManagerBtn|staffRoleExitBtn/);
 assert.match(staffDockMarkup, /staffViewportSwitch[\s\S]*data-staff-viewport="desktop"[\s\S]*data-staff-viewport="tablet"[\s\S]*data-staff-viewport="phone"[\s\S]*data-staff-viewport="phoneSmall"/);
+assert.match(html, /id="staffSaveBtn"[^>]*data-save-state="idle"[^>]*aria-busy="false"/);
 assert.match(html, /<\/div>\s*<button[^>]+class="staff-creator-return"[^>]+id="staffRoleExitBtn"/);
+assert.match(html, /function setSaveButtonState\([\s\S]*?\[saveBtn, staffSaveBtn\]\.filter\(Boolean\)[\s\S]*?button\.setAttribute\("aria-busy", String\(status === "saving"\)\)/);
+assert.match(html, /function beginSaveButtonFeedback\(\)[\s\S]*?clearTimeout\(saveButtonRestoreTimer\)[\s\S]*?setSaveButtonState\("저장 중", true, "saving"\)/);
+assert.match(html, /function finishSaveButtonFeedback\(token, succeeded\)[\s\S]*?saveButtonFeedbackToken[\s\S]*?"저장 완료"[\s\S]*?"저장 실패"[\s\S]*?setTimeout/);
+assert.match(html, /async function saveSnapshot\(\)[\s\S]*?if \(saveSnapshot\.saving\) return;[\s\S]*?finishSaveButtonFeedback\(saveFeedbackToken, saveSucceeded\)/);
 
 assert.match(html, /const sectionSelectControls = \[[^\]]*staffSectionSelect/);
 assert.match(html, /getDetailBundleSectionIds\(kind\)\.includes\(normalizedSectionId\)/);

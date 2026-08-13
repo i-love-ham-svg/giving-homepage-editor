@@ -17,7 +17,7 @@ const navGroups = [
     ["참여마당 전체", "/participation"], ["자원봉사 안내", "/participation/volunteer"], ["후원 안내", "/participation/donation"]
   ]},
   { label: "알림마당", href: "/news", items: [
-    ["알림마당 전체", "/news"], ["공지·소식", "/news/notices"], ["언론보도", "/news/press"], ["영상 아카이브", "/news/videos"], ["갤러리", "/news/gallery"], ["방문자 자유게시판", "/news/visitor-board"], ["소통게시판", "/community"]
+    ["알림마당 전체", "/news"], ["공지·소식", "/news/notices"], ["언론보도", "/news/press"], ["영상 아카이브", "/news/videos"], ["갤러리", "/news/gallery"], ["소통게시판", "/community"]
   ]}
 ];
 
@@ -71,7 +71,7 @@ const PAGES = [
     card("상담", "후원 방법 확인", "후원 분야와 방법은 담당자 상담을 통해 안내받을 수 있습니다."), card("연결", "지역 복지사업 지원", "후원은 지역주민의 삶과 가까운 복지사업을 지원합니다."), card("소통", "후원 관련 문의", "후원 절차와 필요한 확인 사항을 안내받을 수 있습니다."), phoneCard("문의", "후원 담당자 연결", "대표전화로 후원 문의라고 말씀해 주세요.")
   ]),
   page("/news", "public-news.html", "알림마당", "COMMUNITY NEWS", "복지관 소식을 확인하세요", "공지, 언론보도, 영상, 갤러리와 게시판을 메뉴별로 확인하세요.", [
-    linkCard("공지", "공지·소식", "프로그램과 복지관 운영 소식을 확인하세요.", "/news/notices"), linkCard("보도", "언론보도", "언론에 소개된 복지관 활동을 확인하세요.", "/news/press"), linkCard("영상", "영상 아카이브", "공식 유튜브 활동 영상을 확인하세요.", "/news/videos"), linkCard("사진", "갤러리", "복지관 활동 기록을 확인하세요.", "/news/gallery"), linkCard("의견", "방문자 자유게시판", "공개된 주민 의견 목록을 확인하세요.", "/news/visitor-board"), linkCard("소통", "소통게시판", "주민과 복지관이 함께 전하는 이야기를 확인하세요.", "/community")
+    linkCard("공지", "공지·소식", "프로그램과 복지관 운영 소식을 확인하세요.", "/news/notices"), linkCard("보도", "언론보도", "언론에 소개된 복지관 활동을 확인하세요.", "/news/press"), linkCard("영상", "영상 아카이브", "공식 유튜브 활동 영상을 확인하세요.", "/news/videos"), linkCard("사진", "갤러리", "복지관 활동 기록을 확인하세요.", "/news/gallery"), linkCard("소통", "소통게시판", "주민과 복지관이 함께 전하는 이야기를 확인하세요.", "/community")
   ]),
   page("/news/notices", "public-news-notices.html", "알림마당", "NOTICE", "공지·소식", "프로그램 모집, 일정 변경과 복지관 운영에 관한 최신 공지를 확인하세요.", [
     externalCard("공식 공지", "최신 공지 확인", "가장 최근에 게시된 공지는 공식 홈페이지에서 확인할 수 있습니다.", "https://www.sacwc.kr/"), linkCard("소통게시판", "복지관과 주민의 소식", "공개된 게시글을 로그인 없이 둘러보세요.", "/community"), phoneCard("문의", "공지 내용 문의", "프로그램 모집과 운영 일정은 대표전화로 확인해 주세요.")
@@ -84,9 +84,6 @@ const PAGES = [
   ]),
   page("/news/gallery", "public-news-gallery.html", "알림마당", "GALLERY", "사진으로 보는 복지관 활동", "큰 이미지는 목록에서 불러오지 않고 선택한 공식 게시물에서 확인하도록 구성했습니다.", [
     externalCard("활동 사진", "복지관 갤러리 확인", "공식 홈페이지에 공개된 사진과 활동 기록을 확인하세요.", "https://www.sacwc.kr/"), linkCard("영상", "영상 아카이브 함께 보기", "공식 유튜브 활동 영상을 확인하세요.", "/news/videos"), linkCard("소식", "공지·소식 확인", "최근 프로그램과 운영 소식을 확인하세요.", "/news/notices")
-  ]),
-  page("/news/visitor-board", "public-news-visitor-board.html", "알림마당", "VISITOR BOARD", "주민의 의견을 듣고 함께 답합니다", "공개 목록의 제목과 등록일만 제공하며 개인정보와 상세 원문은 공식 정책에 따라 보호합니다.", [
-    externalCard("2026.07.17", "건의드립니다.", "방문자 의견", "https://www.sacwc.kr/main/sub.html?pageCode=20"), externalCard("2025.11.11", "원데이 클레이 추천드려요", "방문자 의견", "https://www.sacwc.kr/main/sub.html?pageCode=20"), externalCard("2025.08.20", "야간 프로그램 운영 건의", "방문자 의견", "https://www.sacwc.kr/main/sub.html?pageCode=20"), externalCard("전체보기", "공식 자유게시판 목록", "상세 내용은 공식 사이트의 공개 범위에 따라 확인하세요.", "https://www.sacwc.kr/main/sub.html?pageCode=20"), linkCard("소통", "송악 소통게시판", "현재 사이트의 공개 게시글을 둘러보고 의견을 남길 수 있습니다.", "/community")
   ]),
   documentPage("/privacy-policy", "public-privacy.html", "개인정보처리방침", "PRIVACY POLICY", "송악사회복지관은 관련 법령을 준수하며 이용자의 개인정보를 보호합니다.", `<dl class="document-meta"><div><dt>시행일</dt><dd>2021-06-22</dd></div><div><dt>담당부서</dt><dd>송악사회복지관 개인정보 보호 담당부서</dd></div><div><dt>연락처</dt><dd>041-353-5077</dd></div><div><dt>이메일</dt><dd>sacwc2021@hanmail.net</dd></div></dl><h2>개인정보의 처리</h2><p>상담, 프로그램 신청, 자원봉사와 후원 문의 등 서비스 제공에 필요한 범위에서 개인정보를 처리하며, 목적이 달성된 뒤에는 관련 법령에 따라 안전하게 파기합니다.</p><h2>이용자의 권리</h2><p>이용자는 자신의 개인정보에 대해 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다.</p><h2>보호조치</h2><p>개인정보의 분실, 도난, 유출, 변조 또는 훼손을 방지하기 위해 필요한 기술적·관리적 보호조치를 시행합니다.</p><p><a href="https://www.sacwc.kr/core/public/privacy_2025.html" target="_blank" rel="noopener">공식 원문 보기</a></p>`),
   documentPage("/email-refusal", "public-email-refusal.html", "이메일무단수집거부", "EMAIL POLICY", "웹사이트에 게시된 이메일 주소의 무단 수집을 거부합니다.", `<dl class="document-meta"><div><dt>시행일</dt><dd>2021-06-22</dd></div><div><dt>담당부서</dt><dd>송악사회복지관</dd></div><div><dt>담당자</dt><dd>홈페이지 운영 담당자</dd></div><div><dt>연락처</dt><dd>041-353-5077</dd></div></dl><p>송악사회복지관 웹사이트에 게시된 이메일 주소가 전자우편 수집 프로그램이나 그 밖의 기술적 장치를 이용해 무단으로 수집되는 것을 거부합니다.</p><p>수집한 주소를 판매·유통하거나 정보 전송에 이용해서는 안 됩니다.</p><p><a href="https://www.sacwc.kr/core/public/emailRefusal_2025.html" target="_blank" rel="noopener">공식 원문 보기</a></p>`),

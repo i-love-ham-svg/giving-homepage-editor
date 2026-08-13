@@ -1,0 +1,948 @@
+{
+  "schemaVersion": 1,
+  "description": "송악사회복지관 홈페이지 수정 이력의 기계 판독 단일 원본",
+  "policy": {
+    "canonicalRegistry": "docs/change-registry.json",
+    "publicDeploymentAllowed": false,
+    "publicDeploymentRequiresExplicitApproval": true,
+    "verifiedRequiresPassingTest": true,
+    "allowed": {
+      "recordTypes": ["feature", "bug", "design", "content", "architecture", "release"],
+      "surfaces": ["canonical-public", "community-board", "editor-shell", "mobile-preview", "operational"],
+      "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+      "roles": ["visitor", "staff", "creator"],
+      "modes": ["view", "edit", "preview"],
+      "decision": ["proposed", "approved", "rejected"],
+      "implementation": ["planned", "in-progress", "implemented", "verified", "retired"],
+      "qa": ["pending", "focused-pass", "full-pass", "failed"],
+      "deployment": ["local-only", "awaiting-approval", "approved", "deployed", "rolled-back"],
+      "causeCategories": [
+        "missing-shared-contract",
+        "duplicate-source",
+        "css-specificity",
+        "sync-drift",
+        "route-mapping",
+        "state-normalization",
+        "cache-stale",
+        "missing-regression-test",
+        "content-error",
+        "performance-waterfall"
+      ],
+      "risk": ["low", "medium", "high", "critical"]
+    }
+  },
+  "records": [
+    {
+      "id": "NAV-ACTIVE-CONTRAST-001",
+      "recordType": "bug",
+      "title": "현재 페이지 상위 메뉴 선택 상태 고대비 유지",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "공개 /about/mission에서 상위 '복지관 소개' 메뉴가 흰색 배경으로 돌아가 식별되지 않음",
+      "primaryTaxonomyId": "layout.navigation.active-state",
+      "relatedTaxonomyIds": [
+        "editor.navigation.selected-dropdown",
+        "system.test.regression"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board"],
+        "routes": ["all-public-menu-destinations"],
+        "sections": ["shared.navigation"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff"],
+        "modes": ["view", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "css-specificity",
+        "relatedCategories": ["duplicate-source", "missing-regression-test"],
+        "confirmed": true,
+        "details": "현재 leaf는 active/aria-current이지만 상위 branch는 contains-active이다. 기본 selected-dropdown PC 규칙과 BoardApp 규칙에 contains-active 고대비 계약이 없어 옅거나 흰색으로 표시되고, 기존 테스트는 two-level leaf만 검사했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "navigation.active.leaf-current",
+          "statement": "현재 leaf 메뉴는 aria-current=page를 유지한다."
+        },
+        {
+          "assertionId": "navigation.active.ancestor-visible",
+          "statement": "현재 leaf의 모든 상위 branch는 contains-active이며 불투명한 선택 배경과 흰 글자로 표시한다."
+        },
+        {
+          "assertionId": "navigation.active.contrast",
+          "statement": "선택 메뉴의 글자와 배경 대비는 PC·태블릿·모바일에서 4.5:1 이상이다."
+        },
+        {
+          "assertionId": "navigation.active.survives-pipeline",
+          "statement": "저장·새로고침·원본 동기화·빌드 이후에도 선택 상태가 유지된다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#renderHomeMenu",
+        "delivery-site/app/homepage-navigation.tsx#HomepageNavigation"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "delivery-site/app/globals.css"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-desktop-menu-active-contrast-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-home-menu-open-state.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/board-shell.test.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "high",
+      "dependencies": [],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "root-cause-confirmed",
+          "note": "selected-dropdown 상위 branch의 contains-active 고대비 규칙과 회귀검사가 누락된 것을 확인"
+        },
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "원본·동기화본·빌드 산출물 일치, 전체 자동검사와 PC·태블릿·모바일·소형폰 경로 검증 통과. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "NAV-CONTEXT-TRAIL-001",
+      "recordType": "feature",
+      "title": "모든 공개 페이지에 메뉴 기반 현재 위치 표시",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "소통게시판의 '알림마당 › 소통게시판' 현재 위치 기능을 모든 공개 페이지에도 동일하게 적용 요청",
+      "primaryTaxonomyId": "layout.navigation.breadcrumb",
+      "relatedTaxonomyIds": [
+        "publishing.scope.menu-section",
+        "system.test.regression"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board"],
+        "routes": ["all-public-menu-destinations"],
+        "sections": ["shared.navigation-context"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff"],
+        "modes": ["view", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-shared-contract",
+        "relatedCategories": ["duplicate-source"],
+        "confirmed": true,
+        "details": "소통게시판만 현재 위치를 하드코딩하고 canonical 공개 페이지에는 공통 메뉴 상태에서 파생되는 현재 위치 계약이 없었다."
+      },
+      "invariants": [
+        {
+          "assertionId": "navigation.breadcrumb.exactly-one",
+          "statement": "모든 공개 메뉴 목적지에는 현재 위치 표시가 정확히 하나만 존재한다."
+        },
+        {
+          "assertionId": "navigation.breadcrumb.menu-derived",
+          "statement": "대분류와 현재 페이지 명칭은 공통 메뉴 모델에서 자동 파생하며 페이지에 하드코딩하지 않는다."
+        },
+        {
+          "assertionId": "navigation.breadcrumb.not-editable",
+          "statement": "현재 위치 표시는 공통 내비게이션 chrome이며 섹션 저장·히스토리·편집막대 대상이 아니다."
+        },
+        {
+          "assertionId": "navigation.breadcrumb.no-overlap",
+          "statement": "메뉴·현재 위치·첫 섹션이 모든 화면 크기에서 겹치거나 가로로 넘치지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#state.homeMenu",
+        "delivery-site/app/homepage-navigation.tsx#SharedNavigation"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "delivery-site/app/homepage-navigation.tsx",
+        "delivery-site/app/board-app.tsx",
+        "delivery-site/app/globals.css"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-public-breadcrumb-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-public-menu-section-connection-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/board-shell.test.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "high",
+      "dependencies": ["NAV-ACTIVE-CONTRAST-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "scope-approved",
+          "note": "공개 배포를 제외한 로컬 구현·검증 승인"
+        },
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "22개 공개 경로 × 4개 화면 크기에서 정확히 1개 표시, 공통 메뉴 자동 파생, 무겹침·무가로넘침 확인. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "CTA-MAIN-INTERACTION-001",
+      "recordType": "bug",
+      "title": "메인 소개 CTA의 실제 HTTP 이동과 44px 터치 계약 회귀 방지",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "file:// 기반 검사는 base href=/songak/ 때문에 실제 공개 경로와 다른 실패를 만들었고 작은 화면에서 CTA 터치 크기를 함께 보장할 회귀검사가 필요했다.",
+      "primaryTaxonomyId": "interaction.cta.main-intro",
+      "relatedTaxonomyIds": [
+        "accessibility.target.touch-size",
+        "system.test.http-fixture"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "editor-shell", "mobile-preview"],
+        "routes": ["/about", "main-intro-section-routes"],
+        "sections": ["main-intro.cta"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff", "creator"],
+        "modes": ["view", "edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-regression-test",
+        "relatedCategories": ["route-mapping", "css-specificity"],
+        "confirmed": true,
+        "details": "기존 검사가 file:// 문맥에서 상대 경로를 해석해 거짓 실패를 만들었고, CTA 높이는 편집기 스케일과 CSS 우선순위에 따라 44px 아래로 축소될 여지가 있었다. 실제 HTTP fixture와 공통 touch target 계약으로 교정했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "cta.main.http-navigation",
+          "statement": "프로그램 찾기와 상담·이용 문의 CTA는 실제 HTTP 문맥에서 canonical 공개 경로로 이동한다."
+        },
+        {
+          "assertionId": "cta.main.touch-target",
+          "statement": "두 CTA의 실제 클릭 영역은 PC·태블릿·모바일·소형폰에서 44px 이상이다."
+        },
+        {
+          "assertionId": "cta.main.no-overlap",
+          "statement": "두 CTA는 어느 지원 화면에서도 서로 겹치거나 섹션 밖으로 넘치지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#fitStage",
+        "outputs/representative-greeting-editor.html#.main-intro-cta-control"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "tools/test-main-intro-cta-browser.mjs",
+        "tools/test-all.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-main-intro-cta-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-main-intro-cta-position-browser.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "high",
+      "dependencies": [],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "HTTP fixture에서 4개 화면 크기의 이동·44px·겹침·가로넘침 검증을 통과했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "BOOT-PUBLIC-SCOPE-001",
+      "recordType": "architecture",
+      "title": "공개 첫 로드 scope 요청 일회 소비와 안전한 fallback",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "공개 첫 화면에서 동일한 site-content를 scope와 full로 연속 요청해 초기 표시가 늦어질 수 있어, 미공개·정상·구형·불완전·네트워크 실패 분기의 요청 수와 복구 결과를 고정할 필요가 있었다.",
+      "primaryTaxonomyId": "publishing.scope.boot-loading",
+      "relatedTaxonomyIds": [
+        "performance.network.request-waterfall",
+        "system.test.cold-load"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board"],
+        "routes": ["all-public-menu-destinations"],
+        "sections": ["public.scope-loader"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor"],
+        "modes": ["view"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "performance-waterfall",
+        "relatedCategories": ["state-normalization", "missing-regression-test"],
+        "confirmed": true,
+        "details": "head에서 시작한 scoped prefetch의 소비 상태가 명시되지 않았고 미공개 또는 구형 응답에서도 다시 full API를 요청해 동일 부트 과정에 중복 waterfall이 생겼다. prefetch를 정확히 한 번 소비하고 응답 유형별 fallback 계약을 분리했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "boot.scope.consume-once",
+          "statement": "정상·미공개·구형·불완전 scoped 응답은 최초 prefetch 한 건만 소비한다."
+        },
+        {
+          "assertionId": "boot.scope.checked-in-fallback",
+          "statement": "미공개·구형·불완전 응답은 두 번째 full 요청 없이 검증된 43개 checked-in 섹션과 footer로 복구한다."
+        },
+        {
+          "assertionId": "boot.scope.network-fallback",
+          "statement": "실제 네트워크 실패에서만 scoped 요청 뒤 full fallback 요청을 허용하고 공개 문서를 완성한다."
+        },
+        {
+          "assertionId": "boot.scope.overlay-bounded",
+          "statement": "공개 로딩 오버레이의 최소 표시 시간은 담당자 편집기보다 짧고 초기 콘텐츠를 불필요하게 가리지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#__songakPublicBootScopeRequest",
+        "outputs/representative-greeting-editor.html#loadInitialSiteSnapshot"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "tools/test-public-scope-loading.mjs",
+        "tools/test-public-scope-fallback-requests.mjs",
+        "tools/test-public-cold-load-browser.mjs",
+        "tools/test-all.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-public-scope-loading.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-public-scope-fallback-requests.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-public-cold-load-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/site-content-scope.test.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "critical",
+      "dependencies": [],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "root-cause-confirmed",
+          "note": "scope prefetch와 full fallback의 중복 요청 waterfall 및 분기별 복구 기준 누락을 확인"
+        },
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "미공개·정상·구형·불완전·네트워크 실패의 요청 수와 43개 섹션 복구를 자동검사했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "PERF-PROGRAM-RENDER-001",
+      "recordType": "architecture",
+      "title": "공개 프로그램 카드 지연 렌더링으로 첫 표시 비용 절감",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "프로그램 공개 페이지의 16개 카드와 편집 필드 전체를 첫 프레임에 그려 초기 렌더 시간이 다른 경로보다 길었다.",
+      "primaryTaxonomyId": "performance.program.card-render",
+      "relatedTaxonomyIds": [
+        "publishing.mode.view-only",
+        "system.test.first-render"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "mobile-preview"],
+        "routes": ["/programs", "/programs/list"],
+        "sections": ["program.card-grid"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff", "creator"],
+        "modes": ["view", "edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "performance-waterfall",
+        "relatedCategories": ["missing-shared-contract", "missing-regression-test"],
+        "confirmed": true,
+        "details": "공개와 편집 모드가 동일한 eager paint 계약을 사용해 화면 아래 16개 카드까지 초기 레이아웃·페인트 비용을 지불했다. 공개 view-mode 카드에만 content-visibility와 intrinsic size를 적용하고 편집·개발 모드는 eager 상태로 유지했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "performance.program.public-lazy-paint",
+          "statement": "공개 view-mode의 화면 밖 프로그램 카드는 content-visibility로 지연 페인트한다."
+        },
+        {
+          "assertionId": "performance.program.editor-eager",
+          "statement": "담당자 편집과 개발 검증에서는 모든 카드와 편집 필드를 즉시 렌더링한다."
+        },
+        {
+          "assertionId": "performance.program.content-preserved",
+          "statement": "16개 카드, 171개 편집 입력, 링크와 접근 가능한 이름은 최적화 전후 동일하다."
+        },
+        {
+          "assertionId": "performance.program.last-card-reachable",
+          "statement": "PC와 모바일 모두 마지막 카드까지 스크롤해 정상 표시하고 조작할 수 있다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#.program-card",
+        "outputs/representative-greeting-editor.html#renderProgramSection"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "tools/test-program-public-first-render-browser.mjs",
+        "tools/test-all.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-program-public-first-render-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-program-layout-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-program-manager.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "high",
+      "dependencies": ["BOOT-PUBLIC-SCOPE-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "공개 초기화 중앙값과 long task가 감소했고 16개 카드·171개 입력·마지막 카드 도달을 PC와 모바일에서 검증했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "CTA-DONATION-GATE-001",
+      "recordType": "release",
+      "title": "후원 CTA 실제 HTTP 일관성 회귀 게이트",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "후원 CTA 검사가 file:// 문맥과 오래된 DOM 가정에 묶여 실제 공개 페이지의 이동·터치·카드 보존을 신뢰성 있게 확인하지 못했다.",
+      "primaryTaxonomyId": "interaction.cta.donation",
+      "relatedTaxonomyIds": [
+        "system.test.http-fixture",
+        "accessibility.target.touch-size"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "editor-shell", "mobile-preview"],
+        "routes": ["/participation/donation"],
+        "sections": ["donation.cta", "donation.card-list"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff", "creator"],
+        "modes": ["view", "edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-regression-test",
+        "relatedCategories": ["route-mapping", "sync-drift"],
+        "confirmed": true,
+        "details": "기존 회귀검사가 실제 HTTP base·canonical 경로·현재 카드 모델을 사용하지 않아 구현이 정상이어도 실패하거나 카드 손실을 놓칠 수 있었다. 최신 원본으로 HTTP fixture를 구성해 release gate에 포함했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "cta.donation.http-contract",
+          "statement": "후원 CTA의 href와 표시 문구는 실제 HTTP 공개 문서와 편집 모델에서 일치한다."
+        },
+        {
+          "assertionId": "cta.donation.touch-target",
+          "statement": "후원 CTA의 실제 클릭 영역은 4개 지원 화면 크기에서 44px 이상이다."
+        },
+        {
+          "assertionId": "cta.donation.cards-preserved",
+          "statement": "후원 CTA를 검증하거나 편집해도 5개 후원 안내 카드와 순서가 보존된다."
+        },
+        {
+          "assertionId": "cta.donation.no-overflow",
+          "statement": "후원 CTA와 카드 영역은 어떤 지원 화면에서도 겹치거나 가로로 넘치지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#renderDonationSection",
+        "outputs/representative-greeting-editor.html#state.donation"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "tools/test-donation-cta-consistency-browser.mjs",
+        "tools/test-all.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-donation-cta-consistency-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-cta-toolbar.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "high",
+      "dependencies": [],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "4개 화면 크기에서 44px·겹침·5개 카드·href·문구·가로넘침 검증을 통과했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "QA-PUBLIC-MATRIX-001",
+      "recordType": "release",
+      "title": "방문자 공개 26경로 130화면 회귀 매트릭스",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "로그인하지 않은 소비자 관점에서 모든 페이지와 기능을 PC·태블릿·모바일로 직접 확인하고 반복 이슈가 없는지 검증해 달라는 요청.",
+      "primaryTaxonomyId": "system.qa.public-matrix",
+      "relatedTaxonomyIds": [
+        "layout.navigation.shared-menu",
+        "publishing.mode.view-only"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board", "mobile-preview"],
+        "routes": ["all-26-public-routes"],
+        "sections": ["all-public-sections", "shared.navigation", "shared.footer"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor"],
+        "modes": ["view", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-regression-test",
+        "relatedCategories": ["duplicate-source", "route-mapping", "sync-drift"],
+        "confirmed": true,
+        "details": "이전 검수는 경로 또는 화면 크기를 일부만 확인해 공통 메뉴·현재 위치·footer·가로넘침·이미지 오류가 다른 경로에서 재발할 여지가 있었다. 26개 공개 경로를 PC 1종·태블릿 2종·휴대폰 2종으로 고정했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "qa.public.all-routes-responsive",
+          "statement": "26개 공개 경로는 PC 1360, 태블릿 820·768, 휴대폰 390·320의 총 130화면에서 정상 응답한다."
+        },
+        {
+          "assertionId": "qa.public.shared-shell",
+          "statement": "각 화면에는 H1, 홈으로 이동하는 브랜드, 현재 위치와 footer가 있고 가로넘침이 없다."
+        },
+        {
+          "assertionId": "qa.public.media-intact",
+          "statement": "모든 검수 화면에는 깨진 이미지가 없고 공개 문서의 편집 필드는 읽기 전용·tabIndex=-1·pointer-events none이다."
+        },
+        {
+          "assertionId": "qa.public.navigation-repeatable",
+          "statement": "드롭다운 반복 열기·닫기·하위 이동·뒤로가기·브랜드 홈·모바일 메뉴 재열기가 정상 동작한다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#SONGAK_PUBLIC_ROUTE_CONFIG",
+        "delivery-site/app/homepage-navigation.tsx#SharedNavigation"
+      ],
+      "implementationFiles": [
+        "tools/test-public-device-viewport-browser.mjs",
+        "tools/test-public-breadcrumb-browser.mjs",
+        "tools/test-public-menu-section-connection-browser.mjs",
+        "tools/test-mobile-menu-repeat-navigation-browser.mjs",
+        "tools/test-mobile-view-only-browser.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-public-device-viewport-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-public-breadcrumb-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-public-menu-section-connection-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-community-homepage-menu-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-mobile-menu-repeat-navigation-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-mobile-view-only-browser.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "critical",
+      "dependencies": ["NAV-ACTIVE-CONTRAST-001", "NAV-CONTEXT-TRAIL-001", "BOOT-PUBLIC-SCOPE-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "26개 경로 × 5개 실제 화면 크기 = 130화면에서 응답·H1·브랜드·현재 위치·footer·무가로넘침·무깨진이미지와 반복 내비게이션을 확인했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "QA-STAFF-EDITOR-001",
+      "recordType": "release",
+      "title": "복지관 담당자 편집기와 소통게시판 운영 QA",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "복지관 담당자 관점에서 로그인 후 모든 편집 기능과 소통게시판 운영 기능을 화면으로 직접 확인해 달라는 요청.",
+      "primaryTaxonomyId": "system.qa.staff-editor",
+      "relatedTaxonomyIds": [
+        "editor.toolbar.shared-contract",
+        "editor.surface.community-adapter"
+      ],
+      "scope": {
+        "surfaces": ["editor-shell", "community-board", "mobile-preview", "operational"],
+        "routes": ["/editor", "/editor?surface=community", "/community"],
+        "sections": ["all-editor-sections", "community.external-surface", "shared.navigation"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["staff", "creator"],
+        "modes": ["edit", "preview", "view"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-regression-test",
+        "relatedCategories": ["missing-shared-contract", "state-normalization"],
+        "confirmed": true,
+        "details": "자동 단위검사만으로는 실제 담당자 역할 부팅, 단일 편집막대, 섹션 추가·삭제 보호, 소통게시판 외부 surface 편집과 운영 화면의 대화상자·검색·필터를 함께 보장하지 못했다. 역할·경로·화면 크기별 실제 QA를 추가했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "qa.staff.boot-clean",
+          "statement": "일반 편집기와 소통게시판 편집기는 staff 역할로 준비 완료되며 콘솔 warning/error가 없다."
+        },
+        {
+          "assertionId": "qa.staff.single-toolbar",
+          "statement": "선택한 편집 대상에는 기존 공통 편집막대 하나만 열리고 장식·배경·CTA·undo·redo 계약을 재사용한다."
+        },
+        {
+          "assertionId": "qa.staff.section-guard",
+          "statement": "섹션 추가와 선택 삭제는 동작하고 필수 섹션 삭제 보호와 SNS 같은 선택 섹션 삭제가 구분된다."
+        },
+        {
+          "assertionId": "qa.staff.community-operational",
+          "statement": "실제 /community 운영 화면에서 공지 등록 대화상자, 입력 필드, 검색·목록·분류 UI를 사용할 수 있다."
+        },
+        {
+          "assertionId": "qa.staff.no-horizontal-overflow",
+          "statement": "담당자 편집기와 운영 화면은 4개 지원 화면 범주에서 가로넘침이 없다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#openTextToolbar",
+        "delivery-site/app/editor-community-surface-adapter.ts",
+        "delivery-site/app/board-app.tsx"
+      ],
+      "implementationFiles": [
+        "tools/test-editor-regression-browser.mjs",
+        "tools/test-community-board-page.mjs",
+        "tools/test-editor-security-browser.mjs",
+        "delivery-site/tests/editor-community-surface-adapter.test.mjs",
+        "delivery-site/tests/community-editor-contract.test.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-editor-regression-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-community-board-page.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-editor-security-browser.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/editor-community-surface-adapter.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/community-editor-contract.test.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "critical",
+      "dependencies": ["QA-PUBLIC-MATRIX-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "편집기 2경로와 실제 소통게시판 운영 화면에서 부팅·메뉴 스타일·섹션·편집막대·장식·배경·CTA·undo/redo·공지 대화상자·검색·분류를 확인했다. 게시물 데이터가 없어 실제 승인·반려 네트워크 변경은 실행하지 않았다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "EDITOR-EMBEDDED-ACTION-001",
+      "recordType": "design",
+      "title": "소통게시판 편집 프리뷰의 운영 버튼 비활성 안내",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "편집기 안의 소통게시판 시각 프리뷰에서 '공식 소식 등록' 버튼이 보이지만 클릭해도 동작하지 않아 실제 /community 운영 화면과 용도가 혼동된다.",
+      "primaryTaxonomyId": "editor.surface.embedded-action",
+      "relatedTaxonomyIds": [
+        "editor.surface.community-adapter",
+        "accessibility.state.disabled-control"
+      ],
+      "scope": {
+        "surfaces": ["editor-shell", "community-board"],
+        "routes": ["/editor?surface=community"],
+        "sections": ["community.operational-action-preview"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["staff", "creator"],
+        "modes": ["edit", "preview"]
+      },
+      "status": {
+        "decision": "proposed",
+        "implementation": "planned",
+        "qa": "pending",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-shared-contract",
+        "relatedCategories": ["route-mapping"],
+        "confirmed": true,
+        "details": "외부 surface 시각 편집기는 콘텐츠·스타일 편집만 허용하고 운영 데이터 변경을 막지만, 프리뷰에 남은 운영 버튼을 disabled 상태와 안내 문구로 구분하는 계약이 없다. 실제 /community에서는 해당 기능이 정상 동작한다."
+      },
+      "invariants": [
+        {
+          "assertionId": "editor.embedded-action.explicit-state",
+          "statement": "시각 프리뷰의 운영 데이터 변경 버튼은 disabled 또는 명시적 프리뷰 상태로 표시한다."
+        },
+        {
+          "assertionId": "editor.embedded-action.operational-route",
+          "statement": "안내 문구는 실제 운영 기능이 /community에서 수행됨을 담당자에게 알린다."
+        },
+        {
+          "assertionId": "editor.embedded-action.no-mutation",
+          "statement": "편집기 프리뷰에서는 게시물 등록·승인·반려 등 운영 데이터 변경 요청을 보내지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "delivery-site/app/editor-community-surface-adapter.ts",
+        "delivery-site/app/board-app.tsx"
+      ],
+      "implementationFiles": [
+        "delivery-site/app/editor-community-surface-adapter.ts",
+        "delivery-site/tests/editor-community-surface-adapter.test.mjs"
+      ],
+      "tests": [
+        {
+          "file": "delivery-site/tests/editor-community-surface-adapter.test.mjs",
+          "status": "pending"
+        }
+      ],
+      "risk": "medium",
+      "dependencies": ["QA-STAFF-EDITOR-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "follow-up-proposed",
+          "note": "실제 운영 기능은 정상이며 프리뷰의 affordance만 다음 편집기 UX 개선 후보로 분리했다. 공개 배포 승인 없음"
+        }
+      ]
+    },
+    {
+      "id": "EDITOR-MOBILE-OVERLAY-001",
+      "recordType": "bug",
+      "title": "소형폰 편집막대와 배경·장식 플로팅 겹침 완화",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "320px 담당자 편집 화면에서 하단 편집막대와 배경·장식 플로팅 컨트롤이 콘텐츠 일부를 덮어 스크롤로 우회해야 한다.",
+      "primaryTaxonomyId": "editor.toolbar.mobile-overlap",
+      "relatedTaxonomyIds": [
+        "layout.responsive.phone-small",
+        "editor.decoration.floating-control"
+      ],
+      "scope": {
+        "surfaces": ["editor-shell", "mobile-preview"],
+        "routes": ["/editor", "/editor?surface=community"],
+        "sections": ["shared.editor-toolbar", "shared.floating-controls"],
+        "viewports": ["phoneSmall"],
+        "roles": ["staff", "creator"],
+        "modes": ["edit", "preview"]
+      },
+      "status": {
+        "decision": "proposed",
+        "implementation": "planned",
+        "qa": "pending",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-shared-contract",
+        "relatedCategories": ["css-specificity", "missing-regression-test"],
+        "confirmed": true,
+        "details": "하단 편집막대와 배경·장식 플로팅 컨트롤이 각각 독립적인 fixed 영역을 계산하고 320px에서 상호 점유 높이를 공유하지 않는다. 현재는 스크롤로 접근 가능하지만 직접 편집성이 낮다."
+      },
+      "invariants": [
+        {
+          "assertionId": "editor.mobile-overlay.shared-inset",
+          "statement": "소형폰에서 편집막대와 플로팅 컨트롤은 서로의 점유 높이를 공유해 겹치지 않는다."
+        },
+        {
+          "assertionId": "editor.mobile-overlay.content-reachable",
+          "statement": "선택한 콘텐츠와 주요 편집 버튼은 추가 스크롤 우회 없이 보이고 조작 가능하다."
+        },
+        {
+          "assertionId": "editor.mobile-overlay.touch-target",
+          "statement": "축소 또는 접힘 상태에서도 모든 표시 컨트롤은 44px 터치 영역과 접근 가능한 이름을 유지한다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#editorToolbar",
+        "outputs/representative-greeting-editor.html#decorationFloatingControls"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "tools/test-editor-regression-browser.mjs"
+      ],
+      "tests": [
+        {
+          "file": "tools/test-editor-regression-browser.mjs",
+          "status": "pending"
+        }
+      ],
+      "risk": "medium",
+      "dependencies": ["QA-STAFF-EDITOR-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "follow-up-proposed",
+          "note": "공개 화면에는 영향이 없고 담당자 320px 편집 UX 개선 후보로 분리했다. 공개 배포 승인 없음"
+        }
+      ]
+    }
+  ]
+}

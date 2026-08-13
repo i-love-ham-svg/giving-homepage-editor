@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+// ARCHIVED LEGACY FIXTURE: excluded from tools/test-all.mjs. The supported
+// community board lives in delivery-site and must not depend on this manager.
+
 const source = readFileSync(new URL("../outputs/editor-board-manager.js", import.meta.url), "utf8");
 const context = { globalThis: {}, URL };
 vm.createContext(context);

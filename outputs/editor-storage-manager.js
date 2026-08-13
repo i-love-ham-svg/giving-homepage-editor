@@ -158,6 +158,21 @@
     return next;
   }
 
+  // External surfaces are visual-only extensions with independent schemas.
+  // Compact fallback must remove embedded image payloads without assuming a
+  // specific surface key or discarding its non-image presentation metadata.
+  function stripExternalSurfaceImageData(value, seen = new WeakSet()) {
+    if (!value || typeof value !== "object" || seen.has(value)) return;
+    seen.add(value);
+    Object.entries(value).forEach(([key, child]) => {
+      if (typeof child === "string" && /^data:image\/(?:png|jpe?g|webp|gif|avif);base64,/i.test(child)) {
+        value[key] = null;
+      } else if (child && typeof child === "object") {
+        stripExternalSurfaceImageData(child, seen);
+      }
+    });
+  }
+
   function stripImageDataForCompactSave(saved) {
     const compactSaved = clone(saved);
     compactSaved.assets = compactSaved.assets ?? {};
@@ -221,6 +236,7 @@
     if (compactSaved.document?.globals?.homeMenu?.logo) {
       compactSaved.document.globals.homeMenu.logo.dataUrl = null;
     }
+    stripExternalSurfaceImageData(compactSaved.document?.globals?.externalSurfaces);
     if (compactSaved.content?.homeMenu?.logo) compactSaved.content.homeMenu.logo.dataUrl = null;
 
     compactSaved.storage = {

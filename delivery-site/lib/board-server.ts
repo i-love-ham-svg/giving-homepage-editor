@@ -14,6 +14,21 @@ type BoardEnv = {
 
 type D1Row = Record<string, unknown>;
 type MediaInput = { id?: unknown; claimToken?: unknown; alt?: unknown };
+type StoredMedia = {
+  id: string;
+  postId: string | null;
+  objectKey: string;
+  ownerTokenHash: string;
+  status: string;
+  alt: string;
+};
+type DesiredMedia = StoredMedia & { alt: string; newlyAttached: boolean };
+type MediaDeletion = StoredMedia & { kind: "post" | "temporary" };
+type MediaUpdatePlan = {
+  desired: DesiredMedia[];
+  deletions: MediaDeletion[];
+  thumbnailMediaId: string | null;
+};
 
 export const ADMIN_COOKIE = "songak_board_admin";
 const encoder = new TextEncoder();
@@ -421,6 +436,111 @@ async function validateMediaInputs(inputs: MediaInput[], admin: boolean): Promis
   return output;
 }
 
+function storedMedia(row: D1Row): StoredMedia {
+  return {
+    id: String(row.id),
+    postId: row.post_id == null ? null : String(row.post_id),
+    objectKey: String(row.object_key),
+    ownerTokenHash: String(row.owner_token_hash),
+    status: String(row.status),
+    alt: String(row.alt_text || ""),
+  };
+}
+
+async function requireMediaClaim(item: MediaInput, media: StoredMedia, admin: boolean): Promise<void> {
+  if (admin) return;
+  const claim = cleanText(item.claimToken, 160);
+  if (!claim || !(await safeEqual(bytesToBase64Url(await sha256(claim)), media.ownerTokenHash))) {
+    throw new Error("첨부파일 소유 정보를 확인해 주세요.");
+  }
+}
+
+async function readStoredMedia(mediaId: string): Promise<StoredMedia | null> {
+  const row = await getBoardEnv().DB.prepare(`
+    SELECT id, post_id, object_key, owner_token_hash, status, alt_text
+    FROM media WHERE id = ?
+  `).bind(mediaId).first<D1Row>();
+  return row ? storedMedia(row) : null;
+}
+
+async function prepareMediaUpdate(
+  postId: string,
+  input: Record<string, unknown>,
+  currentThumbnailMediaId: string | null,
+  admin: boolean,
+): Promise<MediaUpdatePlan> {
+  if (input.media != null && !Array.isArray(input.media)) throw new Error("첨부파일 정보를 확인해 주세요.");
+  if (input.discardedMedia != null && !Array.isArray(input.discardedMedia)) throw new Error("첨부파일 정보를 확인해 주세요.");
+
+  const { results: currentRows = [] } = await getBoardEnv().DB.prepare(`
+    SELECT id, post_id, object_key, owner_token_hash, status, alt_text
+    FROM media
+    WHERE post_id = ? AND status IN ('attached', 'pending_delete')
+    ORDER BY created_at ASC
+  `).bind(postId).all<D1Row>();
+  const current = currentRows.map(storedMedia);
+  const currentAttached = current.filter((item) => item.status === "attached");
+  const requested = Array.isArray(input.media) ? input.media as MediaInput[] : null;
+  if ((requested?.length || currentAttached.length) > 12) throw new Error("사진과 영상은 합계 12개까지 등록할 수 있습니다.");
+
+  const desired: DesiredMedia[] = [];
+  const desiredIds = new Set<string>();
+  if (requested) {
+    for (const rawItem of requested) {
+      if (!rawItem || typeof rawItem !== "object") throw new Error("첨부파일 정보를 확인해 주세요.");
+      const item = rawItem as MediaInput;
+      const mediaId = cleanText(item.id, 80);
+      if (!mediaId || desiredIds.has(mediaId)) throw new Error("첨부파일 정보를 확인해 주세요.");
+      const media = await readStoredMedia(mediaId);
+      if (!media) throw new Error("첨부파일 정보를 확인해 주세요.");
+      if (media.status === "attached") {
+        if (media.postId !== postId) throw new Error("다른 게시글의 첨부파일은 사용할 수 없습니다.");
+        desired.push({ ...media, alt: cleanText(item.alt, 240), newlyAttached: false });
+      } else if (media.status === "temporary") {
+        await requireMediaClaim(item, media, admin);
+        desired.push({ ...media, alt: cleanText(item.alt, 240), newlyAttached: true });
+      } else {
+        throw new Error("첨부파일 정보를 확인해 주세요.");
+      }
+      desiredIds.add(mediaId);
+    }
+  } else {
+    for (const media of currentAttached) {
+      desired.push({ ...media, newlyAttached: false });
+      desiredIds.add(media.id);
+    }
+  }
+
+  const deletions: MediaDeletion[] = current
+    .filter((media) => !desiredIds.has(media.id) && (requested != null || media.status === "pending_delete"))
+    .map((media) => ({ ...media, kind: "post" as const }));
+  const deletionIds = new Set(deletions.map((media) => media.id));
+  const discarded = Array.isArray(input.discardedMedia) ? input.discardedMedia as MediaInput[] : [];
+  if (discarded.length > 12) throw new Error("첨부파일 정보를 확인해 주세요.");
+  for (const rawItem of discarded) {
+    if (!rawItem || typeof rawItem !== "object") throw new Error("첨부파일 정보를 확인해 주세요.");
+    const item = rawItem as MediaInput;
+    const mediaId = cleanText(item.id, 80);
+    if (!mediaId || desiredIds.has(mediaId) || deletionIds.has(mediaId)) throw new Error("첨부파일 정보를 확인해 주세요.");
+    const media = await readStoredMedia(mediaId);
+    if (!media || !["temporary", "pending_delete", "deleted"].includes(media.status) || media.postId) {
+      throw new Error("첨부파일 정보를 확인해 주세요.");
+    }
+    await requireMediaClaim(item, media, admin);
+    deletions.push({ ...media, kind: "temporary" });
+    deletionIds.add(mediaId);
+  }
+
+  const requestedThumbnail = input.thumbnailMediaId == null ? "" : cleanText(input.thumbnailMediaId, 80);
+  if (requestedThumbnail && !desiredIds.has(requestedThumbnail)) throw new Error("대표 첨부파일 정보를 확인해 주세요.");
+  const thumbnailMediaId = desired.length === 0
+    ? null
+    : requestedThumbnail || (requested == null && currentThumbnailMediaId && desiredIds.has(currentThumbnailMediaId)
+      ? currentThumbnailMediaId
+      : desired[0].id);
+  return { desired, deletions, thumbnailMediaId };
+}
+
 export async function createPost(request: Request): Promise<BoardPost> {
   await ensureBoardSchema();
   const admin = await isAdminRequest(request);
@@ -479,12 +599,51 @@ export async function updatePost(request: Request, id: string): Promise<BoardPos
   const category = input.category == null ? row.category as Category : parseCategory(input.category, admin);
   const status = admin ? row.status : "pending";
   const now = new Date().toISOString();
-  await DB.prepare(`
-    UPDATE posts SET category = ?, status = ?, title = ?, body = ?, author = ?, contact = ?, pinned = ?,
-      updated_at = ?, published_at = CASE WHEN ? = 'pending' THEN NULL ELSE published_at END
-    WHERE id = ?
-  `).bind(category, status, title, body, author, cleanText(input.contact ?? row.contact, 120), admin && Boolean(input.pinned ?? row.pinned) ? 1 : 0,
-    now, status, id).run();
+  const mediaPlan = await prepareMediaUpdate(id, input, row.thumbnail_media_id ? String(row.thumbnail_media_id) : null, admin);
+  const statements = [
+    DB.prepare(`
+      UPDATE posts SET category = ?, status = ?, title = ?, body = ?, author = ?, contact = ?, pinned = ?,
+        thumbnail_media_id = ?, updated_at = ?, published_at = CASE WHEN ? = 'pending' THEN NULL ELSE published_at END
+      WHERE id = ?
+    `).bind(category, status, title, body, author, cleanText(input.contact ?? row.contact, 120), admin && Boolean(input.pinned ?? row.pinned) ? 1 : 0,
+      mediaPlan.thumbnailMediaId, now, status, id),
+    ...mediaPlan.desired.map((media) => media.newlyAttached
+      ? DB.prepare(`
+          UPDATE media SET post_id = ?, status = 'attached', alt_text = ?
+          WHERE id = ? AND status = 'temporary' AND owner_token_hash = ?
+        `).bind(id, media.alt, media.id, media.ownerTokenHash)
+      : DB.prepare(`
+          UPDATE media SET alt_text = ?
+          WHERE id = ? AND post_id = ? AND status = 'attached'
+        `).bind(media.alt, media.id, id)),
+    ...mediaPlan.deletions.filter((media) => media.status !== "deleted").map((media) => media.kind === "post"
+      ? DB.prepare(`
+          UPDATE media SET status = 'pending_delete'
+          WHERE id = ? AND post_id = ? AND status IN ('attached', 'pending_delete')
+        `).bind(media.id, id)
+      : DB.prepare(`
+          UPDATE media SET status = 'pending_delete'
+          WHERE id = ? AND post_id IS NULL AND status IN ('temporary', 'pending_delete') AND owner_token_hash = ?
+        `).bind(media.id, media.ownerTokenHash)),
+  ];
+  await DB.batch(statements);
+
+  const attachedAfterUpdate = (await mediaForPosts([id])).get(id) || [];
+  const attachedById = new Map(attachedAfterUpdate.map((media) => [media.id, media]));
+  const mediaStoredExactly = attachedAfterUpdate.length === mediaPlan.desired.length
+    && mediaPlan.desired.every((media) => attachedById.get(media.id)?.alt === media.alt);
+  const postAfterUpdate = await DB.prepare("SELECT * FROM posts WHERE id = ?").bind(id).first<D1Row>();
+  if (!mediaStoredExactly || !postAfterUpdate || (postAfterUpdate.thumbnail_media_id == null ? null : String(postAfterUpdate.thumbnail_media_id)) !== mediaPlan.thumbnailMediaId) {
+    throw new Error("첨부파일을 저장하지 못했습니다. 다시 시도해 주세요.");
+  }
+
+  if (mediaPlan.deletions.length > 0) {
+    await Promise.all(mediaPlan.deletions.map((media) => getBoardEnv().MEDIA.delete(media.objectKey)));
+    await DB.batch(mediaPlan.deletions.map((media) => DB.prepare(`
+      UPDATE media SET post_id = NULL, status = 'deleted'
+      WHERE id = ? AND status IN ('pending_delete', 'deleted')
+    `).bind(media.id)));
+  }
   await logAudit(request, "update", "post", id, { status });
   const updated = await DB.prepare("SELECT * FROM posts WHERE id = ?").bind(id).first<D1Row>();
   if (!updated) return null;

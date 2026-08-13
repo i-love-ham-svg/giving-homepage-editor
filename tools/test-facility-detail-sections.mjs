@@ -53,7 +53,7 @@ assert.match(html, /extraHeight:\s*2,\s*releaseLayerHeight:\s*true/);
 assert.match(html, /facilityDetailSecondaryCta/);
 assert.match(html, /주차장\(장애인 주차 포함\) · 농구장/);
 assert.match(html, /jump-facility-detail-selector/);
-assert.match(html, /representative-greeting-editor\.html\?mode=view&stylePage=application&type=facility/);
+assert.match(html, /href="\/programs\/application\?type=facility"/);
 assert.match(html, /시설현황 상세 4개 섹션을 추가했습니다/);
 assert.match(html, /function selectFacilityCategory/);
 assert.match(html, /kind: "facility-floor"/);

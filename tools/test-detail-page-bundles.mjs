@@ -10,8 +10,147 @@ const bundleCss = fs.readFileSync(new URL("editor-detail-bundles.css", root), "u
 const detailPagesSource = fs.readFileSync(new URL("detail-pages.js", root), "utf8");
 const detailPagesCss = fs.readFileSync(new URL("detail-pages.css", root), "utf8");
 
-assert.match(html, /function openApplicationInsideCurrentPage\(applicationType = "general"\)/);
-assert.match(html, /a\[href\*="stylePage=application"\][\s\S]*?openApplicationInsideCurrentPage/);
+assert.match(html, /async function openApplicationInsideCurrentPage\(applicationType = "general"\)/);
+assert.match(html, /targetUrl\.pathname\.replace\([^\n]+\) !== "\/programs\/application"[\s\S]*?openApplicationInsideCurrentPage/);
+assert.doesNotMatch(html, /representative-greeting-editor\.html\?mode=view(?:&amp;|&)stylePage=/);
+for (const publicRoute of [
+  "/about/facility",
+  "/programs/schedule",
+  "/about/organization",
+  "/news/videos",
+  "/programs/case-management",
+  "/programs/application?type=program",
+  "/programs/application?type=case",
+  "/programs/application?type=volunteer",
+  "/programs/application?type=donation",
+  "/programs/application?type=facility",
+  "/programs/application?type=general"
+]) assert.ok(html.includes(publicRoute), `missing canonical public CTA route: ${publicRoute}`);
+
+const applicationNavigationSource = html.match(
+  /async function openApplicationInsideCurrentPage\(applicationType = "general"\)[\s\S]*?^    \}/m
+)?.[0] || "";
+assert.match(
+  applicationNavigationSource,
+  /await navigateToHomeMenuSection\(applicationMenuId[\s\S]*?if \(!hydrated\) return false;[\s\S]*?setDetailBundlePresentationMode/,
+  "public scoped hydration must finish before the application form is activated"
+);
+
+let releaseHydration;
+const sequence = [];
+const typeControl = { options: [{ value: "donation" }], value: "" };
+const firstControl = { focus: () => sequence.push("focus") };
+const form = {
+  querySelector(selector) {
+    if (selector === '[name="type"]') return typeControl;
+    if (selector === "input, select, textarea") return firstControl;
+    return null;
+  },
+  scrollIntoView: () => sequence.push("scroll")
+};
+const hydrationGate = new Promise((resolve) => {
+  releaseHydration = () => {
+    sequence.push("hydrated");
+    resolve(true);
+  };
+});
+const applicationNavigationContext = vm.createContext({
+  URL,
+  Promise,
+  document: { body: { dataset: { editorRole: "public" } } },
+  state: {
+    mode: "view",
+    essentialSections: { applicationForm: { detailSectionKind: "form" } },
+    activeSection: "",
+    selected: ""
+  },
+  window: {
+    location: new URL("https://songak.example/programs"),
+    history: {
+      lastUrl: "",
+      replaceState(_state, _title, url) {
+        this.lastUrl = String(url);
+        sequence.push("history");
+      }
+    },
+    requestAnimationFrame(callback) {
+      sequence.push("frame");
+      callback();
+    }
+  },
+  navigateToHomeMenuSection(_menuId, options) {
+    sequence.push(`navigate:${options.historyMode}:${options.committedPath}`);
+    return hydrationGate;
+  },
+  setDetailBundlePresentationMode() { sequence.push("activate-form"); },
+  getDetailBundleSectionIds() { return ["applicationForm"]; },
+  sectionLayerMap: { applicationForm: ["applicationForm"] },
+  elements: {
+    applicationForm: {
+      querySelector(selector) {
+        return selector === "[data-detail-application-form]" ? form : null;
+      }
+    }
+  },
+  applySectionVisibility() { sequence.push("visibility"); },
+  applyLayouts() { sequence.push("layout"); }
+});
+vm.runInContext(applicationNavigationSource, applicationNavigationContext, { filename: "application-navigation.js" });
+const pendingApplicationOpen = applicationNavigationContext.openApplicationInsideCurrentPage("donation");
+assert.deepEqual(sequence, ["navigate:none:/programs/application"], "the form must stay untouched while hydration is pending");
+releaseHydration();
+assert.equal(await pendingApplicationOpen, true);
+assert.ok(sequence.indexOf("hydrated") < sequence.indexOf("activate-form"));
+assert.equal(typeControl.value, "donation");
+assert.equal(applicationNavigationContext.window.history.lastUrl, "https://songak.example/programs/application?type=donation");
+
+const visitorDraftSource = html.match(
+  /const visitorApplicationDraftStorageKey = "songak-application-draft";[\s\S]*?(?=    function bindDetailBundleInteractions)/
+)?.[0] || "";
+assert.match(visitorDraftSource, /sessionStorage\.setItem\(visitorApplicationDraftStorageKey/);
+assert.match(visitorDraftSource, /delete data\.consent;[\s\S]*?delete data\.website;/);
+assert.match(visitorDraftSource, /localStorage\.removeItem\("songak-application-drafts"\)/);
+assert.doesNotMatch(visitorDraftSource, /localStorage\.setItem/);
+
+const visitorSessionValues = new Map();
+const removedLegacyDraftKeys = [];
+class VisitorDraftFormData {
+  constructor(form) { this.form = form; }
+  entries() { return Object.entries(this.form.draftEntries)[Symbol.iterator](); }
+}
+const visitorDraftContext = vm.createContext({
+  FormData: VisitorDraftFormData,
+  URLSearchParams,
+  sessionStorage: {
+    getItem: (key) => visitorSessionValues.get(key) ?? null,
+    setItem: (key, value) => visitorSessionValues.set(key, value),
+    removeItem: (key) => visitorSessionValues.delete(key)
+  },
+  localStorage: { removeItem: (key) => removedLegacyDraftKeys.push(key) },
+  window: {
+    location: { search: "?type=donation" },
+    clearTimeout() {},
+    setTimeout() { return 1; }
+  }
+});
+vm.runInContext(visitorDraftSource, visitorDraftContext, { filename: "visitor-application-draft.js" });
+const draftControls = {
+  type: { value: "donation" },
+  name: { value: "" }
+};
+const visitorDraftForm = {
+  draftEntries: { type: "program", name: "테스트 신청자", consent: "on", website: "bot-value" },
+  elements: { namedItem: (name) => draftControls[name] || null }
+};
+visitorDraftContext.saveVisitorApplicationDraft(visitorDraftForm);
+const storedVisitorDraft = JSON.parse(visitorSessionValues.get("songak-application-draft"));
+assert.deepEqual(Object.keys(storedVisitorDraft.data).sort(), ["name", "type"]);
+assert.equal(storedVisitorDraft.data.consent, undefined);
+assert.equal(storedVisitorDraft.data.website, undefined);
+assert.equal(visitorDraftContext.restoreVisitorApplicationDraft(visitorDraftForm), true);
+assert.equal(draftControls.name.value, "테스트 신청자");
+assert.equal(draftControls.type.value, "donation", "an explicit CTA type must win over an older session draft");
+assert.deepEqual(removedLegacyDraftKeys, ["songak-application-drafts"]);
 
 const context = vm.createContext({ structuredClone, console });
 context.window = context;
@@ -64,6 +203,14 @@ assert.equal(account.note, "");
 assert.equal(account.description, "");
 assert.equal(account.socialLayout, "drive-split");
 assert.deepEqual(Object.keys(account.socialButtonStyles), ["kakao", "naver", "google"]);
+assert.deepEqual(Array.from(runtime.SOCIAL_LOGIN_LAYOUTS), ["fresh-split", "drive-split", "immersive", "mobile-curve"]);
+assert.match(html, /data-sns-layout="\$\{escapeHtml\(socialLayout\)\}"/);
+assert.match(html, /data-essential-action="set-social-layout"/);
+assert.match(html, /data-sns-layout-value="\$\{escapeHtml\(option\.value\)\}"/);
+assert.match(html, /const normalizedLayout = normalizeSocialLoginLayout\(model\.socialLayout\)/);
+const accountSnsUpgradeSource = html.match(/function upgradeAccountSnsPresentation\(\)[\s\S]*?^    \}/m)?.[0] || "";
+assert.doesNotMatch(accountSnsUpgradeSource, /model\.socialLayout = "drive-split"/);
+assert.match(accountSnsUpgradeSource, /Number\(model\.detailDesignVersion\) < 5[\s\S]*?account-sns-character-mobile-v5\.webp[\s\S]*?model\.detailDesignVersion = 5/);
 assert.match(html, /data-sns-provider="kakao"[\s\S]*?data-sns-provider="naver"[\s\S]*?data-sns-provider="google"/);
 assert.doesNotMatch(html.match(/page === "account" && kind === "social"[\s\S]*?else if \(\["steps"/)?.[0] || "", /type="password"|아이디 로그인/);
 assert.doesNotMatch(html.match(/page === "account" && kind === "social"[\s\S]*?else if \(\["steps"/)?.[0] || "", /사용할 SNS 계정 선택|별도 비밀번호 없음|data-sns-auth-status/);
@@ -86,9 +233,21 @@ for (const expected of [
   "data-detail-action=\"upload-source-image\"",
   "data-detail-source-image",
   "function bindDetailBundleInteractions",
-  "songak-application-drafts"
+  "songak-application-draft"
 ]) assert.match(html, new RegExp(expected));
 assert.doesNotMatch(html, /songak-application-submissions/);
+assert.doesNotMatch(html, /requireAuthenticationForAction|data-auth-required-dialog|songak-auth-return/);
+assert.doesNotMatch(html, /localStorage\.setItem\("songak-application-drafts"/);
+assert.match(html, /name="consent" required/);
+assert.match(html, /name="website"[^>]*tabindex="-1"[^>]*autocomplete="off"/);
+const publicApplicationSubmitSource = html.match(
+  /const form = layer\.querySelector\("\[data-detail-application-form\]"\);[\s\S]*?(?=      if \(model\.detailPageKind === "account")/
+)?.[0] || "";
+assert.match(publicApplicationSubmitSource, /if \(!form\.reportValidity\(\)\) return;[\s\S]*?fetch\("\/api\/applications"/);
+assert.match(publicApplicationSubmitSource, /if \(payload\.website\) return;/);
+assert.match(publicApplicationSubmitSource, /response\.status === 429/);
+assert.match(publicApplicationSubmitSource, /form\.elements\.namedItem\("consent"\)[\s\S]*?clearVisitorApplicationDraft/);
+assert.doesNotMatch(publicApplicationSubmitSource, /staff-login|SNS 로그인|requireAuthentication/);
 assert.match(html, /작성 내용은 전송되지 않았습니다/);
 
 assert.doesNotMatch(html, /id="topDetailBundleOriginalBtn"/);
@@ -135,7 +294,7 @@ assert.match(bundleCss, /\.stage\.desktop \.detail-fact-grid\[data-detail-balanc
 assert.match(bundleCss, /\.detail-source-image[^}]*height:auto[^}]*object-fit:contain/);
 assert.doesNotMatch(bundleCss, /\.detail-org-root \.essential-(?:eyebrow|org-root-title|note)[^{]*\{[^}]*font-size:[^;}]+!important/);
 assert.match(html, /source: key === "desktop" \? 760 : 430/);
-assert.match(html, /representative-greeting-editor\.html\?mode=view&stylePage=organization/);
+assert.match(html, /organization:\s*"\/about\/organization"/);
 assert.doesNotMatch(detailPagesSource, /detail-editor-entry/);
 assert.doesNotMatch(detailPagesCss, /\.detail-editor-entry\s*\{/);
 assert.match(detailPagesSource, /representative-greeting-editor\.html\?mode=view/);

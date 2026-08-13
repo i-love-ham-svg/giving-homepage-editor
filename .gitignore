@@ -23,6 +23,13 @@ tools/__pycache__/
 !**/.env.example
 !**/.dev.vars.example
 delivery-site/tsconfig.tsbuildinfo
+delivery-site/.wrangler-local-config/
+
+# Local QA evidence and recording artifacts can contain authenticated sessions
+# or large binary captures. Keep them outside source-control recovery points.
+manual-video/
+qa-evidence/
+qa-recordings/
 outputs/assets/stickers/contact-sheets/
 outputs/assets/stickers/library-contact-sheets/
 outputs/assets/stickers/original/

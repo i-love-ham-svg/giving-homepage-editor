@@ -50,6 +50,29 @@ assert.equal(manager.getRightTextLayerId("mainIntro3"), "mainIntro3RightText");
 assert.equal(manager.getPartLabel("VisualCaption"), "장식 문구");
 assert.equal(manager.getLayerLabel("메인 소개 2", "RightText"), "메인 소개 2 오른쪽 텍스트");
 assert.equal(manager.getPartLayerMap("mainIntro2").Body, "mainIntro2Body");
+assertJsonEqual(manager.CTA_KEYS, ["program", "consult"]);
+assertJsonEqual(manager.getCtaIds("mainIntro"), [
+  "mainIntroProgramCta",
+  "mainIntroConsultCta"
+]);
+assertJsonEqual(manager.getCtaIds("mainIntro3"), [
+  "mainIntro3ProgramCta",
+  "mainIntro3ConsultCta"
+]);
+assert.equal(manager.getCtaKey("mainIntro3ConsultCta"), "consult");
+assert.equal(manager.getBaseCtaId("mainIntro3ProgramCta"), "mainIntroProgramCta");
+assert.equal(manager.getCtaLabel("program"), "프로그램 찾기");
+assertJsonEqual(manager.normalizeCtaContent({
+  program: { label: "참여 프로그램" },
+  consult: ""
+}), {
+  program: { label: "참여 프로그램" },
+  consult: { label: "" }
+});
+assertJsonEqual(manager.normalizeCtaContent(), {
+  program: { label: "프로그램 찾기" },
+  consult: { label: "상담·이용 문의" }
+});
 
 const columnFlow = {
   mode: "columns",
@@ -76,5 +99,19 @@ assertJsonEqual(cloned.desktop.mainIntro4Kicker, { x: 1 });
 assertJsonEqual(cloned.desktop.mainIntro4Title, { x: 2 });
 assertJsonEqual(cloned.phone.mainIntro4Body, { x: 3 });
 assert.equal(cloned.mobile, cloned.phone);
+
+const clonedCtas = manager.cloneCtaViewportMap({
+  desktop: {
+    mainIntro2ProgramCta: { size: 15, background: "#123456" },
+    mainIntroConsultCta: { size: 14 }
+  },
+  tablet: {
+    mainIntro2ConsultCta: { size: 13 }
+  }
+}, "mainIntro2", "mainIntro4", ["desktop", "tablet"]);
+
+assertJsonEqual(clonedCtas.desktop.mainIntro4ProgramCta, { size: 15, background: "#123456" });
+assertJsonEqual(clonedCtas.desktop.mainIntro4ConsultCta, { size: 14 });
+assertJsonEqual(clonedCtas.tablet.mainIntro4ConsultCta, { size: 13 });
 
 console.log("main intro manager tests OK");

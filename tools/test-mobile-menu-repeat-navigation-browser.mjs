@@ -189,6 +189,39 @@ try {
     "reopening after the second selection should reveal the new active branch"
   );
 
+  await page.evaluate(() => document.querySelector("#homepageMenuMobileBrand")?.click());
+  await page.waitForFunction(() => !document.querySelector("#homepageMenu")?.classList.contains("open")
+    && !document.body.classList.contains("home-menu-open")
+    && window.location.pathname === "/"
+    && window.scrollY === 0);
+  const brandHomeState = await page.evaluate(() => ({
+    path: window.location.pathname,
+    scrollY: window.scrollY,
+    menuOpen: document.querySelector("#homepageMenu")?.classList.contains("open"),
+    bodyLocked: document.body.classList.contains("home-menu-open"),
+    rootOverflow: getComputedStyle(document.documentElement).overflow,
+    toggleExpanded: document.querySelector("#homepageMenuToggle")?.getAttribute("aria-expanded")
+  }));
+  assert.deepEqual({
+    path: brandHomeState.path,
+    scrollY: brandHomeState.scrollY,
+    menuOpen: brandHomeState.menuOpen,
+    bodyLocked: brandHomeState.bodyLocked,
+    toggleExpanded: brandHomeState.toggleExpanded
+  }, {
+    path: "/",
+    scrollY: 0,
+    menuOpen: false,
+    bodyLocked: false,
+    toggleExpanded: "false"
+  }, "the mobile brand should close the panel, unlock the page, return home, and reset scroll");
+  assert.notEqual(brandHomeState.rootOverflow, "hidden", "the mobile brand should release root scrolling");
+
+  await openMenu();
+  await expandAncestorsAndSelect("home-menu-intro-main");
+  assert.equal(new URL(page.url()).pathname, "/about", "the menu should reopen and navigate after using the mobile brand");
+  assert.equal(await page.evaluate(() => window.scrollY), 0, "navigation after reopening should start at the top");
+
   console.log("mobile repeated navigation regression browser test OK");
 } finally {
   await browser.close();

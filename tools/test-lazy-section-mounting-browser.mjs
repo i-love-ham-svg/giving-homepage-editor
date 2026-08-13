@@ -71,12 +71,30 @@ try {
   await page.evaluate(() => navigateToHomeMenuSection("home-menu-business-application"));
   await page.waitForSelector("[data-detail-application-form]");
   const applicationUrl = page.url();
+  await page.evaluate(() => {
+    const form = document.querySelector("[data-detail-application-form]");
+    form.querySelectorAll(":required").forEach((control) => {
+      if (control instanceof HTMLInputElement && control.type === "checkbox") control.checked = true;
+      else if (control instanceof HTMLSelectElement) control.value = [...control.options].find((option) => option.value)?.value || "";
+      else if (control instanceof HTMLInputElement && control.type === "tel") control.value = "010-1234-5678";
+      else control.value = control instanceof HTMLInputElement && control.type === "number" ? "1" : "테스트 신청 내용";
+    });
+  });
   await page.locator('[data-detail-action="save-draft"]').click();
-  await page.waitForSelector("[data-auth-required-dialog][open]");
-  if (page.url() !== applicationUrl) throw new Error("auth request changed the current page before user confirmation");
-  await page.locator('[data-auth-required-action="stay"]').click();
-  if (await page.locator("[data-auth-required-dialog]").getAttribute("open") !== null) throw new Error("auth dialog did not close");
-  if (!await page.locator('[data-detail-page-kind="application"]').count()) throw new Error("auth dialog did not preserve the current application page");
+  await page.waitForFunction(() => Boolean(sessionStorage.getItem("songak-application-draft")));
+  const draftBoundary = await page.evaluate(() => {
+    const draft = JSON.parse(sessionStorage.getItem("songak-application-draft") || "null");
+    return {
+      authDialogCount: document.querySelectorAll("[data-auth-required-dialog]").length,
+      hasConsent: Object.hasOwn(draft?.data || {}, "consent"),
+      hasWebsite: Object.hasOwn(draft?.data || {}, "website"),
+      legacyLongTermDraft: localStorage.getItem("songak-application-drafts")
+    };
+  });
+  if (page.url() !== applicationUrl) throw new Error("visitor draft save changed the current page");
+  if (draftBoundary.authDialogCount) throw new Error("visitor draft save incorrectly requested staff authentication");
+  if (draftBoundary.hasConsent || draftBoundary.hasWebsite || draftBoundary.legacyLongTermDraft) throw new Error(`visitor draft storage boundary failed: ${JSON.stringify(draftBoundary)}`);
+  if (!await page.locator('[data-detail-page-kind="application"]').count()) throw new Error("visitor draft save did not preserve the current application page");
   if (errors.length) throw new Error(`page errors: ${errors.join(" | ")}`);
   console.log(`lazy section mounting browser test OK ${JSON.stringify({ landing, schedule })}`);
 } finally {

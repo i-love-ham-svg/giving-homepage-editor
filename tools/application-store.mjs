@@ -1,3 +1,6 @@
+// ARCHIVED LEGACY FIXTURE ONLY.
+// The static editor server and default acceptance suite do not import this file.
+// Production submissions use delivery-site /api/applications with D1 storage.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";

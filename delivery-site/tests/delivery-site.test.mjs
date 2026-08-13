@@ -6,18 +6,23 @@ const root = new URL("../", import.meta.url);
 
 test("builds the finished Songak public site and community board shell", async () => {
   await access(new URL("dist/server/index.js", root));
-  const [page, client, worker, packageJson, publicPage] = await Promise.all([
+  const [page, client, communityContract, worker, packageJson, publicPage] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/board-app.tsx", root), "utf8"),
+    readFile(new URL("lib/community-editor-contract.ts", root), "utf8"),
     readFile(new URL("worker/index.ts", root), "utf8"),
     readFile(new URL("package.json", root), "utf8"),
     readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
   ]);
   assert.match(page, /송악사회복지관/);
-  assert.match(client, /복지관과 주민이/);
-  assert.match(client, /주민 글쓰기/);
+  assert.match(communityContract, /복지관과 주민이/);
+  assert.match(communityContract, /주민 글쓰기/);
+  assert.match(client, /communitySurface\.fields\.description/);
+  assert.match(client, /communitySurface\.fields\.primaryCta/);
   assert.match(worker, /content-security-policy/);
   assert.match(worker, /x-content-type-options/);
+  assert.match(worker, /img-src 'self' data: blob: https:\/\/img\.youtube\.com/,
+    "published YouTube thumbnails must be allowed by the image CSP");
   assert.match(worker, /representative-greeting-editor/);
   assert.match(worker, /cache-control/);
   assert.match(worker, /representative-greeting-editor\.html[\s\S]*?public, no-cache, must-revalidate/);
@@ -29,20 +34,31 @@ test("builds the finished Songak public site and community board shell", async (
   assert.doesNotMatch(page + client + packageJson, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
-test("serves every public menu, board, and footer document through the canonical read-only renderer", async () => {
+test("serves public pages through the canonical renderer and the one real community board", async () => {
   const [worker, editor, viteConfig] = await Promise.all([
     readFile(new URL("worker/index.ts", root), "utf8"),
     readFile(new URL("../outputs/representative-greeting-editor.html", root), "utf8"),
     readFile(new URL("vite.config.ts", root), "utf8"),
   ]);
   assert.match(worker, /PUBLIC_PAGE_ROUTES/);
-  assert.match(viteConfig, /assets: \{ html_handling: "none" as const \}/);
-  for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/news/visitor-board", "/community", "/privacy-policy", "/email-refusal", "/directions"]) {
+  assert.match(viteConfig, /directory: "\.\/public"/);
+  assert.match(viteConfig, /binding: "ASSETS"/);
+  assert.match(viteConfig, /html_handling: "none" as const/);
+  assert.match(viteConfig, /run_worker_first: true/);
+  assert.match(viteConfig, /command === "serve"/);
+  assert.match(viteConfig, /run_worker_first: \["\/\*", "!\/@\*", "!\/__vite\*", "!\/app\/\*", "!\/lib\/\*", "!\/node_modules\/\*"\]/,
+    "local Vite client modules and source styles must bypass the Worker-first application router");
+  assert.match(worker, /env\.ASSETS\.fetch/);
+  for (const route of ["/about/greeting", "/about/mission", "/about/facility", "/programs/list", "/programs/case-management", "/participation/volunteer", "/privacy-policy", "/email-refusal", "/directions"]) {
     assert.match(worker, new RegExp(`"${route.replaceAll("/", "\\/")}": "\\/songak\\/representative-greeting-editor\\.html"`));
   }
+  assert.doesNotMatch(worker, /"\/community": "\/songak\/representative-greeting-editor\.html"/);
+  assert.match(worker, /url\.pathname === "\/page\/home-menu-news-board" \|\| url\.pathname === "\/page\/home-menu-news-visitor"[\s\S]*?url\.pathname = "\/community"/);
+  assert.match(worker, /"\/news\/visitor-board": "\/community"/);
+  assert.match(worker, /PUBLIC_PAGE_ROUTES\[canonicalPath\] \|\| canonicalPath === "\/community"/);
   assert.match(editor, /"\/about\/greeting": \{ menuId: "home-menu-intro-main" \}/);
-  assert.match(editor, /"\/community": \{ menuId: "home-menu-news-board" \}/);
-  assert.match(editor, /home-menu-news-board", label: "소통게시판", sectionId: "essential8", sectionIds: \["essential8"\]/);
+  assert.match(editor, /home-menu-news-board", label: "소통게시판", sectionId: "", sectionIds: \[\], externalUrl: "delivery-board"/);
+  assert.match(editor, /function retireLegacyVisitorBoard\(\)[\s\S]*?removeEssentialSection\("essential8"\)/);
   assert.match(editor, /"\/privacy-policy": \{ sectionId: "footer", footerDocument: "privacy" \}/);
   assert.match(editor, /body\.public-view-role \.footer-document-source \{ display: none; \}/);
   assert.match(editor, /publicRoute\?\.menuId/);
@@ -51,7 +67,10 @@ test("serves every public menu, board, and footer document through the canonical
   assert.match(worker, /Response\.redirect\(url\.toString\(\), 308\)/);
   assert.match(worker, /LEGACY_PUBLIC_REDIRECTS[\s\S]*?facility-detail[\s\S]*?\/about\/facility/);
   assert.match(worker, /representative-greeting-editor[\s\S]*?session\.admin[\s\S]*?\/staff-login/);
-  assert.match(worker, /url\.pathname === "\/community" && url\.searchParams\.get\("manage"\) === "1"[\s\S]*?session\.admin[\s\S]*?handler\.fetch\(request/);
+  assert.match(worker, /function isAnonymousPublicEditorRequest/);
+  assert.match(worker, /getAll\("editorRole"\)[\s\S]*?getAll\("role"\)|\["editorRole", "role"\][\s\S]*?getAll\(name\)/);
+  assert.match(worker, /ANONYMOUS_PUBLIC_EDITOR_ROLES = new Set\(\["", "public", "visitor", "consumer"\]\)/);
+  assert.doesNotMatch(worker, /url\.pathname === "\/community" && url\.searchParams\.get\("manage"\) === "1"[\s\S]*?session\.admin/);
 });
 
 test("keeps public gallery sizing content-driven and preserves staff images", async () => {
@@ -114,6 +133,10 @@ test("ships durable site drafts, publishing, version restore, and server authori
   assert.match(server, /WHERE key = \? AND revision = \?/);
   assert.match(server, /SiteContentError\([^\n]+, 409\)/);
   assert.match(server, /MAX_CONTENT_BYTES/);
+  assert.match(server, /scopePublishedSiteContent/);
+  assert.match(server, /requiredSectionIds = new Set\(\[\.\.\.menuSectionIds, "footer"\]\)/);
+  assert.match(server, /wantsDraft \? null : readPublicContentScope\(url\)/);
+  assert.match(server, /x-site-content-scope/);
   assert.match(route, /saveSiteDraft/);
   assert.match(publishRoute, /publishSiteContent/);
   assert.match(versionsRoute, /listSiteVersions/);
@@ -121,8 +144,9 @@ test("ships durable site drafts, publishing, version restore, and server authori
 });
 
 test("keeps the public site read-only and gates the staff editor with temporary credentials or SIWC", async () => {
-  const [page, editorPage, editorAccess, sessionRoute, loginRoute, logoutRoute, boardServer, editorHtml] = await Promise.all([
+  const [page, mobilePage, editorPage, editorAccess, sessionRoute, loginRoute, logoutRoute, boardServer, editorHtml] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/mobile/page.tsx", root), "utf8"),
     readFile(new URL("app/editor/page.tsx", root), "utf8"),
     readFile(new URL("app/editor/editor-access.tsx", root), "utf8"),
     readFile(new URL("app/api/board/admin/session/route.ts", root), "utf8"),
@@ -134,12 +158,17 @@ test("keeps the public site read-only and gates the staff editor with temporary 
   assert.match(page, /송악사회복지관 공개 홈페이지/);
   assert.doesNotMatch(page, /<iframe|representative-greeting-editor/);
   assert.doesNotMatch(page, /mode=edit/);
+  assert.match(mobilePage, /mobile-view-only-frame/);
+  assert.match(mobilePage, /src="\/\?viewport=phone"/);
+  assert.doesNotMatch(mobilePage, /mode=edit|staff-login|editorRole/);
+  assert.match(editorHtml, /\.stage\.view-mode:is\(\.desktop, \.tablet\) \.homepage-menu\[data-layout-mode="selected-dropdown"\]/);
   assert.doesNotMatch(editorPage, /requireChatGPTUser/);
   assert.match(editorPage, /force-dynamic/);
   assert.match(editorAccess, /\/api\/board\/admin\/session/);
   assert.match(editorAccess, /if \(!session\.admin\)/);
-  assert.match(editorAccess, /mode=edit/);
-  assert.match(sessionRoute, /return_to=%2Feditor/);
+  assert.match(editorAccess, /if \(!value\.authenticated\)[\s\S]*?window\.location\.replace\(value\.signInPath/);
+  assert.match(editorAccess, /mode:\s*"edit"/);
+  assert.match(sessionRoute, /\/staff-login\?returnTo=%2Fcommunity%3Fmanage%3D1/);
   assert.match(loginRoute, /createAdminSession/);
   assert.match(loginRoute, /temporary-editor-login/);
   assert.match(loginRoute, /"set-cookie"/);

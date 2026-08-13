@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 const providerLabels: Record<string, string> = {
   kakao: "카카오",
@@ -10,12 +11,30 @@ const providerLabels: Record<string, string> = {
 
 export default function StaffLoginPage() {
   const [provider, setProvider] = useState("");
+  const returnToRef = useRef("/editor");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const key = new URLSearchParams(window.location.search).get("provider") || "";
-    setProvider(providerLabels[key] || "");
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get("provider") || "";
+    const requestedReturn = params.get("returnTo") || "";
+    window.setTimeout(() => setProvider(providerLabels[key] || ""), 0);
+    if (requestedReturn) {
+      try {
+        const destination = new URL(requestedReturn, window.location.origin);
+        const isBoardManager = destination.origin === window.location.origin
+          && destination.pathname === "/community"
+          && destination.searchParams.get("manage") === "1";
+        const isCommunityEditor = destination.origin === window.location.origin
+          && destination.pathname === "/editor"
+          && destination.searchParams.get("surface") === "community";
+        if (isBoardManager) returnToRef.current = "/community?manage=1";
+        else if (isCommunityEditor) returnToRef.current = "/editor?surface=community";
+      } catch {
+        // 올바르지 않은 외부·손상 주소는 기본 편집기 경로로 되돌립니다.
+      }
+    }
   }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -36,7 +55,7 @@ export default function StaffLoginPage() {
       });
       const result = (await response.json().catch(() => ({}))) as { error?: string; redirectTo?: string };
       if (!response.ok) throw new Error(result.error || "아이디 또는 비밀번호를 확인해 주세요.");
-      window.location.assign(result.redirectTo || "/editor");
+      window.location.assign(returnToRef.current || result.redirectTo || "/editor");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "로그인하지 못했습니다. 잠시 후 다시 시도해 주세요.");
       setSubmitting(false);
@@ -46,7 +65,7 @@ export default function StaffLoginPage() {
   return (
     <main className="staff-login-page">
       <section className="staff-login-card" aria-labelledby="staff-login-title">
-        <a className="staff-login-back" href="/">← 홈페이지로 돌아가기</a>
+        <Link className="staff-login-back" href="/">← 홈페이지로 돌아가기</Link>
         <div className="staff-login-brand" aria-hidden="true">송</div>
         <p className="staff-login-eyebrow">SONGAK COMMUNITY WELFARE CENTER</p>
         <h1 id="staff-login-title">복지관 담당자 로그인</h1>

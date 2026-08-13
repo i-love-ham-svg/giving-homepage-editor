@@ -46,14 +46,13 @@ const PUBLIC_PAGE_ROUTES: Record<string, string> = {
   "/news/press": "/songak/representative-greeting-editor.html",
   "/news/videos": "/songak/representative-greeting-editor.html",
   "/news/gallery": "/songak/representative-greeting-editor.html",
-  "/news/visitor-board": "/songak/representative-greeting-editor.html",
-  "/community": "/songak/representative-greeting-editor.html",
   "/privacy-policy": "/songak/representative-greeting-editor.html",
   "/email-refusal": "/songak/representative-greeting-editor.html",
   "/directions": "/songak/representative-greeting-editor.html",
 };
 
 const LEGACY_PUBLIC_REDIRECTS: Record<string, string> = {
+  "/news/visitor-board": "/community",
   "/songak/facility-detail": "/about/facility",
   "/songak/facility-detail.html": "/about/facility",
   "/songak/program-schedule": "/programs/schedule",
@@ -69,6 +68,24 @@ const LEGACY_PUBLIC_REDIRECTS: Record<string, string> = {
   "/songak/community-board": "/community",
   "/songak/community-board.html": "/community",
 };
+
+const ANONYMOUS_PUBLIC_EDITOR_ROLES = new Set(["", "public", "visitor", "consumer"]);
+
+/**
+ * The canonical editor asset also renders the public site, so anonymous access
+ * is allowed only for an explicit read-only request. Check every value for both
+ * supported role parameter names: duplicated or conflicting query parameters
+ * must never turn a privileged editor role into a public request.
+ */
+export function isAnonymousPublicEditorRequest(url: URL): boolean {
+  const modes = url.searchParams.getAll("mode").map((value) => value.trim());
+  if (modes.length !== 1 || modes[0] !== "view") return false;
+
+  const roles = ["editorRole", "role"]
+    .flatMap((name) => url.searchParams.getAll(name))
+    .map((value) => value.trim().toLowerCase());
+  return roles.every((role) => ANONYMOUS_PUBLIC_EDITOR_ROLES.has(role));
+}
 
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
@@ -90,25 +107,22 @@ const worker = {
       return Response.redirect(url.toString(), 308);
     }
 
-    if (url.pathname === "/community" && url.searchParams.get("manage") === "1") {
-      const sessionUrl = new URL("/api/board/admin/session", request.url);
-      const sessionResponse = await handler.fetch(new Request(sessionUrl, { headers: request.headers }), env, ctx);
-      const session = await sessionResponse.clone().json().catch(() => ({ admin: false })) as { admin?: boolean };
-      if (!session.admin) {
-        const loginUrl = new URL("/staff-login", request.url);
-        return Response.redirect(loginUrl.toString(), 302);
-      }
-      return withSecurityHeaders(await handler.fetch(request, env, ctx), url.pathname);
-    }
-
     const legacyPublicPath = LEGACY_PUBLIC_REDIRECTS[url.pathname];
     if (legacyPublicPath) {
       url.pathname = legacyPublicPath;
       return Response.redirect(url.toString(), 308);
     }
 
+    // The community board is a real D1/R2 application, not an editor section.
+    // Prevent the dynamic static-page fallback from resurrecting the legacy
+    // sample board when an older menu link is opened directly.
+    if (url.pathname === "/page/home-menu-news-board" || url.pathname === "/page/home-menu-news-visitor") {
+      url.pathname = "/community";
+      return Response.redirect(url.toString(), 308);
+    }
+
     if ((url.pathname === "/songak/representative-greeting-editor" || url.pathname === "/songak/representative-greeting-editor.html")
-      && !(url.searchParams.get("mode") === "view" && url.searchParams.get("editorRole") !== "staff")) {
+      && !isAnonymousPublicEditorRequest(url)) {
       const sessionUrl = new URL("/api/board/admin/session", request.url);
       const sessionResponse = await handler.fetch(new Request(sessionUrl, { headers: request.headers }), env, ctx);
       const session = await sessionResponse.clone().json().catch(() => ({ admin: false })) as { admin?: boolean };
@@ -120,7 +134,7 @@ const worker = {
 
     if ((request.method === "GET" || request.method === "HEAD") && url.pathname !== "/" && url.pathname.endsWith("/")) {
       const canonicalPath = url.pathname.replace(/\/+$/, "");
-      if (PUBLIC_PAGE_ROUTES[canonicalPath]) {
+      if (PUBLIC_PAGE_ROUTES[canonicalPath] || canonicalPath === "/community") {
         url.pathname = canonicalPath;
         return Response.redirect(url.toString(), 308);
       }
@@ -135,6 +149,15 @@ const worker = {
       // while edit controls and mutations remain isolated behind /editor.
       const publicResponse = await fetchPublicAssetWithoutBrowserRedirect(env.ASSETS, publicAssetPath, request);
       return withSecurityHeaders(publicResponse, publicAssetPath);
+    }
+
+    if ((request.method === "GET" || request.method === "HEAD") && url.pathname.startsWith("/assets/")) {
+      // Vite emits the application shell's content-hashed chunks under
+      // /assets/. Because this Worker runs before static assets in production,
+      // forward those requests to the ASSETS binding instead of letting the
+      // application router return a 404 during client hydration.
+      const buildAssetResponse = await env.ASSETS.fetch(new Request(url, request));
+      return withSecurityHeaders(buildAssetResponse, url.pathname);
     }
 
     if (url.pathname === "/_vinext/image") {
@@ -183,16 +206,18 @@ function withSecurityHeaders(response: Response, pathname = ""): Response {
   secured.headers.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
   secured.headers.set(
     "content-security-policy",
-    "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+    "default-src 'self'; img-src 'self' data: blob: https://img.youtube.com; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
   );
   if (pathname.startsWith("/songak/assets/fonts/")) {
     secured.headers.set("cache-control", "public, max-age=31536000, immutable");
+  } else if (pathname.startsWith("/assets/")) {
+    secured.headers.set("cache-control", response.ok ? "public, max-age=31536000, immutable" : "no-store");
   } else if (pathname.startsWith("/songak/assets/")) {
     secured.headers.set("cache-control", "public, max-age=604800");
-  } else if (pathname === "/songak/public-site.css") {
-    secured.headers.set("cache-control", "public, max-age=86400, stale-while-revalidate=604800");
   } else if (/^\/songak\/.*\.(?:css|js)$/.test(pathname)) {
-    secured.headers.set("cache-control", "public, max-age=86400");
+    // These editor bundles use stable filenames. Revalidate them with the
+    // no-cache HTML so a new renderer can never execute yesterday's JS/CSS.
+    secured.headers.set("cache-control", "public, no-cache, must-revalidate");
   } else if (pathname.endsWith("/representative-greeting-editor.html") || pathname.endsWith("/representative-greeting-editor") || pathname.endsWith("/representative-greeting-public.html") || pathname.includes("/public-")) {
     secured.headers.set("cache-control", "public, no-cache, must-revalidate");
   }

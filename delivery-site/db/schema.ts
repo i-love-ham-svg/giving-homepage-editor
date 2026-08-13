@@ -81,6 +81,26 @@ export const rateLimits = sqliteTable("rate_limits", {
   index("idx_rate_limits_updated_at").on(table.updatedAt),
 ]);
 
+export const applications = sqliteTable("applications", {
+  id: text("id").primaryKey(),
+  receiptId: text("receipt_id").notNull(),
+  type: text("type", { enum: ["program", "case", "volunteer", "donation", "facility", "general"] }).notNull(),
+  applicantKind: text("applicant_kind", { enum: ["individual", "family", "group"] }).notNull(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  preferredContact: text("preferred_contact").notNull().default(""),
+  participants: integer("participants").notNull().default(1),
+  message: text("message").notNull(),
+  status: text("status", { enum: ["received", "contacted", "closed"] }).notNull().default("received"),
+  actorHash: text("actor_hash").notNull(),
+  consentedAt: text("consented_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  uniqueIndex("idx_applications_receipt_id").on(table.receiptId),
+  index("idx_applications_status_created").on(table.status, table.createdAt),
+]);
+
 export const siteDocuments = sqliteTable("site_documents", {
   key: text("key").primaryKey(),
   draftJson: text("draft_json").notNull().default("{}"),

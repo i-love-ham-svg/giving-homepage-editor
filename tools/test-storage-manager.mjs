@@ -51,7 +51,25 @@ const saved = {
   document: {
     globals: {
       background: { imageDataUrl: "bg" },
-      homeMenu: { logo: { dataUrl: "logo", name: "logo.png" } }
+      homeMenu: { logo: { dataUrl: "logo", name: "logo.png" } },
+      externalSurfaces: {
+        community: {
+          background: {
+            imageDataUrl: "data:image/png;base64,QUJDRA==",
+            imageName: "community.png",
+          },
+          pageDecorations: {
+            decorations: [{
+              id: "community-decoration-1",
+              previewDataUrl: "data:image/webp;base64,QUJDRA==",
+              linkedAssetUrl: "/api/site-assets/community-decoration.png",
+            }],
+          },
+        },
+        futureSurface: {
+          nested: { image: "data:image/avif;base64,QUJDRA==", label: "preserve" },
+        },
+      }
     },
     sections: [{
       id: "greeting",
@@ -84,6 +102,12 @@ assert(greetingAssets.signature.dataUrl === null, "compact save should remove ne
 assert(compact.storage.imagesOmitted === true, "compact save should set imagesOmitted");
 assert(compact.document.globals.background.imageDataUrl === null, "compact save should remove canonical background image data");
 assert(compact.document.globals.homeMenu.logo.dataUrl === null, "compact save should remove canonical logo image data");
+assert(compact.document.globals.externalSurfaces.community.background.imageDataUrl === null, "compact save should remove external-surface background data URLs");
+assert(compact.document.globals.externalSurfaces.community.background.imageName === "community.png", "compact save should preserve external-surface image metadata");
+assert(compact.document.globals.externalSurfaces.community.pageDecorations.decorations[0].previewDataUrl === null, "compact save should remove nested external-surface decoration data URLs");
+assert(compact.document.globals.externalSurfaces.community.pageDecorations.decorations[0].linkedAssetUrl === "/api/site-assets/community-decoration.png", "compact save should preserve non-data external asset URLs");
+assert(compact.document.globals.externalSurfaces.futureSurface.nested.image === null, "compact save should handle future external surface schemas generically");
+assert(compact.document.globals.externalSurfaces.futureSurface.nested.label === "preserve", "compact save should preserve non-image future-surface metadata");
 assert(Number.isFinite(compact.storage.estimatedBytesAfter), "compact save should estimate storage size");
 
 const largeDataUrl = `data:image/png;base64,${"A".repeat(750_000)}`;
@@ -125,7 +149,14 @@ const largeSaved = {
   document: {
     globals: {
       background: { imageDataUrl: largeDataUrl },
-      homeMenu: { logo: { name: "logo.png", dataUrl: largeDataUrl } }
+      homeMenu: { logo: { name: "logo.png", dataUrl: largeDataUrl } },
+      externalSurfaces: {
+        community: {
+          fields: { title: "preserve title" },
+          background: { imageName: "community-large.png", imageDataUrl: largeDataUrl },
+          pageDecorations: { decorations: [{ id: "community-decoration-1", previewDataUrl: largeDataUrl }] },
+        },
+      }
     },
     sections: [{
       id: "greeting",
@@ -169,6 +200,9 @@ assert(largeCompact.document.sections[0].content.assets.photo.naturalWidth === 2
 assert(largeCompact.document.sections[0].content.assets.photo.manualDataUrl === null, "compact save should remove nested manual cutout image data");
 assert(largeCompact.document.sections[1].content.cards[0].image.dataUrl === null, "compact save should remove program image data");
 assert(largeCompact.document.sections[2].content.groups[0].events[0].image.dataUrl === null, "compact save should remove history image data");
+assert(largeCompact.document.globals.externalSurfaces.community.background.imageDataUrl === null, "compact save should remove large external-surface background data");
+assert(largeCompact.document.globals.externalSurfaces.community.pageDecorations.decorations[0].previewDataUrl === null, "compact save should remove large external-surface decoration data");
+assert(largeCompact.document.globals.externalSurfaces.community.fields.title === "preserve title", "compact save should preserve external-surface visual text");
 assert(largeCompact.storage.estimatedBytesAfter === largeAfter, "compact save byte estimate should match compact payload");
 
 if (failures.length) {

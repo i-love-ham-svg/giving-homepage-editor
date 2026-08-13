@@ -21,9 +21,14 @@
     footer: "하단 정보"
   });
   const FOOTER_LAYOUTS = Object.freeze(["info", "simple", "compact", "split"]);
-  // SNS 로그인 화면은 승인된 사진분할형 하나만 사용한다. 저장 데이터에 예전
-  // 레이아웃 값이 남아 있어도 정규화 단계에서 사진분할형으로 안전하게 복원한다.
-  const SOCIAL_LOGIN_LAYOUTS = Object.freeze(["drive-split"]);
+  // 사진분할형은 새 섹션의 기본값이지만 담당자가 선택한 승인 레이아웃은
+  // 저장·복원 과정에서도 그대로 유지한다.
+  const SOCIAL_LOGIN_LAYOUTS = Object.freeze([
+    "fresh-split",
+    "drive-split",
+    "immersive",
+    "mobile-curve"
+  ]);
   const SOCIAL_LOGIN_BUTTON_DEFAULTS = Object.freeze({
     kakao: Object.freeze({ background: "#fee500", color: "#191919", size: 16, font: "sans", align: "center", boxWidth: 100, boxOffsetX: 0, boxOffsetY: 0 }),
     naver: Object.freeze({ background: "#00783e", color: "#ffffff", size: 16, font: "sans", align: "center", boxWidth: 100, boxOffsetX: 0, boxOffsetY: 0 }),
@@ -935,6 +940,7 @@
   window.EditorEssentialManager = Object.freeze({
     BASE_SECTION_IDS,
     FOOTER_LAYOUTS,
+    SOCIAL_LOGIN_LAYOUTS,
     TEMPLATE_LABELS,
     VIEWPORTS,
     addDetail,

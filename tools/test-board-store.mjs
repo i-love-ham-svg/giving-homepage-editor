@@ -4,6 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { BoardStore } from "./board-store.mjs";
 
+// ARCHIVED LEGACY FIXTURE: excluded from tools/test-all.mjs. The supported
+// community board uses delivery-site D1/R2 storage, not this local file store.
+
 const store = new BoardStore({ dataDir: mkdtempSync(join(tmpdir(), "songak-board-test-")), adminKey: "admin-secret" });
 const created = store.create({
   category: "resident",

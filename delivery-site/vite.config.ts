@@ -16,7 +16,12 @@ const localBindingConfig = {
   compatibility_flags: ["nodejs_compat"],
   // Public routes are resolved by the Worker. Asset-level HTML canonicalization
   // would otherwise redirect the browser onto the internal editor pathname.
-  assets: { html_handling: "none" as const },
+  assets: {
+    directory: "./public",
+    binding: "ASSETS",
+    html_handling: "none" as const,
+    run_worker_first: true,
+  },
   d1_databases: d1
     ? [
         {
@@ -36,7 +41,7 @@ const localBindingConfig = {
     : [],
 };
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ command }) => {
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   process.env.WRANGLER_WRITE_LOGS ??= "false";
@@ -45,6 +50,18 @@ export default defineConfig(async () => {
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
+
+  const cloudflareBindingConfig = command === "serve"
+    ? {
+        ...localBindingConfig,
+        assets: {
+          ...localBindingConfig.assets,
+          // Vite owns its development modules and source styles. All actual
+          // application routes still run through the Worker.
+          run_worker_first: ["/*", "!/@*", "!/__vite*", "!/app/*", "!/lib/*", "!/node_modules/*"],
+        },
+      }
+    : localBindingConfig;
 
   return {
     server: isCodexSeatbeltSandbox
@@ -55,7 +72,7 @@ export default defineConfig(async () => {
       sites(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
-        config: localBindingConfig,
+        config: cloudflareBindingConfig,
       }),
     ],
   };
