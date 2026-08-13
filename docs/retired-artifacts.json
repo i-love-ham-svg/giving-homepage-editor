@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-13",
+  "policy": {
+    "deleteSourceFiles": false,
+    "quarantineOnlyGeneratedDeliveryCopies": true,
+    "preserveWorkerRedirects": true,
+    "preserveStaticServerGoneGuards": true,
+    "preserveCompatibilityWrappers": true,
+    "publicDeploymentAllowed": false,
+    "deployedDataAuditRequiredBeforeGeneratedImageExclusion": true
+  },
+  "deploymentExclusions": [
+    "community-board.html",
+    "community-board.js",
+    "detail-pages.css",
+    "detail-pages.js",
+    "editor-board-manager.js",
+    "head-layout-editor.html",
+    "public-about-corporate.html",
+    "public-about-facility.html",
+    "public-about-greeting.html",
+    "public-about-history.html",
+    "public-about-mission.html",
+    "public-about-organization.html",
+    "public-about.html",
+    "public-directions.html",
+    "public-email-refusal.html",
+    "public-news-gallery.html",
+    "public-news-notices.html",
+    "public-news-press.html",
+    "public-news-videos.html",
+    "public-news-visitor-board.html",
+    "public-news.html",
+    "public-participation-donation.html",
+    "public-participation-volunteer.html",
+    "public-participation.html",
+    "public-privacy.html",
+    "public-programs-application.html",
+    "public-programs-case-management.html",
+    "public-programs-list.html",
+    "public-programs-schedule-original.html",
+    "public-programs-schedule.html",
+    "public-programs.html",
+    "public-site.css",
+    "representative-greeting-public.html"
+  ],
+  "groups": [
+    {
+      "id": "retired-community-board",
+      "status": "retired-source",
+      "sourceDisposition": "retain-in-place-for-migration-history",
+      "deliveryDisposition": "exclude-generated-copy",
+      "files": [
+        "outputs/community-board.html",
+        "outputs/community-board.js",
+        "outputs/editor-board-manager.js",
+        "tools/application-store.mjs",
+        "tools/board-store.mjs",
+        "tools/test-board-manager.mjs",
+        "tools/test-board-store.mjs"
+      ],
+      "deliveryPaths": [
+        "community-board.html",
+        "community-board.js",
+        "editor-board-manager.js"
+      ],
+      "activeGuards": [
+        "delivery-site/worker/index.ts",
+        "tools/serve-editor.mjs",
+        "tools/test-community-board-page.mjs"
+      ],
+      "reason": "The maintained BoardApp uses D1/R2 and the common external-surface editor adapter. The local file-store board must never be shipped or revived as a fallback application."
+    },
+    {
+      "id": "legacy-static-public-renderer",
+      "status": "retired-source",
+      "sourceDisposition": "retain-in-place-for-migration-history",
+      "deliveryDisposition": "exclude-generated-copy",
+      "files": [
+        "outputs/detail-pages.css",
+        "outputs/detail-pages.js",
+        "outputs/head-layout-editor.html",
+        "outputs/public-about-corporate.html",
+        "outputs/public-about-facility.html",
+        "outputs/public-about-greeting.html",
+        "outputs/public-about-history.html",
+        "outputs/public-about-mission.html",
+        "outputs/public-about-organization.html",
+        "outputs/public-about.html",
+        "outputs/public-directions.html",
+        "outputs/public-email-refusal.html",
+        "outputs/public-news-gallery.html",
+        "outputs/public-news-notices.html",
+        "outputs/public-news-press.html",
+        "outputs/public-news-videos.html",
+        "outputs/public-news-visitor-board.html",
+        "outputs/public-news.html",
+        "outputs/public-participation-donation.html",
+        "outputs/public-participation-volunteer.html",
+        "outputs/public-participation.html",
+        "outputs/public-privacy.html",
+        "outputs/public-programs-application.html",
+        "outputs/public-programs-case-management.html",
+        "outputs/public-programs-list.html",
+        "outputs/public-programs-schedule-original.html",
+        "outputs/public-programs-schedule.html",
+        "outputs/public-programs.html",
+        "outputs/public-site.css",
+        "outputs/representative-greeting-public.html",
+        "tools/build-public-site.mjs"
+      ],
+      "reason": "All public routes are rendered by representative-greeting-editor.html in read-only mode. These files remain as migration evidence but are excluded from generated public and build copies so stale content cannot reappear."
+    },
+    {
+      "id": "active-legacy-route-wrappers",
+      "status": "active-compatibility",
+      "sourceDisposition": "retain-active",
+      "deliveryDisposition": "include",
+      "files": [
+        "outputs/case-management-detail.html",
+        "outputs/facility-detail.html",
+        "outputs/online-application.html",
+        "outputs/organization-staff.html",
+        "outputs/program-schedule.html",
+        "outputs/video-archive.html"
+      ],
+      "activeGuards": [
+        "delivery-site/worker/index.ts",
+        "tools/test-detail-pages.mjs"
+      ],
+      "reason": "Older bookmarks remain recoverable through canonical redirects. These wrappers are intentionally not quarantined."
+    },
+    {
+      "id": "generated-large-image-originals",
+      "status": "deployed-data-audit-hold",
+      "sourceDisposition": "retain-in-place",
+      "deliveryDisposition": "include-until-deployed-data-audit",
+      "reason": "Repository references and local development data do not use these PNG URLs, but a deployed visual document may still store one. Preserve their URLs until production D1 content is audited after deployment approval.",
+      "files": [
+        {
+          "path": "outputs/assets/generated/account-sns-character-desktop-v4.png",
+          "classification": "canonical-original-for-active-webp",
+          "activeDerivative": "outputs/assets/generated/account-sns-character-desktop-v4.webp",
+          "bytes": 1817695,
+          "sha256": "b35084a076b01631127ef5bd3649599f5876460823b78897d44da4a5c5735aad"
+        },
+        {
+          "path": "outputs/assets/generated/account-sns-character-mobile-v5.png",
+          "classification": "canonical-original-for-active-webp",
+          "activeDerivative": "outputs/assets/generated/account-sns-character-mobile-v5.webp",
+          "bytes": 1976360,
+          "sha256": "3462dc255fcce301dfbeadd45fb39db01401aa8b399922bdce3db1c997e6381a"
+        },
+        {
+          "path": "outputs/assets/generated/account-sns-photoreal-mobile-v2.png",
+          "classification": "canonical-original-for-active-webp",
+          "activeDerivative": "outputs/assets/generated/account-sns-photoreal-mobile-v2.webp",
+          "bytes": 2009615,
+          "sha256": "e5436a927674dc2298d355b514c453a78d5729c7a8c9514dda072e515dbfbd8f"
+        },
+        {
+          "path": "outputs/assets/generated/account-sns-pop-mobile-v2.png",
+          "classification": "canonical-original-for-active-webp",
+          "activeDerivative": "outputs/assets/generated/account-sns-pop-mobile-v2.webp",
+          "bytes": 2033726,
+          "sha256": "4e5b314bf9014ecae0ca23961231e12278ee8aa88246b6ca063a9dbe3da6f0b7"
+        },
+        {
+          "path": "outputs/assets/generated/account-sns-welcome-v1.png",
+          "classification": "superseded-original",
+          "supersededBy": "outputs/assets/generated/account-sns-welcome-v3.png",
+          "bytes": 1891188,
+          "sha256": "8bd0e0876355b101e3934f8a998073a0354f1524df7beaf08810a2a4fb50d196"
+        },
+        {
+          "path": "outputs/assets/generated/account-sns-welcome-v2.png",
+          "classification": "superseded-original",
+          "supersededBy": "outputs/assets/generated/account-sns-welcome-v3.png",
+          "bytes": 1917984,
+          "sha256": "d350679205f1c4bfc659911175b5f419b26e4715fb56338b4e8ced787ee87cc9"
+        },
+        {
+          "path": "outputs/assets/generated/account-sns-welcome-v3.png",
+          "classification": "canonical-review-original-for-active-webp",
+          "activeDerivative": "outputs/assets/generated/account-sns-welcome-v3.webp",
+          "bytes": 1896531,
+          "sha256": "bc5b6bfac274f3273e1e240fbc8ed2cdb59622273b8e543222df5d3fe3f5bd30"
+        },
+        {
+          "path": "outputs/assets/generated/songak-sns-thumbnail-v1.png",
+          "classification": "superseded-original",
+          "supersededBy": "outputs/assets/generated/songak-sns-thumbnail-v2.png",
+          "bytes": 2113131,
+          "sha256": "5264726a11410df016a501dd000ec21fdc18c2a08a268873e9190812dfdfc17d"
+        }
+      ]
+    }
+  ]
+}

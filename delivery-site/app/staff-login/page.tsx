@@ -72,7 +72,13 @@ export default function StaffLoginPage() {
         <p className="staff-login-copy">
           {provider ? `${provider} 버튼을 통해 담당자 로그인 화면으로 이동했습니다.` : "전달받은 임시 아이디와 비밀번호를 입력해 주세요."}
         </p>
-        <form className="staff-login-form" onSubmit={submit}>
+        <form
+          className="staff-login-form"
+          action="/api/board/admin/login"
+          method="post"
+          encType="application/x-www-form-urlencoded"
+          onSubmit={submit}
+        >
           <label>
             <span>아이디</span>
             <input name="username" type="text" autoComplete="username" required maxLength={80} autoFocus />

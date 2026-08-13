@@ -20488,6 +20488,7 @@
     const sectionInsertLayer = document.getElementById("sectionInsertLayer");
     const sectionSelect = document.getElementById("sectionSelect");
     const staffSectionSelect = document.getElementById("staffSectionSelect");
+    const staffEditorDock = document.getElementById("staffEditorDock");
     const staffSectionList = document.getElementById("staffSectionList");
     const staffSectionManager = document.getElementById("staffSectionManager");
     const staffSectionBackdrop = document.getElementById("staffSectionBackdrop");
@@ -23659,6 +23660,39 @@
       updateMobilePreviewEditPosition();
     }
 
+    const FLOATING_EDITOR_VIEWPORT_GAP = 8;
+    const FLOATING_EDITOR_STAFF_DOCK_GAP = 12;
+
+    // Every fixed editor surface uses one live dock inset so wrapped mobile dock
+    // rows, safe-area changes, and role switches cannot leave tools underneath it.
+    function getVisibleStaffDockInset(viewportGap = FLOATING_EDITOR_VIEWPORT_GAP) {
+      if (!staffEditorDock || !document.body.classList.contains("staff-editor-role")) return viewportGap;
+      const style = getComputedStyle(staffEditorDock);
+      const rect = staffEditorDock.getBoundingClientRect();
+      const visible = !staffEditorDock.hidden
+        && style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number.parseFloat(style.opacity || "1") > 0
+        && rect.width > 0
+        && rect.height > 0
+        && rect.bottom > 0
+        && rect.top < window.innerHeight;
+      if (!visible) return viewportGap;
+      return clamp(
+        Math.ceil(window.innerHeight - Math.max(0, rect.top) + FLOATING_EDITOR_STAFF_DOCK_GAP),
+        viewportGap,
+        Math.max(viewportGap, window.innerHeight - viewportGap)
+      );
+    }
+
+    function getFloatingEditorViewportBottom(viewportGap = FLOATING_EDITOR_VIEWPORT_GAP) {
+      return Math.max(viewportGap, window.innerHeight - getVisibleStaffDockInset(viewportGap));
+    }
+
+    function getFloatingEditorMaxTop(height, minTop = FLOATING_EDITOR_VIEWPORT_GAP, viewportGap = FLOATING_EDITOR_VIEWPORT_GAP) {
+      return Math.max(minTop, getFloatingEditorViewportBottom(viewportGap) - height);
+    }
+
     function updateBackgroundFloatPosition() {
       const stageRect = stage.getBoundingClientRect();
       const isOpen = backgroundFloat.classList.contains("open");
@@ -23668,21 +23702,23 @@
       backgroundFloat.style.setProperty("--background-panel-width", `${Math.round(panelWidth)}px`);
       const controlWidth = isOpen ? panelWidth : 48;
       const controlHeight = isOpen ? (backgroundFloat.offsetHeight || 260) : 48;
+      const viewportBottom = getFloatingEditorViewportBottom();
+      const viewportMaxTop = getFloatingEditorMaxTop(controlHeight);
       let left = 14;
       let top = (window.innerHeight - controlHeight) / 2 - (state.toolbar.collapsed ? 34 : 0);
       if (isResponsiveViewport()) {
         left = clamp(stageRect.left + 10, 8, Math.max(8, stageRect.right - controlWidth - 10));
         const visibleTop = Math.max(stageRect.top + 76, 8);
-        const visibleBottom = Math.min(stageRect.bottom - 14, window.innerHeight - 8);
-        const maxFloatTop = Math.min(stageRect.bottom - controlHeight - 14, window.innerHeight - controlHeight - 8);
+        const visibleBottom = Math.min(stageRect.bottom - 14, viewportBottom);
+        const maxFloatTop = Math.min(stageRect.bottom - controlHeight - 14, viewportMaxTop);
         const visibleMiddle = visibleTop + Math.max(controlHeight, visibleBottom - visibleTop) / 2;
         const stackedTop = visibleMiddle - controlHeight - 10;
         top = maxFloatTop >= visibleTop
           ? clamp(stackedTop, visibleTop, maxFloatTop)
-          : clamp(stageRect.top + 88, 8, Math.max(8, window.innerHeight - controlHeight - 8));
+          : clamp(stageRect.top + 88, 8, viewportMaxTop);
       } else {
         left = clamp(left, 8, Math.max(8, window.innerWidth - controlWidth - 8));
-        top = clamp(top, 8, Math.max(8, window.innerHeight - controlHeight - 8));
+        top = clamp(top, 8, viewportMaxTop);
       }
 
       backgroundFloat.style.setProperty("--background-float-left", `${Math.round(left)}px`);
@@ -23770,18 +23806,18 @@
       let minLeft = 8;
       let minTop = 8;
       let maxLeft = Math.max(8, window.innerWidth - width - 8);
-      let maxTop = Math.max(8, window.innerHeight - height - 8);
+      let maxTop = getFloatingEditorMaxTop(height);
       if (isResponsiveViewport()) {
         minLeft = clamp(stageRect.left + 10, 8, maxLeft);
         minTop = clamp(stageRect.top + 10, 8, maxTop);
         maxLeft = Math.max(minLeft, Math.min(stageRect.right - width - 10, window.innerWidth - width - 8));
-        maxTop = Math.max(minTop, Math.min(stageRect.bottom - height - 10, window.innerHeight - height - 8));
+        maxTop = Math.max(minTop, Math.min(stageRect.bottom - height - 10, maxTop));
       }
       let leftCandidate = 10;
       let topCandidate = (window.innerHeight - height) / 2;
       if (isResponsiveViewport()) {
         const visibleTop = Math.max(stageRect.top + 76, 8);
-        const visibleBottom = Math.min(stageRect.bottom - 10, window.innerHeight - 8);
+        const visibleBottom = Math.min(stageRect.bottom - 10, getFloatingEditorViewportBottom());
         const visibleHeight = Math.max(height, visibleBottom - visibleTop);
         leftCandidate = stageRect.left + 10;
         topCandidate = visibleTop + (visibleHeight - height) / 2 + height / 2 + 10;
@@ -23962,7 +23998,7 @@
         const targetTop = frameRect.top + targetRect.top * renderedScaleY;
         const targetBottom = frameRect.top + targetRect.bottom * renderedScaleY;
         const maxLeft = Math.max(8, window.innerWidth - toolbarWidth - 8);
-        const maxTop = Math.max(8, window.innerHeight - toolbarHeight - 8);
+        const maxTop = getFloatingEditorMaxTop(toolbarHeight);
         let left = state.toolbar.manual ? clamp(state.toolbar.x, 8, maxLeft) : clamp(targetLeft, 8, maxLeft);
         let top = state.toolbar.manual
           ? clamp(state.toolbar.y, 8, maxTop)
@@ -24276,12 +24312,12 @@
       let minLeft = 8;
       let minTop = 8;
       let maxLeft = Math.max(8, window.innerWidth - toolbarWidth - 8);
-      let maxTop = Math.max(8, window.innerHeight - toolbarHeight - 8);
+      let maxTop = getFloatingEditorMaxTop(toolbarHeight);
       if (useMobileSheet && isResponsiveViewport()) {
         minLeft = clamp(stageRect.left + 8, 8, maxLeft);
         minTop = clamp(stageRect.top + 8, 8, maxTop);
         maxLeft = Math.max(minLeft, Math.min(stageRect.right - toolbarWidth - 8, window.innerWidth - toolbarWidth - 8));
-        maxTop = Math.max(minTop, Math.min(stageRect.bottom - toolbarHeight - 8, window.innerHeight - toolbarHeight - 8));
+        maxTop = Math.max(minTop, Math.min(stageRect.bottom - toolbarHeight - 8, maxTop));
       }
       let left;
       let top;
@@ -25636,12 +25672,12 @@
           let minLeft = 8;
           let minTop = 8;
           let maxLeft = Math.max(8, window.innerWidth - width - 8);
-          let maxTop = Math.max(8, window.innerHeight - height - 8);
+          let maxTop = getFloatingEditorMaxTop(height);
           if (mobileSheet && isResponsiveViewport()) {
             minLeft = clamp(stageRect.left + 8, 8, maxLeft);
             minTop = clamp(stageRect.top + 8, 8, maxTop);
             maxLeft = Math.max(minLeft, Math.min(stageRect.right - width - 8, window.innerWidth - width - 8));
-            maxTop = Math.max(minTop, Math.min(stageRect.bottom - height - 8, window.innerHeight - height - 8));
+            maxTop = Math.max(minTop, Math.min(stageRect.bottom - height - 8, maxTop));
           }
           state.toolbar.x = clamp(start.left + moveEvent.clientX - start.x, minLeft, maxLeft);
           state.toolbar.y = clamp(start.top + moveEvent.clientY - start.y, minTop, maxTop);
@@ -32244,7 +32280,7 @@
       return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${icon.body}</svg>`;
     }
 
-    function updateIconPickerFrame(modal) {
+    function updateIconPickerFrame(modal, options = {}) {
       if (!modal || modal.hidden) return;
       const properties = ["--process-picker-left", "--process-picker-top", "--process-picker-width", "--process-picker-height"];
       const stageBound = isResponsiveViewport();
@@ -32256,16 +32292,20 @@
       const rect = stage.getBoundingClientRect();
       const margin = 6;
       const viewportW = Math.max(280, window.innerWidth - 12);
-      const viewportH = Math.max(360, window.innerHeight - 12);
+      const viewportBottom = options.respectStaffDock
+        ? getFloatingEditorViewportBottom(margin)
+        : window.innerHeight - margin;
+      const viewportH = Math.max(180, viewportBottom - margin);
       let left = clamp(rect.left + margin, 6, Math.max(6, window.innerWidth - 286));
       let width = Math.min(Math.max(280, rect.width - margin * 2), window.innerWidth - left - 6);
       if (width < 280) {
         left = 6;
         width = viewportW;
       }
-      let top = clamp(rect.top + margin, 6, Math.max(6, window.innerHeight - 366));
-      let height = Math.min(Math.max(360, Math.min(rect.height - margin * 2, viewportH)), window.innerHeight - top - 6);
-      if (height < 360) {
+      const preferredMinimumHeight = Math.min(360, viewportH);
+      let top = clamp(rect.top + margin, margin, Math.max(margin, viewportBottom - preferredMinimumHeight));
+      let height = Math.min(Math.max(preferredMinimumHeight, Math.min(rect.height - margin * 2, viewportH)), viewportBottom - top);
+      if (height < preferredMinimumHeight) {
         top = 6;
         height = viewportH;
       }
@@ -32288,7 +32328,7 @@
     }
 
     function updateDecorationPickerFrame() {
-      updateIconPickerFrame(decorationPickerModal);
+      updateIconPickerFrame(decorationPickerModal, { respectStaffDock: true });
       if (isResponsiveViewport()) {
         decorationPickerDialog.style.removeProperty("left");
         decorationPickerDialog.style.removeProperty("top");
@@ -32317,7 +32357,7 @@
       const margin = 8;
       const topbarBottom = topbar?.getBoundingClientRect?.().bottom || 0;
       const safeTop = Math.max(6, Math.min(window.innerHeight - 80, stageRect.top + margin), topbarBottom + 6);
-      const safeBottom = Math.min(window.innerHeight - 6, stageRect.bottom - margin);
+      const safeBottom = Math.min(getFloatingEditorViewportBottom(6), stageRect.bottom - margin);
       const visibleHeight = Math.max(180, safeBottom - safeTop);
       const left = clamp(stageRect.left + margin, 6, Math.max(6, window.innerWidth - 286));
       const width = Math.min(Math.max(280, stageRect.width - margin * 2), window.innerWidth - left - 6);
@@ -32350,8 +32390,9 @@
       const modalRect = decorationPickerModal.getBoundingClientRect();
       const topbarBottom = topbar?.getBoundingClientRect?.().bottom || 0;
       const minTop = Math.max(6, stageRect.top + 6, topbarBottom + 6);
-      const height = Math.min(frame.height, Math.max(120, window.innerHeight - minTop - 6));
-      const maxTop = Math.max(minTop, Math.min(window.innerHeight - height - 6, stageRect.bottom - height - 6));
+      const viewportBottom = getFloatingEditorViewportBottom(6);
+      const height = Math.min(frame.height, Math.max(120, viewportBottom - minTop));
+      const maxTop = Math.max(minTop, Math.min(viewportBottom - height, stageRect.bottom - height - 6));
       const top = clamp(frame.top, minTop, maxTop);
       decorationPickerTarget.mobileFrame = { top, height };
       decorationPickerModal.style.setProperty("--process-picker-top", `${Math.round(top)}px`);
@@ -32363,12 +32404,13 @@
       const target = getVisualDecorationTarget(decorationPickerTarget.sectionId, decorationPickerTarget.decorationId);
       const targetRect = target?.getBoundingClientRect();
       const margin = 12;
+      const viewportBottom = getFloatingEditorViewportBottom(margin);
       const toolbarBottom = Math.max(margin, (topbar?.getBoundingClientRect?.().bottom || 0) + 8);
       const width = Math.min(Math.max(480, decorationPickerDialog.offsetWidth || 640), window.innerWidth - margin * 2);
       const targetCenter = targetRect ? targetRect.left + targetRect.width / 2 : window.innerWidth / 2;
       const left = clamp(targetCenter - width / 2, margin, Math.max(margin, window.innerWidth - width - margin));
       const belowTop = Math.max(toolbarBottom, (targetRect?.bottom || toolbarBottom) + 14);
-      const belowHeight = window.innerHeight - belowTop - margin;
+      const belowHeight = viewportBottom - belowTop;
       let top = belowTop;
       let maxHeight = belowHeight;
       if (belowHeight < 300 && targetRect) {
@@ -32421,7 +32463,7 @@
         const margin = 6;
         const topbarBottom = topbar?.getBoundingClientRect?.().bottom || 0;
         const minTop = Math.max(margin, stageRect.top + margin, topbarBottom + margin);
-        const maxTop = Math.max(minTop, Math.min(window.innerHeight - rect.height - margin, stageRect.bottom - rect.height - margin));
+        const maxTop = Math.max(minTop, Math.min(getFloatingEditorViewportBottom(margin) - rect.height, stageRect.bottom - rect.height - margin));
         const top = clamp(event.clientY - decorationDialogDrag.offsetY, minTop, maxTop);
         decorationPickerModal.style.setProperty("--process-picker-top", `${Math.round(top)}px`);
         decorationPickerTarget.mobileFrame = { top, height: rect.height };
@@ -32430,11 +32472,12 @@
       }
       const rect = decorationPickerDialog.getBoundingClientRect();
       const margin = 6;
+      const viewportBottom = getFloatingEditorViewportBottom(margin);
       const left = clamp(event.clientX - decorationDialogDrag.offsetX, margin, Math.max(margin, window.innerWidth - rect.width - margin));
-      const top = clamp(event.clientY - decorationDialogDrag.offsetY, margin, Math.max(margin, window.innerHeight - 120));
+      const top = clamp(event.clientY - decorationDialogDrag.offsetY, margin, Math.max(margin, viewportBottom - 120));
       decorationPickerDialog.style.left = `${Math.round(left)}px`;
       decorationPickerDialog.style.top = `${Math.round(top)}px`;
-      decorationPickerDialog.style.maxHeight = `${Math.max(240, Math.floor(window.innerHeight - top - margin))}px`;
+      decorationPickerDialog.style.maxHeight = `${Math.max(120, Math.floor(viewportBottom - top))}px`;
       event.preventDefault();
     }
 
@@ -32452,11 +32495,12 @@
       const margin = 6;
       const rect = decorationPickerDialog.getBoundingClientRect();
       const maxWidth = Math.max(320, window.innerWidth - margin * 2);
-      const maxHeight = Math.max(240, window.innerHeight - margin * 2);
+      const viewportBottom = getFloatingEditorViewportBottom(margin);
+      const maxHeight = Math.max(120, viewportBottom - margin);
       const width = clamp(rect.width, Math.min(480, maxWidth), maxWidth);
       const height = clamp(rect.height, Math.min(300, maxHeight), maxHeight);
       const left = clamp(rect.left, margin, Math.max(margin, window.innerWidth - width - margin));
-      const top = clamp(rect.top, margin, Math.max(margin, window.innerHeight - height - margin));
+      const top = clamp(rect.top, margin, Math.max(margin, viewportBottom - height));
       decorationPickerDialog.style.width = `${Math.round(width)}px`;
       decorationPickerDialog.style.height = `${Math.round(height)}px`;
       decorationPickerDialog.style.left = `${Math.round(left)}px`;
@@ -32488,7 +32532,7 @@
       if (!decorationDialogResize || event.pointerId !== decorationDialogResize.pointerId) return;
       const margin = 6;
       const maxWidth = Math.max(320, window.innerWidth - decorationDialogResize.left - margin);
-      const maxHeight = Math.max(240, window.innerHeight - decorationDialogResize.top - margin);
+      const maxHeight = Math.max(120, getFloatingEditorViewportBottom(margin) - decorationDialogResize.top);
       const width = clamp(decorationDialogResize.startWidth + event.clientX - decorationDialogResize.startClientX, Math.min(480, maxWidth), maxWidth);
       const height = clamp(decorationDialogResize.startHeight + event.clientY - decorationDialogResize.startClientY, Math.min(300, maxHeight), maxHeight);
       decorationPickerDialog.style.width = `${Math.round(width)}px`;
@@ -37784,6 +37828,7 @@ function setEditorRole(role = "developer", options = {}) {
     fitStage();
     applyLayouts({ applyStyles: false, updateIdentity: false, refreshPhotos: false, syncUi: false });
     fitStage();
+    scheduleFloatingEditorUi();
   });
 }
 
@@ -41283,6 +41328,7 @@ function syncSectionControls() {
       floatingUiNeedsFit = false;
       if (shouldFit) MobileViewportManager.fitStage();
       updateHomeMenuStickyPosition();
+      updateBackgroundFloatPosition();
       updateInlineToolbar();
       updateMobileTopbarPosition();
       if (state.photoRefine.open) updatePhotoRefineModalFrame();

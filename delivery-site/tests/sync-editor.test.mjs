@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
-  EXCLUDED_LEGACY_BOARD_FILES,
+  EXCLUDED_EDITOR_FILES,
   syncEditorAssets,
 } from "../scripts/sync-editor.mjs";
 
@@ -19,7 +19,7 @@ async function expectMissing(filePath) {
   await assert.rejects(access(filePath), (error) => error?.code === "ENOENT");
 }
 
-test("sync keeps required editor assets and removes every legacy standalone board artifact", async () => {
+test("sync keeps required editor assets and removes every manifest-quarantined artifact", async () => {
   const temporaryRoot = await mkdtemp(path.join(tmpdir(), "songak-editor-sync-"));
   const source = path.join(temporaryRoot, "outputs");
   const destination = path.join(temporaryRoot, "public", "songak");
@@ -35,17 +35,17 @@ test("sync keeps required editor assets and removes every legacy standalone boar
     }
     await writeFile(path.join(source, "assets", "icons", "menu.svg"), "<svg />", "utf8");
 
-    for (const fileName of EXCLUDED_LEGACY_BOARD_FILES) {
-      await writeFile(path.join(source, fileName), `legacy-source:${fileName}`, "utf8");
-      await writeFile(path.join(destination, fileName), `legacy-public:${fileName}`, "utf8");
-      await writeFile(path.join(builtDestination, fileName), `legacy-build:${fileName}`, "utf8");
+    for (const fileName of EXCLUDED_EDITOR_FILES) {
+      await writeFile(path.join(source, fileName), `retired-source:${fileName}`, "utf8");
+      await writeFile(path.join(destination, fileName), `retired-public:${fileName}`, "utf8");
+      await writeFile(path.join(builtDestination, fileName), `retired-build:${fileName}`, "utf8");
     }
     await writeFile(path.join(destination, "stale-public-file.txt"), "stale", "utf8");
     await writeFile(path.join(builtDestination, "keep-build-file.txt"), "keep", "utf8");
 
     await syncEditorAssets({ source, destination, builtDestination });
 
-    for (const fileName of EXCLUDED_LEGACY_BOARD_FILES) {
+    for (const fileName of EXCLUDED_EDITOR_FILES) {
       await expectMissing(path.join(destination, fileName));
       await expectMissing(path.join(builtDestination, fileName));
     }

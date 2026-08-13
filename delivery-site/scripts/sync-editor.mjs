@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { cp, mkdir, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -6,21 +7,28 @@ const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const defaultSource = path.resolve(appRoot, "..", "outputs");
 const defaultDestination = path.join(appRoot, "public", "songak");
 const defaultBuiltDestination = path.join(appRoot, "dist", "client", "songak");
+const retiredArtifactRegistry = JSON.parse(readFileSync(
+  new URL("../../docs/retired-artifacts.json", import.meta.url),
+  "utf8",
+));
 
+export const EXCLUDED_EDITOR_FILES = Object.freeze([
+  ...retiredArtifactRegistry.deploymentExclusions,
+]);
 export const EXCLUDED_LEGACY_BOARD_FILES = Object.freeze([
-  "community-board.html",
-  "community-board.js",
-  "editor-board-manager.js",
+  ...retiredArtifactRegistry.groups
+    .find((group) => group.id === "retired-community-board")
+    .deliveryPaths,
 ]);
 
-const excludedLegacyBoardFiles = new Set(EXCLUDED_LEGACY_BOARD_FILES);
+const excludedEditorFiles = new Set(EXCLUDED_EDITOR_FILES);
 
 function toPortableRelativePath(sourceRoot, candidatePath) {
   return path.relative(sourceRoot, candidatePath).split(path.sep).join("/");
 }
 
-// The standalone legacy board is intentionally excluded so every deployment uses
-// the maintained application route while all other editor files remain unchanged.
+// Source archives remain in outputs for migration history. The reviewed manifest
+// is the single delivery boundary that prevents retired renderers from shipping.
 export async function syncEditorAssets({
   source = defaultSource,
   destination = defaultDestination,
@@ -36,11 +44,11 @@ export async function syncEditorAssets({
     recursive: true,
     filter(candidatePath) {
       const relativePath = toPortableRelativePath(sourceRoot, candidatePath);
-      return !excludedLegacyBoardFiles.has(relativePath);
+      return !excludedEditorFiles.has(relativePath);
     },
   });
 
-  await Promise.all(EXCLUDED_LEGACY_BOARD_FILES.map((fileName) =>
+  await Promise.all(EXCLUDED_EDITOR_FILES.map((fileName) =>
     rm(path.join(builtRoot, fileName), { force: true })));
 
   return { source: sourceRoot, destination: publicRoot, builtDestination: builtRoot };

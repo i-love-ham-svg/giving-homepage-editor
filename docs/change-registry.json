@@ -829,9 +829,9 @@
         "modes": ["edit", "preview"]
       },
       "status": {
-        "decision": "proposed",
-        "implementation": "planned",
-        "qa": "pending",
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
         "deployment": "local-only"
       },
       "cause": {
@@ -863,12 +863,23 @@
         "outputs/editor-community-surface-manager.js",
         "delivery-site/lib/community-editor-contract.ts",
         "delivery-site/app/board-app.tsx",
-        "delivery-site/tests/editor-community-surface-adapter.test.mjs"
+        "delivery-site/app/globals.css",
+        "delivery-site/tests/board-shell.test.mjs",
+        "delivery-site/tests/editor-community-surface-adapter.test.mjs",
+        "tools/test-community-editor-preview-browser.mjs"
       ],
       "tests": [
         {
+          "file": "delivery-site/tests/board-shell.test.mjs",
+          "status": "pass"
+        },
+        {
           "file": "delivery-site/tests/editor-community-surface-adapter.test.mjs",
-          "status": "pending"
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-community-editor-preview-browser.mjs",
+          "status": "pass"
         }
       ],
       "risk": "medium",
@@ -886,6 +897,11 @@
           "date": "2026-08-13",
           "event": "follow-up-proposed",
           "note": "실제 운영 기능은 정상이며 프리뷰의 affordance만 다음 편집기 UX 개선 후보로 분리했다. 공개 배포 승인 없음"
+        },
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "편집 임베드에 미리보기 전용 안내와 /community?manage=1 운영 링크를 제공하고, 운영 콘솔·검수 도구·조회수 및 게시물 변경 요청을 차단했다. desktop/tablet/phone/phoneSmall 브라우저 검증에서 가로 넘침·운영 UI 노출·게시판 변경 요청이 0건임을 확인했다. 공개 배포 승인 없음."
         }
       ]
     },
@@ -904,14 +920,14 @@
         "surfaces": ["editor-shell", "mobile-preview"],
         "routes": ["/editor", "/editor?surface=community"],
         "sections": ["shared.editor-toolbar", "shared.floating-controls"],
-        "viewports": ["phoneSmall"],
-        "roles": ["staff", "creator"],
+        "viewports": ["phoneSmall", "phone", "tablet", "desktop"],
+        "roles": ["staff"],
         "modes": ["edit", "preview"]
       },
       "status": {
-        "decision": "proposed",
-        "implementation": "planned",
-        "qa": "pending",
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
         "deployment": "local-only"
       },
       "cause": {
@@ -935,17 +951,20 @@
         }
       ],
       "sourceOfTruth": [
-        "outputs/representative-greeting-editor.html#editorToolbar",
-        "outputs/representative-greeting-editor.html#decorationFloatingControls"
+        "outputs/representative-greeting-editor.html#staffEditorDock",
+        "outputs/representative-greeting-editor.html#inlineToolbar",
+        "outputs/representative-greeting-editor.html#backgroundFloat",
+        "outputs/representative-greeting-editor.html#decorationPickerModal"
       ],
       "implementationFiles": [
         "outputs/representative-greeting-editor.html",
-        "tools/test-editor-regression-browser.mjs"
+        "tools/test-staff-floating-ui-inset-browser.mjs",
+        "tools/test-all.mjs"
       ],
       "tests": [
         {
-          "file": "tools/test-editor-regression-browser.mjs",
-          "status": "pending"
+          "file": "tools/test-staff-floating-ui-inset-browser.mjs",
+          "status": "pass"
         }
       ],
       "risk": "medium",
@@ -963,6 +982,11 @@
           "date": "2026-08-13",
           "event": "follow-up-proposed",
           "note": "공개 화면에는 영향이 없고 담당자 320px 편집 UX 개선 후보로 분리했다. 공개 배포 승인 없음"
+        },
+        {
+          "date": "2026-08-13",
+          "event": "implemented-and-verified-local",
+          "note": "visible staff dock의 실제 상단 좌표와 12px 간격을 공통 inset으로 계산해 inline toolbar, 축소 편집 버튼, background float, decoration picker의 하단 한계를 통일했다. 320/390/768/1360px 실제 Chrome 회귀에서 최소 간격 12px와 가로 overflow 0을 확인했다. 공개 배포 승인 없음."
         }
       ]
     },
@@ -1141,6 +1165,209 @@
           "date": "2026-08-13",
           "event": "verified-local",
           "note": "안전한 기계적 정리만 적용하고 위험한 메뉴 CSS 통합·퇴역 파일·저장 데이터 참조 가능 자산 삭제는 후속으로 분리했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "MAINT-ARTIFACT-QUARANTINE-001",
+      "recordType": "architecture",
+      "title": "퇴역 소스와 생성 배포 자산의 가역적 격리",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "공개 배포 전 구형 게시판, 정적 렌더러와 미사용 추정 대형 이미지가 현행 산출물에 다시 섞이지 않도록 삭제 없는 정리를 요청함.",
+      "primaryTaxonomyId": "system.maintenance.artifact-quarantine",
+      "relatedTaxonomyIds": [
+        "system.storage.schema",
+        "system.test.regression"
+      ],
+      "scope": {
+        "surfaces": ["canonical-public", "community-board", "editor-shell", "operational"],
+        "routes": ["all-public-menu-destinations", "/community", "/editor"],
+        "sections": ["shared.delivery-assets", "community.external-surface"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["visitor", "staff", "creator"],
+        "modes": ["view", "edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "sync-drift",
+        "relatedCategories": ["duplicate-source", "route-mapping"],
+        "confirmed": true,
+        "details": "배포 동기화가 구형 게시판 3개 파일만 제외해 이미 대체된 정적 공개 렌더러까지 복사했고, 대형 PNG 원본은 원본·대체·운영 데이터 감사 보류 상태가 구분되지 않았다."
+      },
+      "invariants": [
+        {
+          "assertionId": "maintenance.quarantine.source-recoverable",
+          "statement": "퇴역 파일은 저장소에서 삭제하거나 이동하지 않고 마이그레이션 기록으로 복구 가능하게 유지한다."
+        },
+        {
+          "assertionId": "maintenance.quarantine.delivery-excluded",
+          "statement": "검토된 퇴역 게시판과 정적 렌더러는 생성되는 public 및 build 복사본에 포함되지 않는다."
+        },
+        {
+          "assertionId": "maintenance.quarantine.compatibility-preserved",
+          "statement": "Worker 리다이렉트, 정적 서버 410 보호와 활성 구형 링크 호환 래퍼는 그대로 유지한다."
+        },
+        {
+          "assertionId": "maintenance.quarantine.image-audit-hold",
+          "statement": "대형 이미지 원본 8개는 운영 D1 문서 URL 감사 전에는 배포 제외나 삭제를 하지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "docs/retired-artifacts.json",
+        "delivery-site/scripts/sync-editor.mjs"
+      ],
+      "implementationFiles": [
+        "docs/retired-artifacts.json",
+        "delivery-site/scripts/sync-editor.mjs",
+        "delivery-site/scripts/verify-editor-assets.mjs",
+        "delivery-site/tests/editor-asset-parity.test.mjs",
+        "delivery-site/tests/sync-editor.test.mjs",
+        "tools/test-change-registry.mjs",
+        "tools/README.md"
+      ],
+      "tests": [
+        {
+          "file": "delivery-site/tests/editor-asset-parity.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/sync-editor.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-change-registry.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-community-board-page.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-detail-pages.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "medium",
+      "dependencies": ["MAINT-CODE-CLEANUP-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "원본 삭제 없이 생성 배포 복사본만 격리하고 운영 D1 감사 전 대형 이미지 URL을 보존했다. 공개 배포는 하지 않음"
+        }
+      ]
+    },
+    {
+      "id": "AUTH-CREDENTIAL-LEAK-001",
+      "recordType": "bug",
+      "title": "담당자 로그인 자격정보 URL 노출 차단",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "담당자 로그인 화면이 React onSubmit에만 의존해 hydration 전 또는 JavaScript 실패 시 브라우저 기본 GET 제출로 아이디와 비밀번호를 /staff-login 쿼리, 방문 기록과 요청 로그에 노출할 수 있음을 확인함.",
+      "primaryTaxonomyId": "security.authentication.native-form",
+      "relatedTaxonomyIds": [
+        "security.authentication.rate-limit",
+        "system.test.regression"
+      ],
+      "scope": {
+        "surfaces": ["editor-shell", "operational"],
+        "routes": ["/staff-login", "/api/board/admin/login"],
+        "sections": ["staff.authentication-form"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["staff", "creator"],
+        "modes": ["edit"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-shared-contract",
+        "relatedCategories": ["missing-regression-test"],
+        "confirmed": true,
+        "details": "클라이언트 hydration 이후의 fetch 인증만 정의하고 hydration 전 native form 제출 계약을 정의하지 않았다. 로그인 API에는 기존 D1 rate_limits 기반 10분·10회 제한이 이미 있었지만 해당 호출 순서와 11번째 차단을 직접 보장하는 회귀검사가 없었다."
+      },
+      "invariants": [
+        {
+          "assertionId": "security.login.native-post",
+          "statement": "담당자 로그인 폼은 hydration 전과 JavaScript 비활성 상태에서도 /api/board/admin/login으로 POST 제출되며 GET 제출로 되돌아가지 않는다."
+        },
+        {
+          "assertionId": "security.login.url-secrecy",
+          "statement": "로그인 아이디와 비밀번호는 요청 URL, 쿼리 문자열과 브라우저 주소에 직렬화되지 않는다."
+        },
+        {
+          "assertionId": "security.login.hydrated-api",
+          "statement": "hydration 이후 실제 인증은 기존 JSON 로그인 API와 HttpOnly 세션 쿠키 계약을 그대로 사용한다."
+        },
+        {
+          "assertionId": "security.login.rate-limit-order",
+          "statement": "temporary-editor-login scope의 10분·10회 제한은 자격정보 JSON 해석과 인증보다 먼저 실행되고 11번째 요청은 인증 호출 전에 429로 차단된다."
+        },
+        {
+          "assertionId": "security.login.generic-failure",
+          "statement": "잘못된 아이디 또는 비밀번호는 어떤 값이 틀렸는지 구분하지 않는 동일한 401 응답을 반환하며 세션 쿠키를 발급하지 않는다."
+        }
+      ],
+      "sourceOfTruth": [
+        "delivery-site/app/staff-login/page.tsx#StaffLoginPage",
+        "delivery-site/app/api/board/admin/login/route.ts#POST",
+        "delivery-site/lib/board-server.ts#enforceRateLimit"
+      ],
+      "implementationFiles": [
+        "delivery-site/app/staff-login/page.tsx",
+        "delivery-site/tests/admin-login-security.test.mjs",
+        "delivery-site/tests/staff-login-ui.test.mjs",
+        "delivery-site/tests/delivery-site.test.mjs",
+        "tools/test-staff-login-no-js-browser.mjs"
+      ],
+      "tests": [
+        {
+          "file": "delivery-site/tests/admin-login-security.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/staff-login-ui.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "delivery-site/tests/delivery-site.test.mjs",
+          "status": "pass"
+        },
+        {
+          "file": "tools/test-staff-login-no-js-browser.mjs",
+          "status": "pass"
+        }
+      ],
+      "risk": "critical",
+      "dependencies": ["QA-STAFF-EDITOR-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "native POST fallback, 자격정보 URL 비노출, 기존 10분·10회 제한의 인증 전 실행, 무JavaScript 실제 브라우저 제출과 delivery-site 전체 75개 테스트 통과를 확인했다. 공개 배포는 하지 않음"
         }
       ]
     }

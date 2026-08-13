@@ -107,9 +107,9 @@ test("keeps every durable board interaction behind the renewed shell", async () 
   assert.match(board, /navigator\.share/);
   assert.match(board, /thumbnailMediaId/);
   assert.match(board, /accept="image\/jpeg,image\/png,image\/webp,image\/gif,video\/mp4,video\/webm"/);
-  assert.match(board, /\{admin && \(\s*<div className="admin-console">/);
+  assert.match(board, /\{admin && !communityEditor\.active && \(\s*<div className="admin-console">/);
   assert.match(board, /담당자 게시물 관리/);
-  assert.match(board, /\{admin && <section className="moderation-panel">/);
+  assert.match(board, /\{admin && !communityEditor\.active && <section className="moderation-panel">/);
   assert.doesNotMatch(board, /function logoutAdmin\(/);
   assert.match(board, /params\.get\("manage"\) === "1"/);
   assert.match(board, /!adminDialog\.current\.open[\s\S]*?adminDialog\.current\.showModal\(\)/);
@@ -175,6 +175,42 @@ test("adapts community visual fields to the parent editor without mounting anoth
   assert.doesNotMatch(board, /inlineToolbar|className=".*editor-toolbar|toolbar-modal/);
   assert.match(styles, /\.community-editor-embed \[data-editor-target-id\]\[data-editor-selected="true"\]/);
   assert.doesNotMatch(styles, /\.community-editor-toolbar|\.board-editor-toolbar/);
+});
+
+test("keeps the embedded community surface preview-only and routes staff to real operations", async () => {
+  const [board, styles] = await Promise.all([
+    readFile(new URL("app/board-app.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+
+  assert.match(board, /id="community-editor-preview-note"/);
+  assert.match(board, /시각 편집 미리보기/);
+  assert.match(board, /href="\/community\?manage=1" target="_blank" rel="noopener noreferrer"/);
+  assert.match(board, /aria-disabled=\{communityEditor\.active \|\| undefined\}/);
+  assert.match(board, /aria-describedby=\{communityEditor\.active \? "community-editor-preview-note" : undefined\}/);
+  assert.match(board, /\{admin && !communityEditor\.active && \(\s*<div className="admin-console">/);
+  assert.match(board, /\{admin && !communityEditor\.active && <section className="moderation-panel">/);
+  assert.match(board, /\{!communityEditor\.active && <div className="detail-tools">/);
+
+  const openPost = board.slice(board.indexOf("async function openPost"), board.indexOf("function closeDetail"));
+  const openWrite = board.slice(board.indexOf("function openWrite"), board.indexOf("function saveDraft"));
+  const uploadFiles = board.slice(board.indexOf("async function uploadFiles"), board.indexOf("function removeDraftMedia"));
+  const submitPost = board.slice(board.indexOf("async function submitPost"), board.indexOf("function loginAdmin"));
+  const moderate = board.slice(board.indexOf("async function moderate"), board.indexOf("async function sharePost"));
+  const sharePost = board.slice(board.indexOf("async function sharePost"), board.indexOf("async function submitReport"));
+  const submitReport = board.slice(board.indexOf("async function submitReport"), board.indexOf("async function deleteActivePost"));
+  const deletePost = board.slice(board.indexOf("async function deleteActivePost"), board.indexOf("function applySearch"));
+  assert.match(openPost, /const shouldCountView = countView && !communityEditor\.active/);
+  assert.match(openWrite, /if \(communityEditor\.active\) return;/);
+  assert.match(uploadFiles, /if \(communityEditor\.active \|\| !files\?\.length\) return;/);
+  assert.match(submitPost, /if \(communityEditor\.active \|\| uploading \|\| submitting\) return;/);
+  assert.match(moderate, /if \(communityEditor\.active \|\| !activePost\) return;/);
+  assert.match(sharePost, /if \(communityEditor\.active \|\| !activePost\) return;/);
+  assert.match(submitReport, /if \(communityEditor\.active \|\| !activePost\) return;/);
+  assert.match(deletePost, /if \(communityEditor\.active \|\| !activePost\) return;/);
+  assert.match(styles, /\.community-editor-preview-note\s*\{/);
+  assert.match(styles, /\.community-editor-preview-note a\s*\{[\s\S]*?min-height:\s*44px/);
+  assert.doesNotMatch(board, /community-editor-preview-note[\s\S]{0,200}(?:POST|PATCH|DELETE)/);
 });
 
 test("renders section appearance and responsive CTA/text-box styles through the existing adapter", async () => {

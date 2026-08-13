@@ -6,10 +6,57 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const registryPath = path.join(root, "docs", "change-registry.json");
 const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+const retiredArtifacts = JSON.parse(fs.readFileSync(path.join(root, "docs", "retired-artifacts.json"), "utf8"));
 
 assert.equal(registry.schemaVersion, 1, "change registry schemaVersion must be 1");
 assert.equal(registry.policy?.publicDeploymentAllowed, false, "public deployment must remain disabled until explicit approval");
 assert.ok(Array.isArray(registry.records) && registry.records.length > 0, "change registry must contain records");
+assert.equal(retiredArtifacts.schemaVersion, 1, "retired artifact registry schemaVersion must be 1");
+assert.equal(retiredArtifacts.policy?.deleteSourceFiles, false, "retired sources must remain recoverable");
+assert.equal(retiredArtifacts.policy?.publicDeploymentAllowed, false, "retirement work must not authorize deployment");
+assert.ok(retiredArtifacts.deploymentExclusions.includes("community-board.html"));
+assert.ok(retiredArtifacts.deploymentExclusions.includes("public-about.html"));
+assert.ok(!retiredArtifacts.deploymentExclusions.some((file) => file.startsWith("assets/generated/")), "D1-audit-held images cannot be excluded from delivery yet");
+assert.equal(new Set(retiredArtifacts.deploymentExclusions).size, retiredArtifacts.deploymentExclusions.length, "deployment exclusions must be unique");
+for (const relative of retiredArtifacts.deploymentExclusions) {
+  assert.equal(path.posix.dirname(relative), ".", `deployment exclusion must be a top-level generated asset: ${relative}`);
+  assert.ok(fs.existsSync(path.join(root, "outputs", relative)), `deployment exclusion source does not exist: ${relative}`);
+}
+
+const retiredBoardGroup = retiredArtifacts.groups.find((group) => group.id === "retired-community-board");
+const retiredStaticGroup = retiredArtifacts.groups.find((group) => group.id === "legacy-static-public-renderer");
+const activeWrappersGroup = retiredArtifacts.groups.find((group) => group.id === "active-legacy-route-wrappers");
+const heldImagesGroup = retiredArtifacts.groups.find((group) => group.id === "generated-large-image-originals");
+const expectedExclusions = new Set([
+  ...retiredBoardGroup.deliveryPaths,
+  ...retiredStaticGroup.files
+    .filter((source) => source.startsWith("outputs/"))
+    .map((source) => source.slice("outputs/".length)),
+]);
+assert.deepEqual(new Set(retiredArtifacts.deploymentExclusions), expectedExclusions, "manifest groups and deployment exclusions must agree");
+for (const wrapper of activeWrappersGroup.files) {
+  assert.ok(!retiredArtifacts.deploymentExclusions.includes(wrapper.slice("outputs/".length)), `active wrapper cannot be quarantined: ${wrapper}`);
+}
+for (const image of heldImagesGroup.files) {
+  assert.ok(image.activeDerivative || image.supersededBy, `held image needs an active derivative or replacement: ${image.path}`);
+  assert.ok(fs.existsSync(path.join(root, image.activeDerivative || image.supersededBy)), `held image replacement does not exist: ${image.path}`);
+}
+
+for (const group of retiredArtifacts.groups) {
+  for (const entry of group.files || []) {
+    const source = typeof entry === "string" ? entry : entry.path;
+    assert.ok(fs.existsSync(path.join(root, source)), `retired source must remain recoverable: ${source}`);
+    if (typeof entry === "object") {
+      const data = fs.readFileSync(path.join(root, source));
+      assert.equal(data.byteLength, entry.bytes, `retired image byte count drifted: ${source}`);
+      assert.equal(
+        (await import("node:crypto")).createHash("sha256").update(data).digest("hex"),
+        entry.sha256,
+        `retired image digest drifted: ${source}`,
+      );
+    }
+  }
+}
 
 const allowed = registry.policy?.allowed || {};
 const ids = new Set();

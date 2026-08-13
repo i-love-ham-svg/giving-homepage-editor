@@ -35,7 +35,9 @@ pnpm dev
 
 Open the exact local URL printed by that server and append `/community`. Application POST/authorized GET QA uses `/api/applications` on the same integrated server.
 
-`tools/test-board-manager.mjs`, `tools/test-board-store.mjs`, and `tools/application-store.mjs` are archival standalone fixtures and are intentionally excluded from `tools/test-all.mjs`. They may be deleted together with the retired `outputs/community-board.*` and `outputs/editor-board-manager.js` files once those artifacts are no longer needed for migration history; they are never a delivery acceptance gate.
+`docs/retired-artifacts.json` is the canonical quarantine manifest. It keeps retired source files recoverable for migration history while excluding reviewed filenames from generated public/build copies. The manifest also distinguishes active redirect wrappers and generated image originals that must remain available until deployed D1 content can be audited.
+
+`tools/test-board-manager.mjs`, `tools/test-board-store.mjs`, `tools/board-store.mjs`, and `tools/application-store.mjs` are archival standalone fixtures and are intentionally excluded from `tools/test-all.mjs`. They remain in source control for migration history and are never a delivery acceptance gate. Do not delete them or the corresponding retired `outputs/community-board.*` and `outputs/editor-board-manager.js` files as part of routine cleanup.
 
 ## Storage Schema Test
 

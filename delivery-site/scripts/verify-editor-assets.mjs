@@ -2,14 +2,14 @@ import { createHash } from "node:crypto";
 import { access, readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { EXCLUDED_LEGACY_BOARD_FILES } from "./sync-editor.mjs";
+import { EXCLUDED_EDITOR_FILES } from "./sync-editor.mjs";
 
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const defaultSource = path.resolve(appRoot, "..", "outputs");
 const defaultPublicDestination = path.join(appRoot, "public", "songak");
 const defaultBuiltDestination = path.join(appRoot, "dist", "client", "songak");
 const defaultBuiltWranglerConfig = path.join(appRoot, "dist", "server", "wrangler.json");
-const excluded = new Set(EXCLUDED_LEGACY_BOARD_FILES);
+const excluded = new Set(EXCLUDED_EDITOR_FILES);
 
 async function listFiles(root, relative = "") {
   const entries = await readdir(path.join(root, relative), { withFileTypes: true });
@@ -33,7 +33,7 @@ async function expectMissing(filePath) {
     if (error?.code === "ENOENT") return;
     throw error;
   }
-  throw new Error(`Legacy board artifact must not be shipped: ${filePath}`);
+  throw new Error(`Retired editor artifact must not be shipped: ${filePath}`);
 }
 
 /**
@@ -96,8 +96,8 @@ export async function verifyEditorAssetParity({
   ])));
 
   for (const destination of destinations) {
-    for (const legacyFile of EXCLUDED_LEGACY_BOARD_FILES) {
-      await expectMissing(path.join(destination, legacyFile));
+    for (const retiredFile of EXCLUDED_EDITOR_FILES) {
+      await expectMissing(path.join(destination, retiredFile));
     }
     for (const relative of sourceFiles) {
       const target = path.join(destination, ...relative.split("/"));

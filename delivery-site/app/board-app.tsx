@@ -490,7 +490,14 @@ export function BoardApp() {
   const loadPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: "9", category, search, sort, status: admin ? status : "published" });
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: "9",
+        category,
+        search,
+        sort,
+        status: admin && !communityEditor.active ? status : "published",
+      });
       const result = await requestJson<ListResult>(`/api/board/posts?${params}`);
       setPosts(result.items);
       setTotal(result.total);
@@ -501,7 +508,7 @@ export function BoardApp() {
     } finally {
       setLoading(false);
     }
-  }, [admin, category, page, search, sort, status, showToast]);
+  }, [admin, category, communityEditor.active, page, search, sort, status, showToast]);
 
   useEffect(() => {
     requestJson<SharedNavigation>("/api/site-navigation")
@@ -581,7 +588,10 @@ export function BoardApp() {
 
   async function openPost(id: string, countView = true) {
     try {
-      const result = await requestJson<{ item: BoardPost }>(`/api/board/posts/${encodeURIComponent(id)}${countView ? "?view=1" : ""}`);
+      // The embedded visual preview may inspect a post, but it must not mutate
+      // operational counters or records while staff are editing presentation.
+      const shouldCountView = countView && !communityEditor.active;
+      const result = await requestJson<{ item: BoardPost }>(`/api/board/posts/${encodeURIComponent(id)}${shouldCountView ? "?view=1" : ""}`);
       setActivePost(result.item);
       setModerationNote(result.item.moderationNote || "");
       detailDialog.current?.showModal();
@@ -627,6 +637,7 @@ export function BoardApp() {
   }
 
   function openWrite(post?: BoardPost) {
+    if (communityEditor.active) return;
     if (post) {
       setDraft({
         category: post.category,
@@ -647,7 +658,7 @@ export function BoardApp() {
   }
 
   function saveDraft() {
-    if (admin) return;
+    if (admin || communityEditor.active) return;
     // Keep browser persistence content-only. Identity and contact fields stay
     // in React state for the active form and are sent only with submission.
     const safeDraft: PersistedBoardDraft = {
@@ -661,7 +672,7 @@ export function BoardApp() {
   }
 
   async function uploadFiles(files: FileList | null) {
-    if (!files?.length) return;
+    if (communityEditor.active || !files?.length) return;
     if (draftMedia.length + files.length > 12) return showToast("사진과 영상은 합계 12개까지 등록할 수 있습니다.");
     setUploading(true);
     try {
@@ -697,7 +708,7 @@ export function BoardApp() {
 
   async function submitPost(event: FormEvent) {
     event.preventDefault();
-    if (uploading || submitting) return;
+    if (communityEditor.active || uploading || submitting) return;
     setSubmitting(true);
     try {
       const payload = {
@@ -735,7 +746,7 @@ export function BoardApp() {
   }
 
   async function moderate(nextStatus: PostStatus) {
-    if (!activePost) return;
+    if (communityEditor.active || !activePost) return;
     try {
       const result = await requestJson<{ item: BoardPost }>(`/api/board/posts/${activePost.id}/moderate`, {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: nextStatus, note: moderationNote }),
@@ -749,7 +760,7 @@ export function BoardApp() {
   }
 
   async function sharePost() {
-    if (!activePost) return;
+    if (communityEditor.active || !activePost) return;
     const url = new URL(window.location.href);
     url.searchParams.set("post", activePost.id);
     try {
@@ -763,7 +774,7 @@ export function BoardApp() {
 
   async function submitReport(event: FormEvent) {
     event.preventDefault();
-    if (!activePost) return;
+    if (communityEditor.active || !activePost) return;
     try {
       await requestJson(`/api/board/posts/${activePost.id}/report`, {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason: reportReason }),
@@ -778,7 +789,7 @@ export function BoardApp() {
 
   async function deleteActivePost(event: FormEvent) {
     event.preventDefault();
-    if (!activePost) return;
+    if (communityEditor.active || !activePost) return;
     try {
       await requestJson(`/api/board/posts/${activePost.id}`, {
         method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: deletePassword }),
@@ -889,6 +900,16 @@ export function BoardApp() {
       <a className="skip-link" href="#board-list">게시글 목록으로 이동</a>
       <HomepageNavigation navigation={sharedNavigation || publicNavigation} currentPath="/community" />
 
+      {communityEditor.active && (
+        <aside className="community-editor-preview-note" id="community-editor-preview-note" aria-label="소통게시판 편집 미리보기 안내">
+          <div>
+            <b>시각 편집 미리보기</b>
+            <span>이 화면에서는 문구와 디자인만 편집합니다. 게시글 등록·검수·삭제는 실제 소통게시판에서 진행하세요.</span>
+          </div>
+          <Link href="/community?manage=1" target="_blank" rel="noopener noreferrer">실제 게시물 관리 열기</Link>
+        </aside>
+      )}
+
       <main>
         <section className="board-intro" aria-labelledby="board-title" data-editor-target-id={COMMUNITY_EDITOR_TARGET_IDS.section}>
           <HomepageBreadcrumb navigation={sharedNavigation || publicNavigation} currentPath="/community" className="board-breadcrumb" />
@@ -897,8 +918,8 @@ export function BoardApp() {
             <h1 id="board-title" className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.title)}>{communitySurface.fields.title}</h1>
             <p className="board-intro-description community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.description)}>{communitySurface.fields.description}</p>
             <div className="board-intro-actions">
-            <button className="primary-btn community-editor-cta" style={communityTargetStyle(communitySurface, COMMUNITY_EDITOR_TARGET_IDS.primaryCta)} type="button" onClick={() => { if (!communityEditor.active) openWrite(); }}><span className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.primaryCta)}>{communityEditor.active ? communitySurface.fields.primaryCta : admin ? "공식 소식 등록" : communitySurface.fields.primaryCta}</span></button>
-            <a className="secondary-btn button-link community-editor-cta" style={communityTargetStyle(communitySurface, COMMUNITY_EDITOR_TARGET_IDS.secondaryCta)} href="#board-list" onClick={(event) => { if (communityEditor.active) event.preventDefault(); }}><span className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.secondaryCta)}>{communitySurface.fields.secondaryCta}</span></a>
+            <button className="primary-btn community-editor-cta" style={communityTargetStyle(communitySurface, COMMUNITY_EDITOR_TARGET_IDS.primaryCta)} type="button" aria-disabled={communityEditor.active || undefined} aria-describedby={communityEditor.active ? "community-editor-preview-note" : undefined} onClick={() => { if (!communityEditor.active) openWrite(); }}><span className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.primaryCta)}>{communityEditor.active ? communitySurface.fields.primaryCta : admin ? "공식 소식 등록" : communitySurface.fields.primaryCta}</span></button>
+            <a className="secondary-btn button-link community-editor-cta" style={communityTargetStyle(communitySurface, COMMUNITY_EDITOR_TARGET_IDS.secondaryCta)} href="#board-list" aria-disabled={communityEditor.active || undefined} aria-describedby={communityEditor.active ? "community-editor-preview-note" : undefined} onClick={(event) => { if (communityEditor.active) event.preventDefault(); }}><span className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.secondaryCta)}>{communitySurface.fields.secondaryCta}</span></a>
             </div>
           </div>
           <dl className="board-info-row" aria-label="소통게시판 이용 안내">
@@ -909,7 +930,7 @@ export function BoardApp() {
         </section>
 
         <section className="board-shell" id="board-list" aria-label="게시글 목록">
-          {admin && (
+          {admin && !communityEditor.active && (
             <div className="admin-console">
               <div><span className="admin-dot" /><b>담당자 게시물 관리</b><small>주민 게시글을 확인하고 공개·반려·숨김 처리할 수 있습니다.</small></div>
               <label>표시 상태
@@ -952,7 +973,7 @@ export function BoardApp() {
                   <button className="post-card-button" type="button" onClick={() => void openPost(post.id)} aria-label={`${post.title} 게시글 보기`}>
                     <PostThumbnail post={post} />
                     <div className="post-card-body">
-                      <div className="post-meta"><span className="category-badge">{categoryLabel(post.category)}</span><time>{formatDate(post.publishedAt || post.createdAt)}</time>{admin && post.status !== "published" && <span className={`status-pill status-${post.status}`}>{statusLabels[post.status]}</span>}</div>
+                      <div className="post-meta"><span className="category-badge">{categoryLabel(post.category)}</span><time>{formatDate(post.publishedAt || post.createdAt)}</time>{admin && !communityEditor.active && post.status !== "published" && <span className={`status-pill status-${post.status}`}>{statusLabels[post.status]}</span>}</div>
                       <h3>{post.title}</h3><p>{post.body}</p>
                       <div className="post-stats"><span>{post.author}</span><span>조회 {post.views}</span>{post.media.length > 0 && <span>첨부 {post.media.length}</span>}</div>
                     </div>
@@ -961,7 +982,7 @@ export function BoardApp() {
               ))}
             </div>
           ) : (
-            <div className="empty-state"><span>송</span><h3 className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.emptyTitle)}>{communitySurface.fields.emptyTitle}</h3><p className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.emptyDescription)}>{communitySurface.fields.emptyDescription}</p><button className="primary-btn" type="button" onClick={() => { if (!communityEditor.active) openWrite(); }}>글쓰기</button></div>
+            <div className="empty-state"><span>송</span><h3 className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.emptyTitle)}>{communitySurface.fields.emptyTitle}</h3><p className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.emptyDescription)}>{communitySurface.fields.emptyDescription}</p><button className="primary-btn" type="button" aria-disabled={communityEditor.active || undefined} aria-describedby={communityEditor.active ? "community-editor-preview-note" : undefined} onClick={() => { if (!communityEditor.active) openWrite(); }}>글쓰기</button></div>
           )}
 
           {totalPages > 1 && <div className="pagination"><button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>이전</button><span><b>{page}</b> / {totalPages}</span><button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>다음</button></div>}
@@ -989,7 +1010,7 @@ export function BoardApp() {
           <p>Copyright © 송악사회복지관. All rights reserved.</p>
         </div>
       </footer>
-      <button className="mobile-write" type="button" onClick={() => openWrite()} aria-label="게시글 작성">＋</button>
+      <button className="mobile-write" type="button" onClick={() => openWrite()} aria-label="게시글 작성" aria-hidden={communityEditor.active || undefined} tabIndex={communityEditor.active ? -1 : undefined}>＋</button>
 
       <dialog ref={writeDialog} className="write-dialog" onCancel={(event) => { event.preventDefault(); writeDialog.current?.close(); }}>
         <form onSubmit={submitPost}>
@@ -1014,7 +1035,7 @@ export function BoardApp() {
       </dialog>
 
       <dialog ref={detailDialog} className="detail-dialog" onClose={() => setActivePost(null)}>
-        {activePost && <><DialogHeader title="게시글" onClose={closeDetail} /><article className="dialog-body detail-body"><div className="detail-meta"><span>{categoryLabel(activePost.category)}</span><time>{formatDate(activePost.publishedAt || activePost.createdAt)}</time><span>작성자 {activePost.author}</span><span>조회 {activePost.views}</span>{admin && <span className={`status-pill status-${activePost.status}`}>{statusLabels[activePost.status]}</span>}</div><h2>{activePost.title}</h2><div className="detail-content">{activePost.body}</div>{activePost.media.length > 0 && <div className="detail-media">{activePost.media.map((item) => <figure key={item.id}>{item.kind === "image" ? <Image src={mediaUrl(item)} alt={item.alt || ""} width={1200} height={900} sizes="(max-width: 720px) 100vw, 80vw" unoptimized /> : <video src={mediaUrl(item)} controls preload="metadata" />}{item.alt && <figcaption>{item.alt}</figcaption>}</figure>)}</div>}<div className="detail-tools"><button className="secondary-btn" type="button" onClick={() => void sharePost()}>공유하기</button><button className="ghost-btn" type="button" onClick={() => reportDialog.current?.showModal()}>신고</button><button className="ghost-btn" type="button" onClick={() => openWrite(activePost)}>수정</button><button className="ghost-btn danger-text" type="button" onClick={() => deleteDialog.current?.showModal()}>삭제</button></div>{admin && <section className="moderation-panel"><div><b>관리자 검수</b><span>개인정보·비방·광고·저작권 침해 여부를 확인하세요.</span></div>{activePost.contact && <p><b>작성자 연락처</b> {activePost.contact}</p>}<textarea value={moderationNote} onChange={(event) => setModerationNote(event.target.value)} maxLength={500} placeholder="반려 사유 또는 내부 메모(작성자에게 공개하지 않음)" /><div><button className="approve-btn" type="button" onClick={() => void moderate("published")}>공개 승인</button><button className="reject-btn" type="button" onClick={() => void moderate("rejected")}>반려</button><button className="hide-btn" type="button" onClick={() => void moderate("hidden")}>숨김</button></div></section>}</article></>}
+        {activePost && <><DialogHeader title="게시글" onClose={closeDetail} /><article className="dialog-body detail-body"><div className="detail-meta"><span>{categoryLabel(activePost.category)}</span><time>{formatDate(activePost.publishedAt || activePost.createdAt)}</time><span>작성자 {activePost.author}</span><span>조회 {activePost.views}</span>{admin && !communityEditor.active && <span className={`status-pill status-${activePost.status}`}>{statusLabels[activePost.status]}</span>}</div><h2>{activePost.title}</h2><div className="detail-content">{activePost.body}</div>{activePost.media.length > 0 && <div className="detail-media">{activePost.media.map((item) => <figure key={item.id}>{item.kind === "image" ? <Image src={mediaUrl(item)} alt={item.alt || ""} width={1200} height={900} sizes="(max-width: 720px) 100vw, 80vw" unoptimized /> : <video src={mediaUrl(item)} controls preload="metadata" />}{item.alt && <figcaption>{item.alt}</figcaption>}</figure>)}</div>}{!communityEditor.active && <div className="detail-tools"><button className="secondary-btn" type="button" onClick={() => void sharePost()}>공유하기</button><button className="ghost-btn" type="button" onClick={() => reportDialog.current?.showModal()}>신고</button><button className="ghost-btn" type="button" onClick={() => openWrite(activePost)}>수정</button><button className="ghost-btn danger-text" type="button" onClick={() => deleteDialog.current?.showModal()}>삭제</button></div>}{admin && !communityEditor.active && <section className="moderation-panel"><div><b>관리자 검수</b><span>개인정보·비방·광고·저작권 침해 여부를 확인하세요.</span></div>{activePost.contact && <p><b>작성자 연락처</b> {activePost.contact}</p>}<textarea value={moderationNote} onChange={(event) => setModerationNote(event.target.value)} maxLength={500} placeholder="반려 사유 또는 내부 메모(작성자에게 공개하지 않음)" /><div><button className="approve-btn" type="button" onClick={() => void moderate("published")}>공개 승인</button><button className="reject-btn" type="button" onClick={() => void moderate("rejected")}>반려</button><button className="hide-btn" type="button" onClick={() => void moderate("hidden")}>숨김</button></div></section>}</article></>}
       </dialog>
 
       <dialog ref={adminDialog} className="small-dialog"><DialogHeader title="담당자 로그인" onClose={() => adminDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">허용된 담당자 계정으로 로그인하면 편집·저장·게시 기능을 이용할 수 있습니다.</p></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => adminDialog.current?.close()}>취소</button><button className="primary-btn" type="button" onClick={loginAdmin}>로그인 화면으로 이동</button></div></dialog>

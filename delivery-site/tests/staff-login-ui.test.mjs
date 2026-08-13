@@ -16,6 +16,9 @@ test("routes public staff entry and SNS buttons through the temporary login form
 
   assert.doesNotMatch(publicPage, /staff-login-link/);
   assert.match(loginPage, /\/api\/board\/admin\/login/);
+  assert.match(loginPage, /action="\/api\/board\/admin\/login"/);
+  assert.match(loginPage, /method="post"/);
+  assert.match(loginPage, /encType="application\/x-www-form-urlencoded"/);
   assert.match(loginPage, /id: String\(form\.get\("username"\)/);
   assert.match(loginPage, /type="password"/);
   assert.match(loginPage, /destination\.pathname === "\/community"/);

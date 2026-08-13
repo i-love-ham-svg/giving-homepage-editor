@@ -170,7 +170,11 @@ test("keeps the public site read-only and gates the staff editor with temporary 
   assert.match(editorAccess, /mode:\s*"edit"/);
   assert.match(sessionRoute, /\/staff-login\?returnTo=%2Fcommunity%3Fmanage%3D1/);
   assert.match(loginRoute, /createAdminSession/);
-  assert.match(loginRoute, /temporary-editor-login/);
+  assert.match(loginRoute, /enforceRateLimit\(request, "temporary-editor-login", 10, 10 \* 60 \* 1000\)/);
+  assert.ok(
+    loginRoute.indexOf("enforceRateLimit") < loginRoute.indexOf("readJson"),
+    "login attempts must be rate-limited before credentials are parsed",
+  );
   assert.match(loginRoute, /"set-cookie"/);
   assert.match(logoutRoute, /clearAdminCookie/);
   assert.match(boardServer, /TEMP_EDITOR_ID/);

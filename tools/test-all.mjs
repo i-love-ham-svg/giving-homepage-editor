@@ -23,6 +23,9 @@ const tests = [
   "tools/test-storage-manager.mjs",
   "tools/test-section-manager.mjs",
   "tools/test-staff-section-manager.mjs",
+  // Fixed staff controls share one measured bottom inset; exercise the open,
+  // collapsed and dragged toolbar plus background and decoration UI at all profiles.
+  "tools/test-staff-floating-ui-inset-browser.mjs",
   "tools/test-main-intro-manager.mjs",
   // Run the canonical CTA flow against a self-contained HTTP fixture so the
   // /songak/ base path, public routing, tab order and four viewports are real.

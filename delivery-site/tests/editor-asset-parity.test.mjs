@@ -7,8 +7,18 @@ import {
   verifyBuiltWorkerAssetsConfig,
   verifyEditorAssetParity,
 } from "../scripts/verify-editor-assets.mjs";
+import { EXCLUDED_EDITOR_FILES } from "../scripts/sync-editor.mjs";
 
-test("blocks stale editor builds and legacy standalone board files", async () => {
+test("keeps the retirement manifest as the generated-delivery boundary", () => {
+  assert.ok(EXCLUDED_EDITOR_FILES.includes("community-board.html"));
+  assert.ok(EXCLUDED_EDITOR_FILES.includes("public-about.html"));
+  assert.ok(EXCLUDED_EDITOR_FILES.includes("representative-greeting-public.html"));
+  assert.ok(EXCLUDED_EDITOR_FILES.includes("head-layout-editor.html"));
+  assert.ok(!EXCLUDED_EDITOR_FILES.includes("facility-detail.html"), "active redirect wrappers must remain shipped");
+  assert.ok(!EXCLUDED_EDITOR_FILES.some((file) => file.startsWith("assets/generated/")), "D1-audit-held image URLs must remain available");
+});
+
+test("blocks stale editor builds and every manifest-quarantined artifact", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "songak-editor-parity-"));
   const source = path.join(root, "outputs");
   const publicDestination = path.join(root, "public", "songak");
@@ -57,7 +67,14 @@ test("blocks stale editor builds and legacy standalone board files", async () =>
     await writeFile(path.join(publicDestination, "community-board.html"), "legacy", "utf8");
     await assert.rejects(
       verifyEditorAssetParity({ source, publicDestination, builtDestination, builtWranglerConfig }),
-      /Legacy board artifact must not be shipped/,
+      /Retired editor artifact must not be shipped/,
+    );
+
+    await rm(path.join(publicDestination, "community-board.html"));
+    await writeFile(path.join(publicDestination, "public-about.html"), "legacy public renderer", "utf8");
+    await assert.rejects(
+      verifyEditorAssetParity({ source, publicDestination, builtDestination, builtWranglerConfig }),
+      /Retired editor artifact must not be shipped/,
     );
 
     await writeFile(builtWranglerConfig, JSON.stringify({
