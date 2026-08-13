@@ -22,11 +22,14 @@ pnpm install
 pnpm dev
 ```
 
-`.dev.vars`의 세 값은 실제 운영 값으로 교체해야 합니다.
+`.dev.vars`의 값은 실제 운영 값으로 교체해야 합니다.
 
-- `BOARD_ADMIN_PASSWORD`: 관리자 로그인 비밀번호
+- `TEMP_EDITOR_ID`: 임시 담당자 로그인 아이디
+- `TEMP_EDITOR_PASSWORD`: 임시 담당자 로그인 비밀번호
 - `BOARD_SESSION_SECRET`: 32자 이상의 무작위 세션 서명 키
 - `BOARD_HASH_PEPPER`: 작성자·요청자 식별 정보 보호용 무작위 키
+- `APPLICATION_HASH_PEPPER`: 온라인 신청 식별 정보 보호용 무작위 키
+- `BOARD_EDITOR_EMAILS`: 소셜 로그인 사용 시 허용할 담당자 이메일 목록
 
 `.dev.vars`와 실제 비밀값은 Git에 커밋하지 않습니다.
 
@@ -38,11 +41,11 @@ pnpm build
 pnpm test
 ```
 
-데이터 구조를 변경한 경우 `pnpm db:generate`로 D1 마이그레이션을 다시 생성합니다. 현재 초기 마이그레이션은 `drizzle/0000_nifty_photon.sql`입니다.
+데이터 구조를 변경한 경우 `pnpm db:generate`로 D1 마이그레이션을 다시 생성합니다. 운영 환경에는 `drizzle/meta/_journal.json` 순서대로 `0000_nifty_photon.sql`, `0001_site_content_versions.sql`, `0002_applications.sql`을 적용합니다.
 
 ## 운영 점검표
 
-1. 관리자 비밀번호와 두 개의 무작위 비밀키를 배포 환경에 등록합니다.
+1. 담당자 로그인 값과 세 개의 무작위 비밀키를 배포 환경에 등록합니다.
 2. D1 `DB`, R2 `MEDIA` 바인딩이 연결되었는지 확인합니다.
 3. 주민 글 작성 → 관리자 승인 → 공개 조회 → 공유 → 신고 흐름을 확인합니다.
 4. 사진과 영상 업로드, 모바일 작성, 비밀번호 수정·삭제를 확인합니다.

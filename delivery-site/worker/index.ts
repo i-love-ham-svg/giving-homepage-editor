@@ -6,9 +6,12 @@ interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
   MEDIA: R2Bucket;
-  BOARD_ADMIN_PASSWORD?: string;
+  TEMP_EDITOR_ID?: string;
+  TEMP_EDITOR_PASSWORD?: string;
   BOARD_SESSION_SECRET?: string;
   BOARD_HASH_PEPPER?: string;
+  APPLICATION_HASH_PEPPER?: string;
+  BOARD_EDITOR_EMAILS?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
