@@ -384,12 +384,19 @@
       display: none;
     }
 
+    body.home-menu-surface-open .inline-toolbar,
+    body.home-menu-surface-open .inline-toolbar-float,
+    body.section-appearance-surface-open .background-float,
+    body.section-appearance-surface-open .inline-toolbar,
+    body.section-appearance-surface-open .inline-toolbar-float,
     body.home-menu-open.mobile-device-access .topbar.mobile-controls,
     body.home-menu-open.mobile-device-access .background-float,
+    body.home-menu-open.mobile-device-access .inline-toolbar,
     body.home-menu-open.mobile-device-access .inline-toolbar-float,
     body.home-menu-open.mobile-device-access .menu-editor-modal,
     body.home-menu-open.mobile-device-access .menu-editor-float,
     body.home-menu-open.mobile-device-preview .background-float,
+    body.home-menu-open.mobile-device-preview .inline-toolbar,
     body.home-menu-open.mobile-device-preview .inline-toolbar-float,
     body.home-menu-open.mobile-device-preview .menu-editor-modal,
     body.home-menu-open.mobile-device-preview .menu-editor-float {
@@ -993,8 +1000,8 @@
     }
 
     .stage.mobile .section-insert-btn {
-      width: 44px;
-      height: 44px;
+      width: 56px;
+      height: 56px;
       font-size: 20px;
     }
 
@@ -1004,8 +1011,8 @@
     }
 
     .stage.mobile .section-delete-marker {
-      width: 44px;
-      height: 44px;
+      width: 56px;
+      height: 56px;
     }
 
     .section-insert-menu {
@@ -1902,13 +1909,15 @@
       display: none;
     }
 
+    /* The visitor brand is scaled with the preview canvas. An authored 56px
+       target keeps its physical height at least 44px in the smallest profile. */
     .stage.mobile .homepage-menu-mobile-brand {
       display: inline-flex;
       align-items: center;
       justify-content: flex-start;
       min-width: 0;
       max-width: calc(var(--stage-w) * 1px - 96px);
-      min-height: 42px;
+      min-height: 56px;
       padding: 0 12px;
       border: 1px solid rgba(var(--theme-line-rgb), .72);
       border-radius: 999px;
@@ -1926,7 +1935,7 @@
 
     .stage.mobile .homepage-menu.open .homepage-menu-mobile-brand {
       max-width: calc(100% - 74px);
-      min-height: 46px;
+      min-height: 56px;
       padding: 0;
       border: 0;
       border-radius: 0;
@@ -1936,7 +1945,10 @@
       line-height: 1.15;
     }
 
-    .stage.mobile .homepage-menu-edit {
+    /* Menu dragging is desktop-only; keep its inert move handle out of the
+       responsive accessibility tree and hit-test inventory. */
+    .stage.mobile .homepage-menu-edit,
+    .stage.mobile .homepage-menu-move {
       display: none;
     }
 
@@ -2743,7 +2755,7 @@
     }
     .main-intro-style-switcher > span { padding-inline: 5px; color: var(--muted); font-size: 12px; font-weight: 800; }
     .main-intro-style-options { display: flex; gap: 3px; }
-    .main-intro-style-options button { min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--ink); font-weight: 800; cursor: pointer; }
+    .main-intro-style-options button { min-height: 56px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--ink); font-weight: 800; cursor: pointer; }
     .main-intro-style-options button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
     .stage.desktop .main-intro-style-switcher { top: calc(var(--home-menu-height, 44px) + 18px); }
     .gallery-section-content > .main-intro-style-switcher { position: sticky; top: 10px; right: auto; width: max-content; margin: 0 auto 10px; }
@@ -4009,7 +4021,7 @@
     }
     .section-appearance-trigger,
     .section-appearance-menu button {
-      min-height: 38px;
+      min-height: 56px;
       border: 1px solid rgba(var(--theme-accent-rgb), .32);
       border-radius: 999px;
       color: var(--accent-strong);
@@ -4020,6 +4032,10 @@
     .section-appearance-trigger { padding: 0 14px; }
     .section-appearance-menu {
       width: min(520px, calc(100vw - 120px));
+      max-height: calc(100vh - 76px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
       padding: 10px;
       border: 1px solid rgba(var(--theme-accent-rgb), .28);
       border-radius: 16px;
@@ -4034,16 +4050,41 @@
     .section-appearance-fields label {
       display: inline-flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 6px;
-      min-height: 38px;
+      min-height: 56px;
       padding: 0 10px;
       border: 1px solid #d9e4dc;
       border-radius: 10px;
       color: #274b3c;
       background: #f8fbf9;
     }
-    .section-appearance-fields input { width: 32px; height: 28px; padding: 0; border: 0; background: transparent; }
-    .section-appearance-fields select { min-width: 92px; border: 0; color: #274b3c; background: transparent; font: inherit; font-weight: 850; }
+    .section-appearance-fields input { width: 56px; height: 56px; padding: 0; border: 0; background: transparent; }
+    .section-appearance-fields .section-appearance-color-field { flex: 1 1 210px; }
+    .section-appearance-fields .section-appearance-field-label { font-weight: 900; }
+    .section-appearance-fields .section-appearance-hex {
+      width: 104px;
+      min-width: 104px;
+      height: 56px;
+      padding: 0 10px;
+      border: 1px solid #b9cbc0;
+      border-radius: 9px;
+      color: #193d2f;
+      background: #fff;
+      font: 850 13px/1 "Pretendard", sans-serif;
+      letter-spacing: .035em;
+      text-transform: uppercase;
+    }
+    .section-appearance-fields .section-appearance-hex[aria-invalid="true"] { border-color: #a33c32; box-shadow: 0 0 0 2px rgba(163, 60, 50, .18); }
+    .section-appearance-fields .section-appearance-hex-error {
+      flex: 1 0 100%;
+      color: #8a3028;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.4;
+    }
+    .section-appearance-fields .section-appearance-hex-error[hidden] { display: none; }
+    .section-appearance-fields select { min-width: 92px; min-height: 56px; border: 0; color: #274b3c; background: transparent; font: inherit; font-weight: 850; }
     .section-appearance-actions { margin-top: 9px; }
     .section-appearance-menu button { padding: 0 12px; box-shadow: none; }
     .section-appearance-menu button[aria-pressed="true"] { color: #fff; background: var(--accent-strong); }
@@ -4053,6 +4094,7 @@
     .stage.mobile .section-appearance-control { left: 12px; }
     .stage.mobile .section-appearance-menu { width: 310px; max-width: calc(100vw - 84px); }
     .stage.mobile .section-appearance-fields label { flex: 1 1 84px; }
+    .stage.mobile .section-appearance-fields .section-appearance-color-field { flex-basis: 210px; }
     .page-decoration-layer .donation-heart-mark {
       position: absolute;
       left: var(--decoration-x, 50%);
@@ -4094,6 +4136,28 @@
       display: grid;
     }
 
+    /* Responsive background and decoration controls stay compact so automatic placement can avoid editing targets. */
+    .background-float.responsive-compact {
+      grid-template-columns: 44px 44px;
+    }
+
+    .background-float.responsive-compact .background-float-toggle,
+    .background-float.responsive-compact .decoration-float-toggle {
+      width: 44px;
+      height: 44px;
+      min-height: 44px;
+    }
+
+    .background-float.responsive-compact .background-float-panel {
+      grid-column: 1 / -1;
+    }
+
+    .background-float.responsive-compact.open .background-float-panel {
+      max-height: calc(min(34vh, 250px) - 112px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
     .background-float-panel strong {
       color: #5b4131;
       font-size: 13px;
@@ -4103,7 +4167,7 @@
     .background-float-panel input[readonly] {
       width: 100%;
       min-width: 0;
-      height: 34px;
+      height: 44px;
       border: 1px solid rgba(190, 164, 145, .48);
       border-radius: 6px;
       padding: 0 8px;
@@ -4125,7 +4189,7 @@
 
     .background-float-actions button,
     .background-float-color button {
-      min-height: 32px;
+      min-height: 44px;
       border-radius: 6px;
       color: #fff;
       background: var(--accent);
@@ -4141,14 +4205,14 @@
 
     .background-float-color {
       display: grid;
-      grid-template-columns: 76px minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: 92px minmax(0, 1fr) minmax(0, 1fr);
       gap: 6px;
       align-items: center;
     }
 
     .background-float-color input[type="color"] {
-      width: 38px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       padding: 0;
       border: 1px solid #e3cfc0;
       border-radius: 6px;
@@ -4175,22 +4239,58 @@
     }
 
     .theme-preset {
-      min-height: 30px;
+      display: inline-flex;
+      align-items: flex-end;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 4px;
       border: 1px solid rgba(var(--theme-accent-rgb), .22);
       border-radius: 6px;
       background: var(--theme-swatch, var(--accent));
-      color: transparent;
+      color: #fff;
       box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .5);
+      cursor: pointer;
+    }
+
+    .theme-preset-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 100%;
+      min-height: 22px;
+      padding: 0 4px;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(20, 27, 24, .82);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+      opacity: 1;
     }
 
     .theme-preset.active {
       border-color: var(--accent-strong);
+      outline: 2px solid var(--accent-strong);
+      outline-offset: 1px;
       box-shadow: 0 0 0 2px rgba(var(--theme-accent-rgb), .18), inset 0 0 0 2px rgba(255, 255, 255, .74);
+    }
+
+    .theme-preset.active .theme-preset-label {
+      color: #17392d;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(20, 27, 24, .22);
+    }
+
+    .theme-preset:focus-visible {
+      outline: 3px solid var(--accent-strong);
+      outline-offset: 2px;
     }
 
     .theme-custom-row {
       display: grid;
-      grid-template-columns: 76px minmax(0, 1fr);
+      grid-template-columns: 92px minmax(0, 1fr);
       gap: 6px;
       align-items: center;
     }
@@ -4198,16 +4298,16 @@
     .background-float-color .editor-color-control,
     .theme-custom-row .editor-color-control {
       display: grid;
-      grid-template-columns: 38px 34px;
+      grid-template-columns: 44px 44px;
       gap: 4px;
-      width: 76px;
+      width: 92px;
     }
 
     .background-float-color .editor-color-control input[type="color"],
     .theme-custom-row .editor-color-control input[type="color"] {
-      min-width: 38px;
-      max-width: 38px;
-      flex: 0 0 38px;
+      min-width: 44px;
+      max-width: 44px;
+      flex: 0 0 44px;
     }
 
     .background-float-color input[type="color"]::-webkit-color-swatch-wrapper,
@@ -4222,8 +4322,8 @@
     }
 
     .theme-custom-row input[type="color"] {
-      width: 38px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       padding: 0;
       border: 1px solid #e3cfc0;
       border-radius: 6px;
@@ -4231,7 +4331,7 @@
     }
 
     .theme-custom-row button {
-      min-height: 32px;
+      min-height: 44px;
       border-radius: 6px;
       color: #fff;
       background: var(--accent);
@@ -4251,6 +4351,7 @@
 
     .background-float-control input[type="range"] {
       width: 100%;
+      min-height: 44px;
       accent-color: var(--accent);
     }
 
@@ -4323,6 +4424,10 @@
 
     .inline-toolbar[hidden] {
       display: none;
+    }
+
+    .inline-toolbar.measuring-position {
+      transition: none;
     }
 
     .inline-toolbar.mobile-sheet {
@@ -4687,6 +4792,16 @@
 
     .inline-toolbar.mobile-sheet .toolbar-control input[type="range"] {
       width: 100%;
+      min-height: 44px;
+    }
+
+    /* Responsive editing keeps every discrete control and every slider track
+       inside a physical 44px touch region; overflow stays inside toolbar-main. */
+    .inline-toolbar.mobile-sheet button,
+    .inline-toolbar.mobile-sheet select,
+    .inline-toolbar.mobile-sheet input[type="color"] {
+      min-width: 44px;
+      min-height: 44px;
     }
 
     .inline-toolbar.mobile-sheet #inlineFontSizeControl {
@@ -5256,6 +5371,19 @@
       body.desktop-device-access .toolbar-control input[type="range"] {
         width: 92px;
       }
+    }
+
+    /* Compact phone scrollers leave the homepage menu, section controls and
+       selected content reachable beside floating tools. */
+    @media (max-width: 390px) {
+      .inline-toolbar.mobile-sheet {
+        max-height: min(34vh, 250px);
+      }
+
+      .inline-toolbar.mobile-sheet .toolbar-main {
+        max-height: calc(min(34vh, 250px) - 10px);
+      }
+
     }
 
     /* Program section */
@@ -9083,7 +9211,7 @@
 
     .gallery-style-bar select,
     .gallery-style-bar button {
-      min-height: 32px;
+      min-height: 56px;
       padding: 0 9px;
       border: 1px solid var(--line);
       border-radius: 6px;
@@ -11696,6 +11824,11 @@
 
     .stage.edit-mode .essential-notice-view-action { display: none !important; }
     .stage.view-mode .essential-notice-compose-action { display: none !important; }
+    /* Reserve a dedicated edit-tool strip so the notice composer button stays
+       visible and physically clickable instead of sitting under card tools. */
+    .stage.edit-mode .essential-section-content[data-essential-template="notice"] .essential-item {
+      padding-top: 58px;
+    }
     .stage.view-mode .essential-section-content[data-essential-template="notice"] .essential-item { cursor: pointer; }
     .stage.view-mode .essential-section-content[data-essential-template="notice"] .essential-item:hover {
       background: rgba(var(--theme-accent-rgb), .07);
@@ -13387,7 +13520,7 @@
 
     .footer-document-action {
       align-self: flex-start;
-      min-height: 32px;
+      min-height: 56px;
       margin-top: 8px;
       padding: 0 12px;
       border: 1px solid rgba(255, 255, 255, .34);
@@ -13443,7 +13576,7 @@
 
     .essential-section-content[data-essential-template="footer"][data-essential-layout="compact"] .footer-document-action,
     .essential-section-content[data-essential-template="footer"][data-essential-layout="split"] .footer-document-action {
-      min-height: 28px;
+      min-height: 56px;
       margin-top: 2px;
       padding: 0 9px;
       font-size: 11px;
@@ -13495,7 +13628,7 @@
     .footer-document-kicker { display: block; color: var(--strong); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
     .footer-document-head strong { display: block; overflow: hidden; font-size: 21px; text-overflow: ellipsis; white-space: nowrap; }
     .footer-document-status { flex: 0 0 auto; padding: 6px 10px; border-radius: 999px; background: var(--soft); color: var(--strong); font-size: 11px; font-weight: 900; }
-    .footer-document-close { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--ink); font-size: 22px; cursor: pointer; }
+    .footer-document-close { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--ink); font-size: 22px; cursor: pointer; }
 
     .footer-document-body {
       min-height: 0;
@@ -13541,7 +13674,7 @@
     .footer-document-modal[data-readonly="true"] .footer-document-field input,
     .footer-document-modal[data-readonly="true"] .footer-document-field textarea { border-color: transparent; background: #f8faf8; }
     .footer-document-actions { justify-content: flex-end; border-top: 1px solid rgba(var(--theme-line-rgb), .68); }
-    .footer-document-actions button { min-height: 40px; padding: 0 18px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font-weight: 850; cursor: pointer; }
+    .footer-document-actions button { min-height: 44px; padding: 0 18px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink); font-weight: 850; cursor: pointer; }
     .footer-document-actions button.primary { border-color: #356b55; background: #356b55; color: #fff; }
 
     @media (max-width: 700px) {
@@ -13938,7 +14071,7 @@
     }
 
     .essential-footer-layout-switcher button {
-      min-height: 32px;
+      min-height: 44px;
       padding: 0 11px;
       border: 0;
       border-radius: 999px;
@@ -14667,7 +14800,7 @@
     }
 
     .stage.mobile .homepage-menu.open .homepage-menu-mobile-brand {
-      min-height: 52px;
+      min-height: 56px;
       max-width: calc(100% - 68px);
       font-size: clamp(20px, calc(var(--home-menu-brand-font-size, 18px) * 1.08), 27px);
     }
@@ -14955,6 +15088,7 @@
     }
 
     .staff-editor-dock button {
+      min-width: 44px;
       min-height: 44px;
       padding: 0 16px;
       border: 1px solid rgba(53, 107, 85, .2);
@@ -15031,6 +15165,7 @@
       outline: 3px solid rgba(53, 107, 85, .22);
       outline-offset: 3px;
     }
+
 
     .section-style-choice {
       position: absolute;
@@ -15422,7 +15557,7 @@
 
       .staff-editor-dock button {
         flex: 1 1 auto;
-        min-width: 0;
+        min-width: 44px;
         padding: 0 8px;
         font-size: 12px;
       }
@@ -15780,6 +15915,8 @@
       font-size: 12px;
     }
 
+    .sns-auth-edit-actions .section-appearance-trigger { min-height: 56px; }
+
     .sns-auth-edit-actions .sns-auth-image-switcher,
     .sns-auth-edit-actions .sns-auth-layout-choices,
     .sns-auth-edit-actions .section-appearance-menu {
@@ -15967,11 +16104,44 @@
     .stage.tablet.tablet-landscape .sns-auth-buttons { gap: 8px; }
     .stage.tablet.tablet-landscape .sns-auth-button { min-height: 52px; }
 
+    /* 모바일 편집 동작은 섹션 흐름 안에 두어 고정 메뉴·하단 도크가 클릭 지점을 가리지 않게 한다. */
     .stage.mobile .sns-auth-edit-actions,
     .stage.phone-small .sns-auth-edit-actions {
-      right: 0;
-      bottom: calc(100% + 10px);
-      gap: 6px;
+      position: relative;
+      z-index: 20;
+      right: auto;
+      bottom: auto;
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 10px;
+      white-space: normal;
+    }
+
+    .stage.mobile .sns-auth-edit-actions > *,
+    .stage.phone-small .sns-auth-edit-actions > * { min-width: 0; }
+
+    .stage.mobile .sns-auth-edit-actions .sns-auth-image-switcher,
+    .stage.mobile .sns-auth-edit-actions .sns-auth-layout-choices,
+    .stage.mobile .sns-auth-edit-actions .section-appearance-menu,
+    .stage.phone-small .sns-auth-edit-actions .sns-auth-image-switcher,
+    .stage.phone-small .sns-auth-edit-actions .sns-auth-layout-choices,
+    .stage.phone-small .sns-auth-edit-actions .section-appearance-menu {
+      position: fixed;
+      z-index: 110;
+      top: 96px;
+      right: 12px;
+      bottom: auto;
+      left: 12px;
+      width: auto;
+      max-height: calc(100vh - 190px);
+    }
+
+    .stage.mobile .sns-auth-panel,
+    .stage.phone-small .sns-auth-panel {
+      padding-top: 118px;
     }
 
     .stage.mobile .sns-auth-edit-actions .sns-auth-visual-editor .detail-bundle-action,
@@ -15982,10 +16152,14 @@
     .stage.phone-small .sns-auth-edit-actions .section-appearance-trigger,
     .stage.phone-small .sns-auth-edit-actions .sns-auth-image-picker > summary,
     .stage.phone-small .sns-auth-edit-actions .sns-auth-layout-picker > summary {
+      min-height: 46px;
       min-width: 0;
       padding-inline: 10px;
       font-size: 11px;
     }
+
+    .stage.mobile .sns-auth-edit-actions .section-appearance-trigger,
+    .stage.phone-small .sns-auth-edit-actions .section-appearance-trigger { min-height: 56px; }
 
     /* 모바일 사진분할형은 별도 로그인 카드를 만들지 않고 사진 위에 세 SNS 버튼만 직접 겹친다. */
     .stage.mobile .sns-auth-layout[data-sns-layout="drive-split"] {
@@ -16826,7 +17000,7 @@
     </section>
   </div>
 
-  <div class="notice-text-editor-modal" id="essentialNoticeTextEditorModal" role="dialog" aria-modal="true" aria-labelledby="essentialNoticeTextEditorHeading" hidden>
+  <div class="notice-text-editor-modal" id="essentialNoticeTextEditorModal" role="region" aria-labelledby="essentialNoticeTextEditorHeading" hidden>
     <section class="notice-text-editor-dialog">
       <header class="notice-text-editor-head">
         <strong id="essentialNoticeTextEditorHeading">텍스트 상자 편집</strong>
@@ -16908,9 +17082,9 @@
     </section>
   </div>
 
-  <div class="menu-editor-modal" id="menuEditorModal" hidden>
+  <div class="menu-editor-modal" id="menuEditorModal" role="dialog" aria-modal="false" aria-labelledby="menuEditorModalTitle" hidden>
     <div class="menu-editor-head">
-      <strong>홈페이지 메뉴 편집</strong>
+      <strong id="menuEditorModalTitle">홈페이지 메뉴 편집</strong>
       <div class="menu-editor-head-actions">
         <button type="button" class="menu-editor-drag" id="menuEditorDragBtn" title="메뉴 편집창 이동" aria-label="메뉴 편집창 이동">↕</button>
         <button type="button" id="menuEditorCollapseBtn">접기</button>
@@ -17005,11 +17179,11 @@
       <div class="theme-float" aria-label="전체 분위기 색상">
         <span class="theme-float-label">분위기 색상</span>
         <div class="theme-preset-row" id="themePresetRow">
-          <button type="button" class="theme-preset" data-theme="warm" style="--theme-swatch:#a9754f" title="따뜻한 브라운">브라운</button>
-          <button type="button" class="theme-preset" data-theme="green" style="--theme-swatch:#4f7a62" title="차분한 그린">그린</button>
-          <button type="button" class="theme-preset" data-theme="blue" style="--theme-swatch:#4e6f96" title="신뢰감 있는 블루">블루</button>
-          <button type="button" class="theme-preset" data-theme="goldBlack" style="--theme-swatch:#2f2a24" title="블랙 골드">블랙</button>
-          <button type="button" class="theme-preset" data-theme="rose" style="--theme-swatch:#b66b78" title="부드러운 로즈">로즈</button>
+          <button type="button" class="theme-preset" data-theme="warm" style="--theme-swatch:#a9754f" title="따뜻한 브라운" aria-pressed="false"><span class="theme-preset-label">브라운</span></button>
+          <button type="button" class="theme-preset" data-theme="green" style="--theme-swatch:#4f7a62" title="차분한 그린" aria-pressed="true"><span class="theme-preset-label">그린</span></button>
+          <button type="button" class="theme-preset" data-theme="blue" style="--theme-swatch:#4e6f96" title="신뢰감 있는 블루" aria-pressed="false"><span class="theme-preset-label">블루</span></button>
+          <button type="button" class="theme-preset" data-theme="goldBlack" style="--theme-swatch:#2f2a24" title="블랙 골드" aria-pressed="false"><span class="theme-preset-label">블랙</span></button>
+          <button type="button" class="theme-preset" data-theme="rose" style="--theme-swatch:#b66b78" title="부드러운 로즈" aria-pressed="false"><span class="theme-preset-label">로즈</span></button>
         </div>
         <div class="theme-custom-row">
           <input id="themeCustomColorInput" type="color" value="#a9754f" aria-label="직접 분위기 색상">
@@ -18267,9 +18441,9 @@
 
     const sectionAppearancePresets = Object.freeze({
       green: { label: "산뜻한 초록", background: "#f1f8f3", accent: "#2f7656", text: "#17372b" },
-      cream: { label: "따뜻한 크림", background: "#fff8e8", accent: "#c86e18", text: "#3b2a18" },
+      cream: { label: "따뜻한 크림", background: "#fff8e8", accent: "#a9540f", text: "#3b2a18" },
       sky: { label: "맑은 하늘", background: "#eef7fb", accent: "#2f6f91", text: "#153749" },
-      coral: { label: "활기찬 코랄", background: "#fff1ef", accent: "#b95d50", text: "#4a2420" },
+      coral: { label: "활기찬 코랄", background: "#fff1ef", accent: "#ac5045", text: "#4a2420" },
       lavender: { label: "차분한 보라", background: "#f6f1fb", accent: "#7157a0", text: "#302444" }
     });
     const sectionDecorationMotifs = Object.freeze({
@@ -18787,7 +18961,9 @@
       root.style.setProperty("--theme-wave-rgb", rgbString(state.theme.line));
       if (themeCustomColorInput) themeCustomColorInput.value = state.theme.accent;
       document.querySelectorAll("[data-theme]").forEach((button) => {
-        button.classList.toggle("active", button.dataset.theme === state.theme.name);
+        const selected = button.dataset.theme === state.theme.name;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", String(selected));
       });
       Object.keys(state.donationSections ?? {}).forEach(applyDonationVisualStyle);
       applyTextStyles();
@@ -19707,9 +19883,15 @@
         submenu.className = "homepage-submenu";
         submenu.id = `homepage-submenu-${item.id}`;
         const selectedDropdownMode = level === 1 && state.homeMenu.layoutMode === "selected-dropdown";
+        const unifiedMode = level === 1 && state.homeMenu.layoutMode === "unified";
         const quickMode = level === 1 && !["selected-dropdown", "cascade", "unified"].includes(state.homeMenu.layoutMode);
-        if (selectedDropdownMode || (quickMode && state.homeMenu.layoutMode === "two-level")) {
-          submenu.classList.add("quick-submenu", selectedDropdownMode ? "quick-selected-dropdown" : "quick-two-level");
+        // The unified editor preview uses the same flattened destination list as
+        // the delivery header, preserving visible labels, IDs, and navigation order.
+        if (selectedDropdownMode || unifiedMode || (quickMode && state.homeMenu.layoutMode === "two-level")) {
+          submenu.classList.add(
+            "quick-submenu",
+            selectedDropdownMode ? "quick-selected-dropdown" : unifiedMode ? "quick-dropdown" : "quick-two-level"
+          );
           getHomeMenuDestinationEntries(item).forEach(({ item: destination }) => {
             const quickItem = document.createElement("div");
             quickItem.className = "homepage-menu-item level-2 quick-destination";
@@ -20053,6 +20235,16 @@
       homepageMenu.classList.toggle("open", menuOpen);
       stage.classList.toggle("home-menu-open", menuOpen);
       document.body.classList.toggle("home-menu-open", menuOpen);
+      const menuSurfaceOpen = menuOpen || Boolean(state.expandedHomeMenuId);
+      stage.classList.toggle("home-menu-surface-open", menuSurfaceOpen);
+      document.body.classList.toggle("home-menu-surface-open", menuSurfaceOpen);
+      const toolbarSuppressed = menuSurfaceOpen || document.body.classList.contains("section-appearance-surface-open");
+      [inlineToolbar, inlineToolbarFloat].forEach((surface) => {
+        if (!surface) return;
+        surface.inert = toolbarSuppressed;
+        if (toolbarSuppressed) surface.setAttribute("aria-hidden", "true");
+        else surface.removeAttribute("aria-hidden");
+      });
       syncHomeMenuPageScroll(menuOpen);
       homepageMenuToggle.setAttribute("aria-expanded", String(menuOpen));
       homepageMenuToggle.setAttribute("aria-label", menuOpen ? "홈페이지 메뉴 닫기" : "홈페이지 메뉴 열기");
@@ -20172,20 +20364,28 @@
 
     function openHomeMenuEditor() {
       if (!menuEditorModal) return;
+      const wasHidden = menuEditorModal.hidden;
+      const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      if (!prepareEditorModalOpen("menu-editor")) return;
+      if (wasHidden) homeMenuEditorReturnFocus = returnFocus;
       state.menuEditor.collapsed = false;
       menuEditorModal.hidden = false;
       menuEditorModal.classList.remove("collapsed");
       if (menuEditorFloatBtn) menuEditorFloatBtn.hidden = true;
       renderHomeMenuEditor();
+      requestAnimationFrame(() => menuEditorCloseBtn?.focus({ preventScroll: true }));
     }
 
-    function closeHomeMenuEditor() {
+    function closeHomeMenuEditor(options = {}) {
       if (!menuEditorModal) return;
       menuEditorModal.hidden = true;
       menuEditorModal.classList.remove("collapsed");
       state.menuEditor.collapsed = false;
       if (menuEditorFloatBtn) menuEditorFloatBtn.hidden = true;
       syncHomeMenuInputs();
+      const returnFocus = homeMenuEditorReturnFocus;
+      homeMenuEditorReturnFocus = null;
+      if (options.restoreFocus !== false) requestAnimationFrame(() => returnFocus?.focus?.({ preventScroll: true }));
     }
 
     function collapseHomeMenuEditor() {
@@ -20608,6 +20808,165 @@
     const photoRefineCloseBtn = document.getElementById("photoRefineCloseBtn");
     const photoRefineResetBtn = document.getElementById("photoRefineResetBtn");
     const photoRefineApplyBtn = document.getElementById("photoRefineApplyBtn");
+    let homeMenuEditorReturnFocus = null;
+    let photoRefineReturnFocus = null;
+    let activeEditorModalSurfaceId = "";
+
+    // Independent editor dialogs share one coordinator so opening a new task cannot
+    // leave an unrelated picker or modal obscuring the canvas. Notice text and
+    // decoration tools may keep their composer parent, but never each other.
+    function getEditorModalSurfaceEntries() {
+      return [
+        { id: "notice-text-editor", element: essentialNoticeTextEditorModal, close: () => closeNoticeTextEditor({ restoreFocus: false }) },
+        { id: "decoration-picker", element: decorationPickerModal, close: () => closeDecorationPicker({ restoreFocus: false }) },
+        { id: "process-icon-picker", element: processIconPickerModal, close: () => closeProcessIconPicker({ restoreFocus: false }) },
+        { id: "history-icon-picker", element: historyIconPickerModal, close: () => closeHistoryIconPicker({ restoreFocus: false }) },
+        { id: "donation-icon-picker", element: donationIconPickerModal, close: () => closeDonationIconPicker({ restoreFocus: false }) },
+        { id: "photo-refine", element: photoRefineModal, close: () => closePhotoRefineEditor({ restoreFocus: false }) },
+        { id: "footer-document", element: footerDocumentModal, close: () => closeFooterDocumentModal({ restoreFocus: false }) },
+        { id: "staff-section-manager", element: staffSectionManager, close: () => closeStaffSectionManager({ restoreFocus: false }) },
+        { id: "menu-editor", element: menuEditorModal, close: () => closeHomeMenuEditor({ restoreFocus: false }) },
+        { id: "notice-composer", element: essentialNoticeComposerModal, close: () => closeEssentialNoticeComposer({ restoreFocus: false }) },
+        { id: "notice-detail", element: essentialNoticeDetailModal, close: () => closeEssentialNoticeDetail({ restoreFocus: false }) },
+        {
+          id: "sns-auth-config",
+          getOpenElements: () => [...document.querySelectorAll("dialog[data-sns-auth-config-dialog]:open")],
+          close: () => document.querySelectorAll("dialog[data-sns-auth-config-dialog]:open").forEach((dialog) => dialog.close())
+        }
+      ];
+    }
+
+    function isEditorModalSurfaceOpen(entry) {
+      if (entry.getOpenElements) return entry.getOpenElements().length > 0;
+      return Boolean(entry.element && !entry.element.hidden);
+    }
+
+    function getOpenEditorModalSurfaceIds() {
+      return getEditorModalSurfaceEntries()
+        .filter(isEditorModalSurfaceOpen)
+        .map((entry) => entry.id);
+    }
+
+    function prepareEditorModalOpen(nextSurface, options = {}) {
+      const allowed = new Set([nextSurface]);
+      if (options.preserveNoticeComposer === true) allowed.add("notice-composer");
+      const protectedOpenSurface = ["notice-composer", "footer-document", "photo-refine"]
+        .find((id) => id !== nextSurface && !(id === "notice-composer" && options.preserveNoticeComposer === true)
+          && isEditorModalSurfaceOpen(getEditorModalSurfaceEntries().find((entry) => entry.id === id)));
+      if (protectedOpenSurface) {
+        showToast("현재 편집창에서 저장 또는 취소를 먼저 선택해 주세요.");
+        return false;
+      }
+      if (!inlineToolbar?.hidden && !state.toolbar.collapsed) collapseInlineToolbar();
+      colorPickerRuntime.cancelAll();
+      stage.querySelectorAll(".section-appearance-menu:not([hidden]), .section-style-choice-menu:not([hidden])").forEach((menu) => { menu.hidden = true; });
+      stage.querySelectorAll('.section-appearance-trigger[aria-expanded="true"], .section-style-choice-trigger[aria-expanded="true"]').forEach((button) => button.setAttribute("aria-expanded", "false"));
+      syncSectionAppearanceSurfaceState();
+      stage.querySelectorAll("details.sns-auth-image-picker[open], details.sns-auth-layout-picker[open]").forEach((details) => { details.open = false; });
+      if (backgroundFloat.classList.contains("open")) setBackgroundFloatOpen(false);
+      getEditorModalSurfaceEntries().forEach((entry) => {
+        if (!isEditorModalSurfaceOpen(entry)) return;
+        // A native SNS dialog has no stable target ID, so every previous instance
+        // closes before the newly selected configuration dialog calls showModal().
+        if (entry.id === "sns-auth-config" && nextSurface === entry.id) {
+          entry.close();
+          return;
+        }
+        if (!allowed.has(entry.id)) entry.close();
+      });
+      const conflicts = getOpenEditorModalSurfaceIds().filter((id) => !allowed.has(id));
+      if (!conflicts.length) {
+        activeEditorModalSurfaceId = nextSurface;
+        return true;
+      }
+      showToast("진행 중인 편집 작업을 닫은 뒤 다시 시도해 주세요.");
+      return false;
+    }
+
+    function prepareEditorTransientOpen(options = {}) {
+      const blockingSurface = getOpenEditorModalSurfaceIds().find((id) => !["notice-composer", "notice-text-editor", "decoration-picker"].includes(id));
+      if (blockingSurface) {
+        showToast("현재 편집창에서 저장 또는 취소를 먼저 선택해 주세요.");
+        return false;
+      }
+      colorPickerRuntime.cancelAll();
+      stage.querySelectorAll(".section-appearance-menu:not([hidden]), .section-style-choice-menu:not([hidden])").forEach((menu) => { menu.hidden = true; });
+      stage.querySelectorAll('.section-appearance-trigger[aria-expanded="true"], .section-style-choice-trigger[aria-expanded="true"]').forEach((button) => button.setAttribute("aria-expanded", "false"));
+      syncSectionAppearanceSurfaceState();
+      stage.querySelectorAll("details.sns-auth-image-picker[open], details.sns-auth-layout-picker[open]").forEach((details) => {
+        if (details !== options.preserveElement) details.open = false;
+      });
+      if (backgroundFloat.classList.contains("open")) setBackgroundFloatOpen(false);
+      return true;
+    }
+
+    function closeEditorTransientSurface() {
+      if (colorPickerRuntime.active || colorPickerRuntime.paletteOpen) return colorPickerRuntime.cancelAll();
+      const openAppearanceMenu = stage.querySelector(".section-appearance-menu:not([hidden]), .section-style-choice-menu:not([hidden])");
+      if (openAppearanceMenu) {
+        openAppearanceMenu.hidden = true;
+        const control = openAppearanceMenu.closest(".section-appearance-control, .section-style-choice");
+        control?.querySelector('[aria-expanded="true"]')?.setAttribute("aria-expanded", "false");
+        syncSectionAppearanceSurfaceState();
+        return true;
+      }
+      const openDetails = stage.querySelector("details.sns-auth-image-picker[open], details.sns-auth-layout-picker[open]");
+      if (openDetails) {
+        openDetails.open = false;
+        openDetails.querySelector("summary")?.focus?.({ preventScroll: true });
+        return true;
+      }
+      if (backgroundFloat.classList.contains("open")) {
+        setBackgroundFloatOpen(false);
+        backgroundFloatToggle.focus({ preventScroll: true });
+        activeEditorModalSurfaceId = "";
+        return true;
+      }
+      return false;
+    }
+
+    function closeTopmostEditorModal(options = {}) {
+      const restoreFocus = options.restoreFocus !== false;
+      const openEntries = getEditorModalSurfaceEntries().filter(isEditorModalSurfaceOpen);
+      if (!openEntries.length) return false;
+      const entry = openEntries.find((candidate) => candidate.id === activeEditorModalSurfaceId)
+        || openEntries.find((candidate) => candidate.id !== "notice-composer")
+        || openEntries[0];
+      if (entry.id === "notice-text-editor") closeNoticeTextEditor({ restoreFocus });
+      else if (entry.id === "decoration-picker") closeDecorationPicker({ restoreFocus });
+      else if (entry.id === "process-icon-picker") closeProcessIconPicker({ restoreFocus });
+      else if (entry.id === "history-icon-picker") closeHistoryIconPicker({ restoreFocus });
+      else if (entry.id === "donation-icon-picker") closeDonationIconPicker({ restoreFocus });
+      else if (entry.id === "photo-refine") closePhotoRefineEditor({ restoreFocus });
+      else if (entry.id === "footer-document") closeFooterDocumentModal({ restoreFocus });
+      else if (entry.id === "staff-section-manager") closeStaffSectionManager({ restoreFocus });
+      else if (entry.id === "menu-editor") closeHomeMenuEditor({ restoreFocus });
+      else if (entry.id === "notice-composer") closeEssentialNoticeComposer({ restoreFocus });
+      else if (entry.id === "notice-detail") closeEssentialNoticeDetail({ restoreFocus });
+      else entry.close();
+      activeEditorModalSurfaceId = getOpenEditorModalSurfaceIds().at(-1) || "";
+      return true;
+    }
+
+    window.EditorModalCoordinator = Object.freeze({
+      prepare: prepareEditorModalOpen,
+      getOpenSurfaceIds: getOpenEditorModalSurfaceIds,
+      closeTopmost: closeTopmostEditorModal
+    });
+
+    document.addEventListener("keydown", (event) => {
+      // The shared eyedropper owns Escape while it samples the page. Let its
+      // earlier capture listener cancel sampling without also closing a dialog.
+      if (event.key !== "Escape") return;
+      if (closeEditorTransientSurface()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (!closeTopmostEditorModal()) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, { capture: true });
     const signatureLayer = document.getElementById("signatureLayer");
     const sealLayer = document.getElementById("sealLayer");
     const layerList = document.getElementById("layerList");
@@ -23693,20 +24052,59 @@
       return Math.max(minTop, getFloatingEditorViewportBottom(viewportGap) - height);
     }
 
+    // Keeps the automatic background surface clear of the active editing route and visible insertion controls.
+    function getBackgroundFloatingProtectedRects() {
+      const selectedSectionId = getSectionForLayer(state.selected);
+      const selectedPart = getGreetingLayerPart(state.selected);
+      const selectedElement = elements[state.selected];
+      const selectedTitle = selectedPart === "title"
+        ? selectedElement?.querySelector?.(".title-text") || selectedElement
+        : selectedElement;
+      const appearanceTrigger = selectedSectionId
+        ? stage.querySelector(`.section-appearance-control[data-section-id="${normalizeSectionId(selectedSectionId)}"] .section-appearance-trigger`)
+        : null;
+      const nodeRects = [selectedTitle, appearanceTrigger, inlineToolbar, inlineToolbarFloat, homepageMenu]
+        .filter((node) => {
+          if (!node || node.hidden) return false;
+          const style = getComputedStyle(node);
+          const rect = node.getBoundingClientRect();
+          return style.display !== "none" && style.visibility !== "hidden"
+            && Number(style.opacity) > 0 && rect.width > 0 && rect.height > 0;
+        })
+        .map((node) => node.getBoundingClientRect());
+      return [...nodeRects, ...getVisibleSectionInsertRects()];
+    }
+
     function updateBackgroundFloatPosition() {
       const stageRect = stage.getBoundingClientRect();
+      const responsive = isResponsiveViewport();
+      backgroundFloat.classList.toggle("responsive-compact", responsive);
       const isOpen = backgroundFloat.classList.contains("open");
-      const panelWidth = isResponsiveViewport()
+      const panelWidth = responsive
         ? Math.max(180, Math.min(260, stageRect.width - 16))
         : 260;
       backgroundFloat.style.setProperty("--background-panel-width", `${Math.round(panelWidth)}px`);
-      const controlWidth = isOpen ? panelWidth : 48;
-      const controlHeight = isOpen ? (backgroundFloat.offsetHeight || 260) : 48;
+      // Compact grid tracks can be narrower than the open panel. Include its
+      // rendered overflow when choosing a position so phone controls stay onscreen.
+      const controlWidth = Math.max(backgroundFloat.offsetWidth, isOpen ? backgroundFloat.scrollWidth : 0) || (isOpen ? panelWidth : 48);
+      const controlHeight = backgroundFloat.offsetHeight || (isOpen ? 260 : 48);
       const viewportBottom = getFloatingEditorViewportBottom();
       const viewportMaxTop = getFloatingEditorMaxTop(controlHeight);
+      const protectedRects = getBackgroundFloatingProtectedRects();
+      const protectedToolbarRect = inlineToolbar?.getBoundingClientRect?.() ?? null;
+      backgroundFloat.dataset.protectedRectCount = String(protectedRects.length);
+      backgroundFloat.dataset.protectedToolbarRect = protectedToolbarRect
+        ? [protectedToolbarRect.left, protectedToolbarRect.top, protectedToolbarRect.right, protectedToolbarRect.bottom]
+          .map((value) => Math.round(value * 1000) / 1000).join(",")
+        : "";
+      backgroundFloat.dataset.protectedToolbarIncluded = String(Boolean(protectedToolbarRect
+        && protectedRects.some((rect) => Math.abs(rect.left - protectedToolbarRect.left) < .5
+          && Math.abs(rect.top - protectedToolbarRect.top) < .5
+          && Math.abs(rect.right - protectedToolbarRect.right) < .5
+          && Math.abs(rect.bottom - protectedToolbarRect.bottom) < .5)));
       let left = 14;
       let top = (window.innerHeight - controlHeight) / 2 - (state.toolbar.collapsed ? 34 : 0);
-      if (isResponsiveViewport()) {
+      if (responsive) {
         left = clamp(stageRect.left + 10, 8, Math.max(8, stageRect.right - controlWidth - 10));
         const visibleTop = Math.max(stageRect.top + 76, 8);
         const visibleBottom = Math.min(stageRect.bottom - 14, viewportBottom);
@@ -23716,9 +24114,28 @@
         top = maxFloatTop >= visibleTop
           ? clamp(stackedTop, visibleTop, maxFloatTop)
           : clamp(stageRect.top + 88, 8, viewportMaxTop);
+        const minFloatLeft = clamp(stageRect.left + 10, 8, Math.max(8, stageRect.right - controlWidth - 10));
+        const maxFloatLeft = Math.max(minFloatLeft, Math.min(stageRect.right - controlWidth - 10, window.innerWidth - controlWidth - 8));
+        const placement = chooseProtectedFloatingPlacement(
+          [left, maxFloatLeft], Math.min(maxFloatTop, top + 8), controlWidth, controlHeight,
+          minFloatLeft, maxFloatLeft, 8, maxFloatTop, protectedRects, 8
+        );
+        left = placement.left;
+        top = placement.top;
+        backgroundFloat.dataset.sectionAppearanceAvoidance = placement.strategy;
+        backgroundFloat.dataset.sectionAppearanceAvoidanceSafe = String(placement.safe);
       } else {
-        left = clamp(left, 8, Math.max(8, window.innerWidth - controlWidth - 8));
-        top = clamp(top, 8, viewportMaxTop);
+        backgroundFloat.classList.remove("responsive-compact");
+        const minFloatLeft = 8;
+        const maxFloatLeft = Math.max(minFloatLeft, window.innerWidth - controlWidth - 8);
+        const placement = chooseProtectedFloatingPlacement(
+          [clamp(left, minFloatLeft, maxFloatLeft), maxFloatLeft], clamp(top, 8, viewportMaxTop),
+          controlWidth, controlHeight, minFloatLeft, maxFloatLeft, 8, viewportMaxTop, protectedRects, 8
+        );
+        left = placement.left;
+        top = placement.top;
+        backgroundFloat.dataset.sectionAppearanceAvoidance = placement.strategy;
+        backgroundFloat.dataset.sectionAppearanceAvoidanceSafe = String(placement.safe);
       }
 
       backgroundFloat.style.setProperty("--background-float-left", `${Math.round(left)}px`);
@@ -23729,10 +24146,19 @@
       }
     }
 
+    let backgroundFloatToolbarRestoreExpanded = false;
+
     function setBackgroundFloatOpen(isOpen) {
+      const wasOpen = backgroundFloat.classList.contains("open");
       backgroundFloat.classList.toggle("open", Boolean(isOpen));
       backgroundFloatToggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
       updateBackgroundFloatPosition();
+      if (!isOpen && wasOpen && backgroundFloatToolbarRestoreExpanded) {
+        backgroundFloatToolbarRestoreExpanded = false;
+        state.toolbar.collapsed = false;
+        markInlineToolbarExpanded();
+        updateInlineToolbar();
+      }
       if (state.toolbar.collapsed) positionInlineToolbarFloat();
     }
 
@@ -23839,7 +24265,24 @@
         }
       }
       const left = clamp(leftCandidate, minLeft, maxLeft);
-      const top = clamp(topCandidate, minTop, maxTop);
+      let top = clamp(topCandidate, minTop, maxTop);
+      const finalBackgroundRect = backgroundFloat.getBoundingClientRect();
+      const floatRectAt = (candidateTop) => ({
+        left,
+        right: left + width,
+        top: candidateTop,
+        bottom: candidateTop + height
+      });
+      if (finalBackgroundRect.width > 0 && finalBackgroundRect.height > 0
+        && rectsOverlap(floatRectAt(top), finalBackgroundRect, 8)) {
+        const above = finalBackgroundRect.top - height - 10;
+        const below = finalBackgroundRect.bottom + 10;
+        top = above >= minTop
+          ? above
+          : below <= maxTop
+            ? below
+            : top;
+      }
       inlineToolbarFloat.style.setProperty("--inline-float-left", `${Math.round(left)}px`);
       inlineToolbarFloat.style.setProperty("--inline-float-top", `${Math.round(top)}px`);
     }
@@ -23857,8 +24300,8 @@
         .filter((rect) => rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight);
     }
 
+    // Keeps an automatically placed toolbar clear of every visible section insertion target.
     function avoidSectionInsertOverlap(left, top, width, height, minTop, maxTop) {
-      if (!isResponsiveViewport()) return top;
       let nextTop = top;
       const gap = 10;
       const insertRects = getVisibleSectionInsertRects();
@@ -23900,6 +24343,81 @@
       if (below <= maxTop) return below;
       if (above >= minTop) return above;
       return clamp(below, minTop, maxTop);
+    }
+
+    // Finds a safe vertical slot around horizontally overlapping protected controls.
+    function chooseProtectedToolbarTop(left, top, width, height, minTop, maxTop, protectedRects, gap = 8) {
+      const initialTop = clamp(top, minTop, maxTop);
+      const horizontalRects = (protectedRects || []).filter((rect) => rect
+        && rect.width > 0 && rect.height > 0
+        && left < rect.right + gap && left + width > rect.left - gap);
+      const toolbarRectAt = (candidateTop) => ({
+        left,
+        right: left + width,
+        top: candidateTop,
+        bottom: candidateTop + height
+      });
+      if (!horizontalRects.some((rect) => rectsOverlap(toolbarRectAt(initialTop), rect, gap))) {
+        return { top: initialTop, safe: true, strategy: "unchanged", protectedUnion: null };
+      }
+      const protectedUnion = {
+        left: Math.min(...horizontalRects.map((rect) => rect.left)),
+        right: Math.max(...horizontalRects.map((rect) => rect.right)),
+        top: Math.min(...horizontalRects.map((rect) => rect.top)),
+        bottom: Math.max(...horizontalRects.map((rect) => rect.bottom))
+      };
+      const candidates = [
+        { top: protectedUnion.top - height - gap, strategy: "above-protected-union" },
+        { top: protectedUnion.bottom + gap, strategy: "below-protected-union" }
+      ];
+      for (const candidate of candidates) {
+        if (candidate.top < minTop || candidate.top > maxTop) continue;
+        if (horizontalRects.some((rect) => rectsOverlap(toolbarRectAt(candidate.top), rect, gap))) continue;
+        return { ...candidate, safe: true, protectedUnion };
+      }
+      /* A wide toolbar plus several smaller controls can make the outer union
+         span almost the whole viewport even though a safe interior gap exists.
+         Test every protected edge (and both viewport bounds), nearest to the
+         preferred position first, before declaring that placement is unsafe. */
+      const gapCandidates = [
+        minTop,
+        maxTop,
+        ...horizontalRects.flatMap((rect) => [
+          rect.top - height - gap,
+          rect.bottom + gap
+        ])
+      ]
+        .filter((candidateTop) => Number.isFinite(candidateTop)
+          && candidateTop >= minTop && candidateTop <= maxTop)
+        .filter((candidateTop, index, all) => all.indexOf(candidateTop) === index)
+        .sort((leftTop, rightTop) => Math.abs(leftTop - initialTop) - Math.abs(rightTop - initialTop));
+      for (const candidateTop of gapCandidates) {
+        if (horizontalRects.some((rect) => rectsOverlap(toolbarRectAt(candidateTop), rect, gap))) continue;
+        return {
+          top: candidateTop,
+          safe: true,
+          strategy: "nearest-protected-gap",
+          protectedUnion
+        };
+      }
+      return {
+        top: initialTop,
+        safe: false,
+        strategy: "no-safe-candidate-fallback",
+        protectedUnion
+      };
+    }
+
+    // Tries automatic horizontal candidates; manual toolbar positions bypass this call path.
+    function chooseProtectedFloatingPlacement(leftCandidates, top, width, height, minLeft, maxLeft, minTop, maxTop, protectedRects, gap = 8) {
+      const candidates = [...new Set((leftCandidates || []).map((left) => clamp(left, minLeft, maxLeft)))];
+      for (const left of candidates) {
+        const placement = chooseProtectedToolbarTop(left, top, width, height, minTop, maxTop, protectedRects, gap);
+        if (placement.safe) return { ...placement, left };
+      }
+      const left = candidates[0] ?? clamp(minLeft, minLeft, maxLeft);
+      const placement = chooseProtectedToolbarTop(left, top, width, height, minTop, maxTop, protectedRects, gap);
+      return { ...placement, left };
     }
 
     let inlineToolbarExpandedAt = 0;
@@ -24305,6 +24823,7 @@
       }
       inlineToolbarFloat.hidden = true;
       inlineToolbar.hidden = false;
+      inlineToolbar.classList.add("measuring-position");
       inlineToolbar.style.transform = "translate(-9999px, -9999px)";
 
       const toolbarWidth = inlineToolbar.offsetWidth || 420;
@@ -24339,13 +24858,47 @@
         top = topCandidate > 8 ? topCandidate : rect.bottom + 14;
         left = clamp(rect.left, 8, maxLeft);
       }
-      if (useMobileSheet && isResponsiveViewport()) {
+      if (!state.toolbar.manual) {
         top = avoidSectionInsertOverlap(left, top, toolbarWidth, toolbarHeight, minTop, maxTop);
       }
       top = avoidHomeMenuOverlap(left, top, toolbarWidth, toolbarHeight, minTop, maxTop);
+      if (useMobileSheet && isResponsiveViewport() && !state.toolbar.manual) {
+        const selectedTitle = selectedPart === "title"
+          ? selectedEl?.querySelector?.(".title-text") || selectedEl
+          : selectedEl;
+        const appearanceControl = stage.querySelector(`.section-appearance-control[data-section-id="${normalizeSectionId(selectedSectionId)}"]`);
+        const appearanceTrigger = appearanceControl?.querySelector(".section-appearance-trigger");
+        /* Resolve the homepage menu, title, appearance and section-insert
+           targets together. A later placement pass must not move the toolbar
+           back over a control that an earlier specialized pass already cleared. */
+        const protectedRects = [homepageMenu, selectedTitle, appearanceTrigger]
+          .filter(Boolean)
+          .map((node) => node.getBoundingClientRect())
+          .filter((rect) => rect.width > 0 && rect.height > 0)
+          .concat(getVisibleSectionInsertRects());
+        const placement = chooseProtectedFloatingPlacement(
+          [left], top, toolbarWidth, toolbarHeight, minLeft, maxLeft, minTop, maxTop, protectedRects, 8
+        );
+        left = placement.left;
+        top = placement.top;
+        inlineToolbar.dataset.sectionAppearanceAvoidance = placement.strategy;
+        inlineToolbar.dataset.sectionAppearanceAvoidanceSafe = String(placement.safe);
+      } else {
+        delete inlineToolbar.dataset.sectionAppearanceAvoidance;
+        delete inlineToolbar.dataset.sectionAppearanceAvoidanceSafe;
+      }
       if (state.toolbar.manual) state.toolbar.y = top;
       inlineToolbar.style.transform = `translate(${left}px, ${top}px)`;
       updateMobileTopbarPosition();
+      /* The background surface depends on the toolbar's painted rectangle.
+         Force the final transform into layout before measuring that dependency;
+         the temporary -9999px measurement position must never be accepted. */
+      inlineToolbar.getBoundingClientRect();
+      updateBackgroundFloatPosition();
+      inlineToolbar.classList.remove("measuring-position");
+      /* Range/select sizing can settle after the toolbar transform. Re-run the
+         dependent background surface placement on the next layout frame. */
+      scheduleLayoutTask("backgroundFloatAfterInlineToolbar", updateBackgroundFloatPosition);
     }
 
     function uploadForSelectedLayer() {
@@ -24837,6 +25390,10 @@
         showToast("대표자 사진을 먼저 첨부해 주세요");
         return;
       }
+      const wasHidden = photoRefineModal.hidden;
+      const returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      if (!prepareEditorModalOpen("photo-refine")) return;
+      if (wasHidden) photoRefineReturnFocus = returnFocus;
       photoRefineModal.hidden = false;
       state.photoRefine.open = true;
       state.photoRefine.sectionId = sectionId;
@@ -24856,12 +25413,15 @@
       }
     }
 
-    function closePhotoRefineEditor() {
+    function closePhotoRefineEditor(options = {}) {
       state.photoRefine.open = false;
       state.photoRefine.drawing = false;
       state.photoRefine.lastPoint = null;
       hidePhotoRefineBrushPreview();
       photoRefineModal.hidden = true;
+      const returnFocus = photoRefineReturnFocus;
+      photoRefineReturnFocus = null;
+      if (options.restoreFocus !== false) requestAnimationFrame(() => returnFocus?.focus?.({ preventScroll: true }));
     }
 
     function resetPhotoRefineEditor() {
@@ -28116,6 +28676,10 @@
         const model = getProgramModel(sectionId);
         const field = event.target.dataset.programField;
         if (field && field in model) model[field] = event.target.value;
+        if (field === "ctaLabel" && model.detailPageKind === "application" && model.detailSectionKind === "form") {
+          const submitButton = layer.querySelector('[data-detail-application-form] button[type="submit"]');
+          if (submitButton) submitButton.textContent = event.target.value;
+        }
         const summaryField = event.target.dataset.programSummaryField;
         if (editableProgramSummaryFields.has(summaryField)) {
           model[summaryField] = event.target.value;
@@ -29060,6 +29624,7 @@
         ? model.items.find((entry) => entry.id === itemId)
         : null;
       if (!item) return;
+      if (!prepareEditorModalOpen("notice-detail")) return;
       essentialNoticeDetailReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       essentialNoticeDetailContext.sectionId = sectionId;
       essentialNoticeDetailContext.itemId = itemId;
@@ -29084,6 +29649,7 @@
       const model = getGalleryModel(sectionId);
       const item = model.items.find((entry) => entry.id === itemId);
       if (!item) return;
+      if (!prepareEditorModalOpen("notice-detail")) return;
       const category = model.categories.find((entry) => entry.id === item.categoryId);
       essentialNoticeDetailReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       essentialNoticeDetailContext.sectionId = null;
@@ -29137,6 +29703,7 @@
       const model = getEssentialModel(sectionId);
       const item = model.template === "notice" ? model.items.find((entry) => entry.id === itemId) : null;
       if (!item) return;
+      if (!prepareEditorModalOpen("notice-composer")) return;
       closeEssentialNoticeDetail({ restoreFocus: false });
       noticeComposerState.sectionId = sectionId;
       noticeComposerState.itemId = itemId;
@@ -29767,9 +30334,9 @@
     function openNoticeTextEditor({ field = "", blockId = "", tableRow = null, tableColumn = null, returnFocus = null } = {}) {
       const draft = noticeComposerState.draft;
       if (!draft) return;
-      if (isResponsiveViewport()) {
-        collapseInlineToolbar();
-        closeDecorationPicker({ restoreFocus: false });
+      if (!prepareEditorModalOpen("notice-text-editor", { preserveNoticeComposer: true })) return;
+      if (essentialNoticeTextEditorModal.parentElement !== essentialNoticeComposerModal) {
+        essentialNoticeComposerModal.appendChild(essentialNoticeTextEditorModal);
       }
       if (!essentialNoticeTextEditorModal.hidden) closeNoticeTextEditor({ restoreFocus: false });
       const block = blockId ? getNoticeComposerBlock(blockId) : null;
@@ -30215,6 +30782,7 @@
       const model = getEssentialModel(sectionId);
       const item = model.template === "notice" ? model.items.find((entry) => entry.id === itemId) : null;
       if (!item) return;
+      if (!prepareEditorModalOpen("notice-composer")) return;
       closeEssentialNoticeDetail({ restoreFocus: false });
       noticeComposerState.sectionId = sectionId;
       noticeComposerState.itemId = itemId;
@@ -30847,6 +31415,7 @@
       const model = getEssentialModel(sectionId);
       const documentModel = model.template === "footer" ? model.footerDocuments?.[documentKey] : null;
       if (!footerDocumentModal || !documentModel) return;
+      if (!prepareEditorModalOpen("footer-document")) return;
       const editable = state.mode === "edit";
       footerDocumentEditorState.sectionId = sectionId;
       footerDocumentEditorState.documentKey = documentKey;
@@ -31319,7 +31888,7 @@
             const nameAttribute = fieldName ? ` name="${escapeHtml(fieldName)}"` : "";
             const control = item.fieldType === "select" ? `<select${nameAttribute} ${item.required ? "required" : ""}><option value="">선택해 주세요</option>${options.map((option, optionIndex) => `<option value="${escapeHtml(String(item.fieldOptions || "").split("|")[optionIndex] || option)}">${escapeHtml(option)}</option>`).join("")}</select>` : item.fieldType === "textarea" ? `<textarea${nameAttribute} placeholder="${escapeHtml(item.meta)}" ${item.required ? "required" : ""}></textarea>` : `<input type="${escapeHtml(item.fieldType || "text")}"${nameAttribute} placeholder="${escapeHtml(item.meta)}" ${item.required ? "required" : ""}>`;
             return `<div class="detail-form-field${wide}" data-essential-item-id="${escapeHtml(item.id)}"><label><textarea class="essential-field essential-item-title" rows="1" data-essential-item-field="title">${escapeHtml(item.title)}</textarea>${item.required ? `<span class="detail-required-mark" aria-hidden="true">*</span>` : ""}</label>${control}<textarea class="essential-field essential-item-description essential-edit-only" rows="1" data-essential-item-field="description">${escapeHtml(item.description)}</textarea>${renderFacilityDetailItemTools(index, model.items.length)}</div>`;
-          }).join("")}</div><label class="detail-form-honeypot" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">웹사이트<input type="text" name="website" tabindex="-1" autocomplete="off"></label><div class="detail-consent"><label><input type="checkbox" name="consent" required><span>접수와 상담을 위해 이름·연락처·신청 내용을 수집하고 처리하는 것에 동의합니다. 접수 목적 달성 후 기관 보유기간 기준에 따라 파기됩니다. *</span></label></div><div class="detail-form-actions"><button type="button" class="detail-bundle-action" data-detail-action="save-draft">임시 저장</button><button type="submit" class="detail-bundle-action primary">${escapeHtml(model.ctaLabel)}</button></div><p data-detail-form-status aria-live="polite"></p><div class="detail-receipt" data-detail-receipt hidden></div></form><aside class="detail-application-aside"><h2>접수 절차</h2><ol><li>신청서 작성</li><li>담당자 확인</li><li>전화 또는 문자 안내</li><li>일정·참여 확정</li></ol><p>${escapeHtml(model.note)}</p></aside></div>`;
+          }).join("")}</div><label class="detail-form-honeypot" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">웹사이트<input type="text" name="website" tabindex="-1" autocomplete="off"></label><div class="detail-consent"><label><input type="checkbox" name="consent" required><span>접수와 상담을 위해 이름·연락처·신청 내용을 수집하고 처리하는 것에 동의합니다. 접수 목적 달성 후 기관 보유기간 기준에 따라 파기됩니다. *</span></label></div><div class="detail-form-actions"><button type="button" class="detail-bundle-action" data-detail-action="save-draft">임시 저장</button><textarea class="essential-field detail-bundle-action-field primary essential-edit-only" rows="1" data-essential-field="ctaLabel" aria-label="접수 버튼 라벨">${escapeHtml(model.ctaLabel)}</textarea><button type="submit" class="detail-bundle-action primary">${escapeHtml(model.ctaLabel)}</button></div><p data-detail-form-status aria-live="polite"></p><div class="detail-receipt" data-detail-receipt hidden></div></form><aside class="detail-application-aside"><h2>접수 절차</h2><ol><li>신청서 작성</li><li>담당자 확인</li><li>전화 또는 문자 안내</li><li>일정·참여 확정</li></ol><p>${escapeHtml(model.note)}</p></aside></div>`;
         } else if (["consult", "contact", "guide"].includes(kind)) {
           const isAccountGuide = page === "account" && kind === "guide";
           const primaryHref = kind === "contact" ? "tel:0413535077" : kind === "consult" ? "/programs/application?type=case" : "/news/videos";
@@ -31543,6 +32112,11 @@
       const form = layer.querySelector("[data-detail-application-form]");
       if (form) {
         const status = form.querySelector("[data-detail-form-status]");
+        const submitLabelEditor = form.querySelector('[aria-label="접수 버튼 라벨"]');
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitLabelEditor?.addEventListener("input", () => {
+          if (submitButton) submitButton.textContent = submitLabelEditor.value;
+        });
         if (restoreVisitorApplicationDraft(form) && status) {
           status.textContent = "이 탭에 임시 저장한 내용을 불러왔습니다. 개인정보 처리 동의를 다시 확인해 주세요.";
         }
@@ -32004,6 +32578,7 @@
           return;
         }
         if (action === "open-social-config" && model.detailPageKind === "account" && model.detailSectionKind === "social" && state.mode === "edit") {
+          if (!prepareEditorModalOpen("sns-auth-config")) return;
           elements[sectionId]?.querySelector("[data-sns-auth-config-dialog]")?.showModal?.();
           return;
         }
@@ -32559,9 +33134,7 @@
 
     function openProcessIconPicker(sectionId, scope, itemId, returnFocus = null) {
       if (state.mode !== "edit" || !processIconPickerModal || !processIconPickerGrid) return;
-      closeHistoryIconPicker({ restoreFocus: false });
-      closeDonationIconPicker({ restoreFocus: false });
-      closeDecorationPicker({ restoreFocus: false });
+      if (!prepareEditorModalOpen("process-icon-picker")) return;
       processIconPickerTarget = { sectionId, scope, itemId, returnFocus };
       const selected = getProcessPickerSelectedIcon();
       processIconPickerGrid.innerHTML = Object.entries(processRuntime.ICONS).map(([key, icon]) => `
@@ -32607,11 +33180,9 @@
 
     function openHistoryIconPicker(sectionId, groupId, returnFocus = null) {
       if (state.mode !== "edit" || !historyIconPickerModal || !historyIconPickerGrid) return;
-      closeProcessIconPicker({ restoreFocus: false });
-      closeDonationIconPicker({ restoreFocus: false });
-      closeDecorationPicker({ restoreFocus: false });
       const group = getHistoryModel(sectionId).groups.find((item) => item.id === groupId);
       if (!group) return;
+      if (!prepareEditorModalOpen("history-icon-picker")) return;
       historyIconPickerTarget = { sectionId, groupId, returnFocus };
       historyIconPickerGrid.innerHTML = Object.entries(timelineRuntime.ICONS).map(([key, icon]) => `
         <button type="button" class="process-icon-choice" data-history-icon-key="${escapeHtml(key)}" aria-label="${escapeHtml(icon.label)} 아이콘" aria-pressed="${key === group.icon}">
@@ -33878,18 +34449,10 @@
     function openDecorationPicker(sectionId, decorationId, returnFocus = null) {
       if (state.mode !== "edit" || !decorationPickerModal || !visualAssetRuntime) return;
       if (!isVisualDecorationSection(sectionId) || !getVisualDecoration(sectionId, decorationId)) return;
+      if (!prepareEditorModalOpen("decoration-picker", { preserveNoticeComposer: isNoticeDecorationSection(sectionId) })) return;
       // 직전에 닫힌 선택창의 지연 타이머가 새 선택창을 다시 닫지 않도록 초기화한다.
       window.clearTimeout(decorationAutoCollapseTimer);
       decorationAutoCollapseTimer = null;
-      if (!state.toolbar.collapsed) {
-        collapseInlineToolbar();
-      }
-      if (isResponsiveViewport() && !essentialNoticeTextEditorModal.hidden) {
-        closeNoticeTextEditor({ restoreFocus: false });
-      }
-      closeProcessIconPicker({ restoreFocus: false });
-      closeHistoryIconPicker({ restoreFocus: false });
-      closeDonationIconPicker({ restoreFocus: false });
       decorationPickerTarget = { sectionId, decorationId, returnFocus, manuallyPositioned: false };
       decorationPickerModal.classList.toggle("notice-decoration-context", isNoticeDecorationSection(sectionId));
       refreshDecorationPicker();
@@ -34233,9 +34796,7 @@
       if (state.mode !== "edit" || !donationIconPickerModal || !donationIconPickerGrid) return;
       const card = getDonationModel(sectionId).cards.find((item) => item.id === cardId);
       if (!card) return;
-      closeProcessIconPicker({ restoreFocus: false });
-      closeHistoryIconPicker({ restoreFocus: false });
-      closeDecorationPicker({ restoreFocus: false });
+      if (!prepareEditorModalOpen("donation-icon-picker")) return;
       donationIconPickerTarget = { sectionId, cardId, returnFocus };
       donationIconPickerGrid.innerHTML = Object.entries(donationRuntime.ICONS).map(([key, icon]) => `
         <button type="button" class="process-icon-choice" data-donation-icon-key="${escapeHtml(key)}" aria-label="${escapeHtml(icon.label)} 아이콘" aria-pressed="${key === card.icon}">
@@ -37269,10 +37830,8 @@
             ${Object.entries(sectionAppearancePresets).map(([key, preset]) => `<button type="button" data-section-appearance-action="preset" data-preset="${key}" aria-pressed="${selectedPreset === key}">${escapeHtml(preset.label)}</button>`).join("")}
           </div>
           <div class="section-appearance-fields">
-            <label>배경 <input type="color" data-section-appearance-color="background" value="${fallback.background}" aria-label="섹션 배경색"></label>
-            <label>강조 <input type="color" data-section-appearance-color="accent" value="${fallback.accent}" aria-label="섹션 강조색"></label>
-            <label>글자 <input type="color" data-section-appearance-color="text" value="${fallback.text}" aria-label="섹션 글자색"></label>
-            <label>무늬 <select data-section-appearance-decoration aria-label="섹션 배경 장식">${Object.entries(sectionDecorationMotifs).map(([key, label]) => `<option value="${key}"${fallback.decoration === key ? " selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
+            ${[["background", "배경", "섹션 배경색"], ["accent", "강조", "섹션 강조색"], ["text", "글자", "섹션 글자색"]].map(([field, label, ariaLabel]) => `<label class="section-appearance-color-field"><span class="section-appearance-field-label">${label}</span><input type="color" data-section-appearance-color="${field}" value="${fallback[field]}" aria-label="${ariaLabel}"><input type="text" class="section-appearance-hex" data-section-appearance-hex="${field}" value="${fallback[field].toUpperCase()}" inputmode="text" autocomplete="off" spellcheck="false" maxlength="7" pattern="#[0-9A-Fa-f]{6}" aria-label="${ariaLabel} HEX 값" aria-describedby="section-appearance-${field}-hex-error" aria-invalid="false"><span class="section-appearance-hex-error" id="section-appearance-${field}-hex-error" data-section-appearance-hex-error="${field}" role="status" hidden>#RRGGBB 형식으로 입력해 주세요.</span></label>`).join("")}
+            <label><span class="section-appearance-field-label">무늬</span><select data-section-appearance-decoration aria-label="섹션 배경 장식">${Object.entries(sectionDecorationMotifs).map(([key, label]) => `<option value="${key}"${fallback.decoration === key ? " selected" : ""}>${escapeHtml(label)}</option>`).join("")}</select></label>
           </div>
           <div class="section-appearance-actions">
             <button type="button" data-section-appearance-action="add-decoration">+ 이 섹션에 장식</button>
@@ -37282,6 +37841,32 @@
       `;
       control.addEventListener("pointerdown", (event) => event.stopPropagation());
       (accountAppearanceSlot || stage).appendChild(control);
+      syncSectionAppearanceSurfaceState();
+    }
+
+    let sectionAppearanceToolbarRestoreExpanded = false;
+
+    function syncSectionAppearanceSurfaceState() {
+      const surfaceOpen = Boolean(stage.querySelector(".section-appearance-menu:not([hidden])"));
+      const wasSurfaceOpen = document.body.classList.contains("section-appearance-surface-open");
+      if (surfaceOpen && !wasSurfaceOpen) {
+        sectionAppearanceToolbarRestoreExpanded = Boolean(!inlineToolbar?.hidden && !state.toolbar.collapsed);
+      }
+      stage.classList.toggle("section-appearance-surface-open", surfaceOpen);
+      document.body.classList.toggle("section-appearance-surface-open", surfaceOpen);
+      const toolbarSuppressed = surfaceOpen || document.body.classList.contains("home-menu-surface-open");
+      [inlineToolbar, inlineToolbarFloat, backgroundFloat].forEach((surface) => {
+        if (!surface) return;
+        surface.inert = toolbarSuppressed;
+        if (toolbarSuppressed) surface.setAttribute("aria-hidden", "true");
+        else surface.removeAttribute("aria-hidden");
+      });
+      if (!surfaceOpen && wasSurfaceOpen && sectionAppearanceToolbarRestoreExpanded) {
+        sectionAppearanceToolbarRestoreExpanded = false;
+        state.toolbar.collapsed = false;
+        markInlineToolbarExpanded();
+        updateInlineToolbar();
+      }
     }
 
     function applySectionAppearances({ syncControl = true } = {}) {
@@ -37806,6 +38391,7 @@ function openStaffSectionManager() {
     showToast("소통게시판 화면에서는 홈페이지 섹션 순서를 변경할 수 없습니다.");
     return;
   }
+  if (!prepareEditorModalOpen("staff-section-manager")) return;
   if (state.mode !== "edit") setMode("edit");
   staffSectionManager.hidden = false;
   staffSectionBackdrop.hidden = false;
@@ -40056,7 +40642,15 @@ function syncSectionControls() {
     backgroundColorInput.addEventListener("input", () => setBackgroundColor(backgroundColorInput.value, { notify: false }));
     document.getElementById("backgroundResetBtn").addEventListener("click", resetBackground);
     backgroundFloatToggle.addEventListener("click", () => {
-      setBackgroundFloatOpen(!backgroundFloat.classList.contains("open"));
+      const opening = !backgroundFloat.classList.contains("open");
+      if (opening) {
+        backgroundFloatToolbarRestoreExpanded = Boolean(!inlineToolbar.hidden && !state.toolbar.collapsed);
+        if (!prepareEditorTransientOpen() || !prepareEditorModalOpen("background-float")) {
+          backgroundFloatToolbarRestoreExpanded = false;
+          return;
+        }
+      }
+      setBackgroundFloatOpen(opening);
     });
     document.getElementById("backgroundFloatUploadBtn").addEventListener("click", () => document.getElementById("backgroundUpload").click());
     document.getElementById("backgroundFloatColorBtn").addEventListener("click", () => setBackgroundColor(backgroundFloatColorInput.value));
@@ -40384,7 +40978,9 @@ function syncSectionControls() {
         applyLayouts();
         return;
       }
-      if (state.homeMenu.layoutMode === "cascade" && isHomeMenuMobileSurface() && found.meta.level === 2 && hasHomeMenuChildren(found.item)) {
+      // Cascade level-two branches are disclosure controls on every viewport.
+      // Only their final leaves navigate, so pointer and keyboard paths stay equivalent.
+      if (state.homeMenu.layoutMode === "cascade" && found.meta.level === 2 && hasHomeMenuChildren(found.item)) {
         state.expandedHomeSubMenuId = state.expandedHomeSubMenuId === found.item.id ? null : found.item.id;
         renderHomeMenu({ syncInputs: false });
         applyLayouts();
@@ -40698,10 +41294,23 @@ function syncSectionControls() {
       if (button) setStaffPreviewViewport(button.dataset.staffViewport);
     });
     stage.addEventListener("click", (event) => {
+      const summary = event.target.closest?.("details.sns-auth-image-picker > summary, details.sns-auth-layout-picker > summary");
+      const details = summary?.parentElement;
+      if (!details || details.open) return;
+      // The native details toggle is applied after click. Close the previous
+      // transient before that default action so exactly the chosen picker opens.
+      if (!prepareEditorTransientOpen({ preserveElement: details })) event.preventDefault();
+    }, true);
+    stage.addEventListener("click", (event) => {
       const actionButton = event.target.closest("[data-section-appearance-action]");
       if (!actionButton) {
+        if (event.target.closest(".section-appearance-control")) {
+          event.stopPropagation();
+          return;
+        }
         stage.querySelectorAll(".section-appearance-menu:not([hidden])").forEach((menu) => { menu.hidden = true; });
         stage.querySelectorAll('.section-appearance-trigger[aria-expanded="true"]').forEach((button) => button.setAttribute("aria-expanded", "false"));
+        syncSectionAppearanceSurfaceState();
         return;
       }
       const control = actionButton.closest(".section-appearance-control");
@@ -40712,8 +41321,11 @@ function syncSectionControls() {
       const action = actionButton.dataset.sectionAppearanceAction;
       const menu = control.querySelector(".section-appearance-menu");
       if (action === "toggle") {
+        const opening = menu.hidden;
+        if (opening && !prepareEditorTransientOpen()) return;
         menu.hidden = !menu.hidden;
         actionButton.setAttribute("aria-expanded", String(!menu.hidden));
+        syncSectionAppearanceSurfaceState();
         return;
       }
       if (action === "preset") {
@@ -40727,7 +41339,13 @@ function syncSectionControls() {
           state.sectionAppearances[sectionId] = nextAppearance;
         }
         control.querySelectorAll("[data-section-appearance-action='preset']").forEach((button) => button.setAttribute("aria-pressed", String(button === actionButton)));
-        control.querySelectorAll("[data-section-appearance-color]").forEach((input) => { input.value = preset[input.dataset.sectionAppearanceColor]; });
+        control.querySelectorAll("[data-section-appearance-color]").forEach((input) => {
+          const field = input.dataset.sectionAppearanceColor;
+          input.value = preset[field];
+          const hexInput = control.querySelector(`[data-section-appearance-hex="${field}"]`);
+          if (hexInput) hexInput.value = preset[field].toUpperCase();
+          setSectionAppearanceHexValidity(control, field, true);
+        });
         renderSectionAppearances();
         recordHistory("섹션 추천 색상 적용");
         return;
@@ -40735,6 +41353,7 @@ function syncSectionControls() {
       if (action === "add-decoration") {
         menu.hidden = true;
         control.querySelector(".section-appearance-trigger")?.setAttribute("aria-expanded", "false");
+        syncSectionAppearanceSurfaceState();
         addDonationDecoration(PAGE_DECORATION_SECTION_ID, { targetSectionId: sectionId === communityRuntime?.SECTION_ID ? null : sectionId });
         return;
       }
@@ -40743,12 +41362,17 @@ function syncSectionControls() {
         showToast("선택한 섹션에 추천 기본 색상과 장식을 적용했습니다");
       }
     });
-    stage.addEventListener("input", (event) => {
-      const colorInput = event.target.closest("[data-section-appearance-color]");
-      const control = colorInput?.closest(".section-appearance-control");
-      if (!colorInput || !control) return;
+    const SECTION_APPEARANCE_HEX_PATTERN = /^#[0-9a-f]{6}$/i;
+    function setSectionAppearanceHexValidity(control, field, valid) {
+      const hexInput = control?.querySelector(`[data-section-appearance-hex="${field}"]`);
+      const error = control?.querySelector(`[data-section-appearance-hex-error="${field}"]`);
+      if (hexInput) hexInput.setAttribute("aria-invalid", String(!valid));
+      if (error) error.hidden = valid;
+    }
+    function applyDirectSectionAppearance(control) {
       const sectionId = normalizeSectionId(control.dataset.sectionId);
-      const values = Object.fromEntries([...control.querySelectorAll("[data-section-appearance-color]")].map((input) => [input.dataset.sectionAppearanceColor, input.value]));
+      const values = Object.fromEntries([...control.querySelectorAll("[data-section-appearance-color]")]
+        .map((input) => [input.dataset.sectionAppearanceColor, input.value.toLowerCase()]));
       const nextAppearance = normalizeSectionAppearance({ ...values, preset: "custom", decoration: control.querySelector("[data-section-appearance-decoration]")?.value });
       if (state.activeExternalSurface === communityRuntime?.SURFACE_KEY && sectionId === communityRuntime.SECTION_ID) {
         getCommunitySurface().appearance = nextAppearance;
@@ -40758,8 +41382,43 @@ function syncSectionControls() {
       control.querySelectorAll("[data-section-appearance-action='preset']").forEach((button) => button.setAttribute("aria-pressed", "false"));
       renderSectionAppearances();
       scheduleHistoryRecord("섹션 직접 색상 변경");
+    }
+    stage.addEventListener("input", (event) => {
+      const colorInput = event.target.closest("[data-section-appearance-color]");
+      if (colorInput) {
+        const control = colorInput.closest(".section-appearance-control");
+        if (!control) return;
+        const field = colorInput.dataset.sectionAppearanceColor;
+        const hexInput = control.querySelector(`[data-section-appearance-hex="${field}"]`);
+        if (hexInput) hexInput.value = colorInput.value.toUpperCase();
+        setSectionAppearanceHexValidity(control, field, true);
+        applyDirectSectionAppearance(control);
+        return;
+      }
+      const hexInput = event.target.closest("[data-section-appearance-hex]");
+      const control = hexInput?.closest(".section-appearance-control");
+      if (!hexInput || !control) return;
+      const field = hexInput.dataset.sectionAppearanceHex;
+      const normalized = hexInput.value.trim();
+      const valid = SECTION_APPEARANCE_HEX_PATTERN.test(normalized);
+      setSectionAppearanceHexValidity(control, field, valid);
+      if (!valid) return;
+      const normalizedHex = normalized.toLowerCase();
+      hexInput.value = normalizedHex.toUpperCase();
+      const swatch = control.querySelector(`[data-section-appearance-color="${field}"]`);
+      if (swatch) swatch.value = normalizedHex;
+      applyDirectSectionAppearance(control);
     });
     stage.addEventListener("change", (event) => {
+      const hexInput = event.target.closest("[data-section-appearance-hex]");
+      if (hexInput) {
+        const control = hexInput.closest(".section-appearance-control");
+        const field = hexInput.dataset.sectionAppearanceHex;
+        const valid = SECTION_APPEARANCE_HEX_PATTERN.test(hexInput.value.trim());
+        setSectionAppearanceHexValidity(control, field, valid);
+        if (valid) hexInput.value = hexInput.value.trim().toUpperCase();
+        return;
+      }
       const decorationSelect = event.target.closest("[data-section-appearance-decoration]");
       const control = decorationSelect?.closest(".section-appearance-control");
       if (!decorationSelect || !control) return;
@@ -40781,6 +41440,8 @@ function syncSectionControls() {
       const action = actionButton.dataset.sectionStyleAction;
       const menu = chooser.querySelector(".section-style-choice-menu");
       if (action === "toggle") {
+        const opening = menu.hidden;
+        if (opening && !prepareEditorTransientOpen()) return;
         menu.hidden = !menu.hidden;
         actionButton.setAttribute("aria-expanded", String(!menu.hidden));
         return;
@@ -41347,6 +42008,7 @@ function syncSectionControls() {
       const shouldCollapseToolbar = state.mode === "edit"
         && !state.toolbar.collapsed
         && !inlineToolbar.hidden
+        && !document.body.classList.contains("section-appearance-surface-open")
         && performance.now() - inlineToolbarExpandedAt > 450;
       if (shouldCollapseToolbar) collapseInlineToolbar();
       scheduleFloatingEditorUi();
@@ -41369,6 +42031,15 @@ function syncSectionControls() {
     }, { passive: true });
     window.addEventListener("keydown", handleEditorHistoryShortcut);
     window.addEventListener("keydown", handleSectionClipboardShortcut);
+    // A homepage menu may display several linked sections while keeping the
+    // first linked section active. Selecting any visible greeting layer must
+    // therefore activate that greeting section through the same real pointer
+    // path a staff learner uses; do not depend on hidden section selectors.
+    stage.addEventListener("pointerdown", (event) => {
+      const layer = event.target.closest('.editable[data-section-id][data-greeting-part][data-id]');
+      if (state.mode !== "edit" || !layer || !elements[layer.dataset.id]) return;
+      selectLayer(layer.dataset.id, { expandToolbar: true });
+    }, { capture: true });
     stage.addEventListener("keydown", (event) => {
       const target = event.target.closest('.editable[role="button"][data-id]');
       if (state.mode !== "edit" || !target || (event.key !== "Enter" && event.key !== " ")) return;

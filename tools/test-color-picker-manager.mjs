@@ -42,5 +42,10 @@ assert.equal(runtime.applyColor(input, "#A1B2C3"), true);
 assert.equal(input.value, "#a1b2c3");
 assert.deepEqual(events, [["input", true], ["change", true]]);
 assert.equal(runtime.applyColor(input, "invalid"), false);
+assert.equal(typeof runtime.cancelAll, "function");
+assert.equal(typeof runtime.closePalette, "function");
+assert.equal(runtime.active, false);
+assert.equal(runtime.paletteOpen, false);
+assert.equal(runtime.cancelAll(), false);
 
 console.log("color picker manager tests OK");

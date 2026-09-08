@@ -353,9 +353,19 @@
       registerAll,
       start,
       cancel: () => finish("색상 선택을 취소했습니다"),
+      cancelAll: () => {
+        const cancelledSampling = finish();
+        const closedPalette = Boolean(activePalette);
+        closePalette();
+        return cancelledSampling || closedPalette;
+      },
+      closePalette,
       applyColor,
       get active() {
         return Boolean(active);
+      },
+      get paletteOpen() {
+        return Boolean(activePalette);
       }
     });
   }

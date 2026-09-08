@@ -1370,6 +1370,95 @@
           "note": "native POST fallback, 자격정보 URL 비노출, 기존 10분·10회 제한의 인증 전 실행, 무JavaScript 실제 브라우저 제출과 delivery-site 전체 75개 테스트 통과를 확인했다. 공개 배포는 하지 않음"
         }
       ]
+    },
+    {
+      "id": "EDITOR-SINGLE-MODAL-001",
+      "recordType": "bug",
+      "title": "담당자 편집창과 게시판 대화상자의 단일 활성 계약",
+      "requestedAt": "2026-08-13",
+      "sourceEvidence": "담당자 교육 영상 설계 중 공지 텍스트 편집기·장식 선택기와 게시글 상세·신고·삭제·수정 대화상자가 동시에 겹쳐 열릴 수 있음을 실제 브라우저에서 확인함.",
+      "primaryTaxonomyId": "editor.modal.single-active",
+      "relatedTaxonomyIds": ["editor.toolbar.inline", "system.test.regression"],
+      "scope": {
+        "surfaces": ["editor-shell", "community-board", "operational"],
+        "routes": ["/editor", "/editor?surface=community", "/community"],
+        "sections": ["shared.editor-modal", "community.dialog"],
+        "viewports": ["desktop", "tablet", "phone", "phoneSmall"],
+        "roles": ["staff", "creator"],
+        "modes": ["edit", "preview"]
+      },
+      "status": {
+        "decision": "approved",
+        "implementation": "verified",
+        "qa": "full-pass",
+        "deployment": "local-only"
+      },
+      "cause": {
+        "category": "missing-shared-contract",
+        "relatedCategories": ["duplicate-source", "missing-regression-test"],
+        "confirmed": true,
+        "details": "각 선택기·모달·게시판 대화상자가 자체 open/close 경로를 사용해 독립 작업 간 상호배타와 취소 후 복귀 순서가 정의되지 않았다. SNS details는 정적 계약 이후 실제 클릭 검사에서 두 판이 함께 열리는 추가 결함도 확인했다."
+      },
+      "invariants": [
+        {
+          "assertionId": "editor.modal.one-boundary",
+          "statement": "독립적인 편집창·선택기·게시판 대화상자는 모든 화면 크기에서 한 번에 하나만 활성화된다."
+        },
+        {
+          "assertionId": "editor.modal.notice-inspector",
+          "statement": "공지 텍스트 도구는 별도 모달이 아니라 공지 작성창 안의 편집 도구 영역으로 표시되며 장식 도구와 동시에 열리지 않는다."
+        },
+        {
+          "assertionId": "editor.modal.draft-protection",
+          "statement": "공지·푸터·사진처럼 저장하지 않은 입력이 있는 편집창은 다른 창이 자동으로 닫지 않으며 저장 또는 취소를 먼저 안내한다."
+        },
+        {
+          "assertionId": "editor.modal.escape-order",
+          "statement": "Escape는 색상 선택·작은 선택판·공지 내부 도구·상위 편집창 순으로 하나씩 닫는다."
+        },
+        {
+          "assertionId": "community.dialog.restore-detail",
+          "statement": "게시글 신고·삭제·수정은 상세를 잠시 닫고 하나의 창만 열며 취소 또는 Escape 후 상세로 복귀한다."
+        }
+      ],
+      "sourceOfTruth": [
+        "outputs/representative-greeting-editor.html#EditorModalCoordinator",
+        "outputs/editor-color-picker-manager.js#create",
+        "delivery-site/app/board-app.tsx#openExclusiveDialog"
+      ],
+      "implementationFiles": [
+        "outputs/representative-greeting-editor.html",
+        "outputs/editor-color-picker-manager.js",
+        "delivery-site/app/board-app.tsx",
+        "delivery-site/tests/board-shell.test.mjs",
+        "tools/test-editor-modal-contract.mjs",
+        "tools/test-editor-modal-contract-browser.mjs",
+        "tools/test-color-picker-manager.mjs",
+        "tools/test-all.mjs"
+      ],
+      "tests": [
+        { "file": "tools/test-editor-modal-contract.mjs", "status": "pass" },
+        { "file": "tools/test-editor-modal-contract-browser.mjs", "status": "pass" },
+        { "file": "delivery-site/tests/board-shell.test.mjs", "status": "pass" },
+        { "file": "tools/test-all.mjs", "status": "pass" }
+      ],
+      "risk": "high",
+      "dependencies": ["QA-STAFF-EDITOR-001"],
+      "supersedes": [],
+      "deployApproval": {
+        "required": true,
+        "publicDeployApproved": false,
+        "approvedBy": null,
+        "approvedAt": null,
+        "exactScope": null
+      },
+      "history": [
+        {
+          "date": "2026-08-13",
+          "event": "verified-local",
+          "note": "정적 계약, 게시판 대화상자 9개 회귀검사, PC·태블릿·모바일·소형폰의 편집 모달 44개 체크포인트와 전체 편집기 테스트를 통과했다. 공개 배포는 하지 않음"
+        }
+      ]
     }
   ]
 }

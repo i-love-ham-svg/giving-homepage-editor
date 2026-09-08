@@ -459,12 +459,19 @@ export function BoardApp() {
   const [moderationNote, setModerationNote] = useState("");
   const [reportReason, setReportReason] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
+  const [claimPostId, setClaimPostId] = useState("");
+  const [claimPassword, setClaimPassword] = useState("");
+  const [claiming, setClaiming] = useState(false);
+  const [claimedModerationNote, setClaimedModerationNote] = useState("");
 
   const writeDialog = useRef<HTMLDialogElement>(null);
   const detailDialog = useRef<HTMLDialogElement>(null);
   const adminDialog = useRef<HTMLDialogElement>(null);
   const reportDialog = useRef<HTMLDialogElement>(null);
   const deleteDialog = useRef<HTMLDialogElement>(null);
+  const claimDialog = useRef<HTMLDialogElement>(null);
+  const returnToDetailAfterWriteRef = useRef(false);
+  const returnToDetailAfterPostActionRef = useRef(false);
   const communitySurfaceRef = useRef(communitySurface);
   const communityRevisionRef = useRef(communityRevision);
   const communityCaretRef = useRef<CommunityCaretSnapshot | null>(null);
@@ -486,6 +493,36 @@ export function BoardApp() {
     setToast(message);
     window.setTimeout(() => setToast(""), 3200);
   }, []);
+
+  // Keep one application dialog in the top layer at a time. Detail actions
+  // temporarily close the detail dialog and restore it after cancel/finish,
+  // rather than stacking a second modal over it.
+  function openExclusiveDialog(next: HTMLDialogElement | null) {
+    if (!next) return;
+    for (const dialog of [writeDialog.current, detailDialog.current, adminDialog.current, reportDialog.current, deleteDialog.current, claimDialog.current]) {
+      if (dialog && dialog !== next && dialog.open) dialog.close();
+    }
+    if (!next.open) next.showModal();
+  }
+
+  function cancelWrite() {
+    if (writeDialog.current?.open) writeDialog.current.close();
+    const shouldRestoreDetail = returnToDetailAfterWriteRef.current;
+    returnToDetailAfterWriteRef.current = false;
+    if (shouldRestoreDetail && activePost) openExclusiveDialog(detailDialog.current);
+  }
+
+  function openPostActionDialog(next: HTMLDialogElement | null) {
+    returnToDetailAfterPostActionRef.current = Boolean(detailDialog.current?.open && activePost);
+    openExclusiveDialog(next);
+  }
+
+  function closePostActionDialog(current: HTMLDialogElement | null, restoreDetail = true) {
+    if (current?.open) current.close();
+    const shouldRestoreDetail = returnToDetailAfterPostActionRef.current;
+    returnToDetailAfterPostActionRef.current = false;
+    if (restoreDetail && shouldRestoreDetail && activePost) openExclusiveDialog(detailDialog.current);
+  }
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
@@ -548,7 +585,7 @@ export function BoardApp() {
         }
         if (!result.admin && params.get("manage") === "1") {
           window.setTimeout(() => {
-            if (adminDialog.current && !adminDialog.current.open) adminDialog.current.showModal();
+            openExclusiveDialog(adminDialog.current);
           }, 0);
         }
       })
@@ -594,7 +631,9 @@ export function BoardApp() {
       const result = await requestJson<{ item: BoardPost }>(`/api/board/posts/${encodeURIComponent(id)}${shouldCountView ? "?view=1" : ""}`);
       setActivePost(result.item);
       setModerationNote(result.item.moderationNote || "");
-      detailDialog.current?.showModal();
+      returnToDetailAfterWriteRef.current = false;
+      returnToDetailAfterPostActionRef.current = false;
+      openExclusiveDialog(detailDialog.current);
       const url = new URL(window.location.href);
       url.searchParams.set("post", id);
       history.replaceState(null, "", url);
@@ -605,6 +644,8 @@ export function BoardApp() {
 
   function closeDetail() {
     detailDialog.current?.close();
+    returnToDetailAfterWriteRef.current = false;
+    returnToDetailAfterPostActionRef.current = false;
     setActivePost(null);
     const url = new URL(window.location.href);
     url.searchParams.delete("post");
@@ -634,10 +675,12 @@ export function BoardApp() {
     setDiscardedDraftMedia([]);
     setThumbnailMediaId(null);
     setEditingId("");
+    setClaimedModerationNote("");
   }
 
   function openWrite(post?: BoardPost) {
     if (communityEditor.active) return;
+    returnToDetailAfterWriteRef.current = Boolean(post && detailDialog.current?.open);
     if (post) {
       setDraft({
         category: post.category,
@@ -654,7 +697,41 @@ export function BoardApp() {
       setThumbnailMediaId(post.thumbnailMediaId || post.media[0]?.id || null);
       setEditingId(post.id);
     } else resetWrite();
-    writeDialog.current?.showModal();
+    openExclusiveDialog(writeDialog.current);
+  }
+
+  function openClaimDialog() {
+    if (communityEditor.active || admin) return;
+    const recentId = localStorage.getItem("songak-board-recent-post-id-v1") || "";
+    setClaimPostId(recentId);
+    setClaimPassword("");
+    openExclusiveDialog(claimDialog.current);
+  }
+
+  async function claimVisitorPost(event: FormEvent) {
+    event.preventDefault();
+    if (claiming || communityEditor.active || admin) return;
+    setClaiming(true);
+    try {
+      const id = claimPostId.trim();
+      const result = await requestJson<{ item: BoardPost }>(`/api/board/posts/${encodeURIComponent(id)}/claim`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: claimPassword }),
+      });
+      localStorage.setItem("songak-board-recent-post-id-v1", result.item.id);
+      claimDialog.current?.close();
+      setClaimPassword("");
+      setClaimedModerationNote(result.item.status === "rejected" ? result.item.moderationNote || "" : "");
+      openWrite(result.item);
+      if (result.item.status === "rejected" && result.item.moderationNote) {
+        showToast(`반려 사유: ${result.item.moderationNote}`);
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "내 게시글을 불러오지 못했습니다.");
+    } finally {
+      setClaiming(false);
+    }
   }
 
   function saveDraft() {
@@ -720,18 +797,23 @@ export function BoardApp() {
         } : {}),
       };
       if (editingId) {
-        await requestJson(`/api/board/posts/${encodeURIComponent(editingId)}`, {
+        const result = await requestJson<{ item: BoardPost }>(`/api/board/posts/${encodeURIComponent(editingId)}`, {
           method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload),
         });
+        if (!admin) localStorage.setItem("songak-board-recent-post-id-v1", result.item.id);
         showToast(admin ? "게시글을 수정했습니다." : "수정 내용을 다시 검수 요청했습니다.");
       } else {
-        await requestJson("/api/board/posts", {
+        const result = await requestJson<{ item: BoardPost }>("/api/board/posts", {
           method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload),
         });
-        if (!admin) localStorage.removeItem("songak-board-draft-v2");
+        if (!admin) {
+          localStorage.removeItem("songak-board-draft-v2");
+          localStorage.setItem("songak-board-recent-post-id-v1", result.item.id);
+        }
         showToast(admin ? "복지관 소식을 게시했습니다." : "접수되었습니다. 관리자 확인 후 공개됩니다.");
       }
-      writeDialog.current?.close();
+      if (writeDialog.current?.open) writeDialog.current.close();
+      returnToDetailAfterWriteRef.current = false;
       closeDetail();
       await loadPosts();
     } catch (error) {
@@ -761,14 +843,19 @@ export function BoardApp() {
 
   async function sharePost() {
     if (communityEditor.active || !activePost) return;
+    const post = activePost;
+    const shouldRestoreDetail = Boolean(detailDialog.current?.open);
+    if (shouldRestoreDetail) detailDialog.current?.close();
     const url = new URL(window.location.href);
-    url.searchParams.set("post", activePost.id);
+    url.searchParams.set("post", post.id);
     try {
-      if (navigator.share) await navigator.share({ title: activePost.title, text: activePost.body.slice(0, 90), url: url.toString() });
+      if (navigator.share) await navigator.share({ title: post.title, text: post.body.slice(0, 90), url: url.toString() });
       else { await navigator.clipboard.writeText(url.toString()); showToast("게시글 주소를 복사했습니다."); }
-      void requestJson(`/api/board/posts/${activePost.id}/share`, { method: "POST" });
+      void requestJson(`/api/board/posts/${post.id}/share`, { method: "POST" });
     } catch (error) {
       if ((error as DOMException)?.name !== "AbortError") showToast("공유를 완료하지 못했습니다.");
+    } finally {
+      if (shouldRestoreDetail && activePost?.id === post.id) openExclusiveDialog(detailDialog.current);
     }
   }
 
@@ -780,7 +867,7 @@ export function BoardApp() {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason: reportReason }),
       });
       setReportReason("");
-      reportDialog.current?.close();
+      closePostActionDialog(reportDialog.current);
       showToast("신고를 접수했습니다. 관리자가 확인하겠습니다.");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "신고를 접수하지 못했습니다.");
@@ -795,7 +882,7 @@ export function BoardApp() {
         method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: deletePassword }),
       });
       setDeletePassword("");
-      deleteDialog.current?.close();
+      closePostActionDialog(deleteDialog.current, false);
       closeDetail();
       showToast("게시글을 삭제했습니다.");
       await loadPosts();
@@ -919,6 +1006,7 @@ export function BoardApp() {
             <p className="board-intro-description community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.description)}>{communitySurface.fields.description}</p>
             <div className="board-intro-actions">
             <button className="primary-btn community-editor-cta" style={communityTargetStyle(communitySurface, COMMUNITY_EDITOR_TARGET_IDS.primaryCta)} type="button" aria-disabled={communityEditor.active || undefined} aria-describedby={communityEditor.active ? "community-editor-preview-note" : undefined} onClick={() => { if (!communityEditor.active) openWrite(); }}><span className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.primaryCta)}>{communityEditor.active ? communitySurface.fields.primaryCta : admin ? "공식 소식 등록" : communitySurface.fields.primaryCta}</span></button>
+            {!admin && !communityEditor.active && <button className="secondary-btn" type="button" onClick={openClaimDialog}>내 글 수정</button>}
             <a className="secondary-btn button-link community-editor-cta" style={communityTargetStyle(communitySurface, COMMUNITY_EDITOR_TARGET_IDS.secondaryCta)} href="#board-list" aria-disabled={communityEditor.active || undefined} aria-describedby={communityEditor.active ? "community-editor-preview-note" : undefined} onClick={(event) => { if (communityEditor.active) event.preventDefault(); }}><span className="community-editor-text" {...editorTargetProps(COMMUNITY_EDITOR_TARGET_IDS.secondaryCta)}>{communitySurface.fields.secondaryCta}</span></a>
             </div>
           </div>
@@ -1012,11 +1100,12 @@ export function BoardApp() {
       </footer>
       <button className="mobile-write" type="button" onClick={() => openWrite()} aria-label="게시글 작성" aria-hidden={communityEditor.active || undefined} tabIndex={communityEditor.active ? -1 : undefined}>＋</button>
 
-      <dialog ref={writeDialog} className="write-dialog" onCancel={(event) => { event.preventDefault(); writeDialog.current?.close(); }}>
+      <dialog ref={writeDialog} className="write-dialog" onCancel={(event) => { event.preventDefault(); cancelWrite(); }}>
         <form onSubmit={submitPost}>
-          <DialogHeader title={editingId ? "게시글 수정" : admin ? "복지관 소식 등록" : "주민 글쓰기"} onClose={() => writeDialog.current?.close()} />
+          <DialogHeader title={editingId ? "게시글 수정" : admin ? "복지관 소식 등록" : "주민 글쓰기"} onClose={cancelWrite} />
           <div className="dialog-body">
             {!admin && !editingId && <div className="notice-box"><b>작성한 글은 관리자 확인 후 공개됩니다.</b><span>연락처는 검수 목적으로만 사용되며 게시판에 표시되지 않습니다.</span></div>}
+            {!admin && editingId && claimedModerationNote && <div className="notice-box"><b>반려 사유를 확인해 주세요.</b><span>{claimedModerationNote}</span></div>}
             <div className="field-grid">
               <label className="field"><span>분류 <em>필수</em></span><select value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value as Category })}>{availableCategories.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}</select></label>
               <label className="field"><span>작성자 <em>필수</em></span><input required maxLength={40} value={draft.author} onChange={(event) => setDraft({ ...draft, author: event.target.value })} placeholder="이름 또는 별명" /></label>
@@ -1030,17 +1119,18 @@ export function BoardApp() {
               {admin && <label className="check-field full"><input type="checkbox" checked={draft.pinned} onChange={(event) => setDraft({ ...draft, pinned: event.target.checked })} />상단 중요 공지로 고정</label>}
             </div>
           </div>
-          <div className="dialog-actions">{!admin && !editingId && <button className="ghost-btn" type="button" onClick={saveDraft}>임시저장</button>}<button className="secondary-btn" type="button" onClick={() => writeDialog.current?.close()}>취소</button><button className="primary-btn" type="submit" disabled={submitting || uploading}>{submitting ? "저장 중…" : admin ? "바로 게시" : editingId ? "수정 검수 요청" : "검수 요청"}</button></div>
+          <div className="dialog-actions">{!admin && !editingId && <button className="ghost-btn" type="button" onClick={saveDraft}>임시저장</button>}<button className="secondary-btn" type="button" onClick={cancelWrite}>취소</button><button className="primary-btn" type="submit" disabled={submitting || uploading}>{submitting ? "저장 중…" : admin ? "바로 게시" : editingId ? "수정 검수 요청" : "검수 요청"}</button></div>
         </form>
       </dialog>
 
-      <dialog ref={detailDialog} className="detail-dialog" onClose={() => setActivePost(null)}>
-        {activePost && <><DialogHeader title="게시글" onClose={closeDetail} /><article className="dialog-body detail-body"><div className="detail-meta"><span>{categoryLabel(activePost.category)}</span><time>{formatDate(activePost.publishedAt || activePost.createdAt)}</time><span>작성자 {activePost.author}</span><span>조회 {activePost.views}</span>{admin && !communityEditor.active && <span className={`status-pill status-${activePost.status}`}>{statusLabels[activePost.status]}</span>}</div><h2>{activePost.title}</h2><div className="detail-content">{activePost.body}</div>{activePost.media.length > 0 && <div className="detail-media">{activePost.media.map((item) => <figure key={item.id}>{item.kind === "image" ? <Image src={mediaUrl(item)} alt={item.alt || ""} width={1200} height={900} sizes="(max-width: 720px) 100vw, 80vw" unoptimized /> : <video src={mediaUrl(item)} controls preload="metadata" />}{item.alt && <figcaption>{item.alt}</figcaption>}</figure>)}</div>}{!communityEditor.active && <div className="detail-tools"><button className="secondary-btn" type="button" onClick={() => void sharePost()}>공유하기</button><button className="ghost-btn" type="button" onClick={() => reportDialog.current?.showModal()}>신고</button><button className="ghost-btn" type="button" onClick={() => openWrite(activePost)}>수정</button><button className="ghost-btn danger-text" type="button" onClick={() => deleteDialog.current?.showModal()}>삭제</button></div>}{admin && !communityEditor.active && <section className="moderation-panel"><div><b>관리자 검수</b><span>개인정보·비방·광고·저작권 침해 여부를 확인하세요.</span></div>{activePost.contact && <p><b>작성자 연락처</b> {activePost.contact}</p>}<textarea value={moderationNote} onChange={(event) => setModerationNote(event.target.value)} maxLength={500} placeholder="반려 사유 또는 내부 메모(작성자에게 공개하지 않음)" /><div><button className="approve-btn" type="button" onClick={() => void moderate("published")}>공개 승인</button><button className="reject-btn" type="button" onClick={() => void moderate("rejected")}>반려</button><button className="hide-btn" type="button" onClick={() => void moderate("hidden")}>숨김</button></div></section>}</article></>}
+      <dialog ref={detailDialog} className="detail-dialog" onCancel={(event) => { event.preventDefault(); closeDetail(); }}>
+        {activePost && <><DialogHeader title="게시글" onClose={closeDetail} /><article className="dialog-body detail-body"><div className="detail-meta"><span>{categoryLabel(activePost.category)}</span><time>{formatDate(activePost.publishedAt || activePost.createdAt)}</time><span>작성자 {activePost.author}</span><span>조회 {activePost.views}</span>{admin && !communityEditor.active && <span className={`status-pill status-${activePost.status}`}>{statusLabels[activePost.status]}</span>}</div><h2>{activePost.title}</h2><div className="detail-content">{activePost.body}</div>{activePost.media.length > 0 && <div className="detail-media">{activePost.media.map((item) => <figure key={item.id}>{item.kind === "image" ? <Image src={mediaUrl(item)} alt={item.alt || ""} width={1200} height={900} sizes="(max-width: 720px) 100vw, 80vw" unoptimized /> : <video src={mediaUrl(item)} controls preload="metadata" />}{item.alt && <figcaption>{item.alt}</figcaption>}</figure>)}</div>}{!communityEditor.active && <div className="detail-tools"><button className="secondary-btn" type="button" onClick={() => void sharePost()}>공유하기</button><button className="ghost-btn" type="button" onClick={() => openPostActionDialog(reportDialog.current)}>신고</button><button className="ghost-btn" type="button" onClick={() => openWrite(activePost)}>수정</button><button className="ghost-btn danger-text" type="button" onClick={() => openPostActionDialog(deleteDialog.current)}>삭제</button></div>}{admin && !communityEditor.active && <section className="moderation-panel"><div><b>관리자 검수</b><span>개인정보·비방·광고·저작권 침해 여부를 확인하세요.</span></div>{activePost.contact && <p><b>작성자 연락처</b> {activePost.contact}</p>}<textarea value={moderationNote} onChange={(event) => setModerationNote(event.target.value)} maxLength={500} placeholder="반려 사유 또는 내부 메모(작성자에게 공개하지 않음)" /><div><button className="approve-btn" type="button" onClick={() => void moderate("published")}>공개 승인</button><button className="reject-btn" type="button" onClick={() => void moderate("rejected")}>반려</button><button className="hide-btn" type="button" onClick={() => void moderate("hidden")}>숨김</button></div></section>}</article></>}
       </dialog>
 
       <dialog ref={adminDialog} className="small-dialog"><DialogHeader title="담당자 로그인" onClose={() => adminDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">허용된 담당자 계정으로 로그인하면 편집·저장·게시 기능을 이용할 수 있습니다.</p></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => adminDialog.current?.close()}>취소</button><button className="primary-btn" type="button" onClick={loginAdmin}>로그인 화면으로 이동</button></div></dialog>
-      <dialog ref={reportDialog} className="small-dialog"><form onSubmit={submitReport}><DialogHeader title="게시글 신고" onClose={() => reportDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">개인정보 노출, 비방, 광고, 저작권 침해 등 확인이 필요한 이유를 알려주세요.</p><label className="field"><span>신고 사유</span><textarea required minLength={2} maxLength={300} value={reportReason} onChange={(event) => setReportReason(event.target.value)} /></label></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => reportDialog.current?.close()}>취소</button><button className="danger-btn" type="submit">신고 접수</button></div></form></dialog>
-      <dialog ref={deleteDialog} className="small-dialog"><form onSubmit={deleteActivePost}><DialogHeader title="게시글 삭제" onClose={() => deleteDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">삭제한 게시글은 일반 화면에서 즉시 보이지 않습니다.</p>{!admin && <label className="field"><span>작성 시 입력한 비밀번호</span><input required type="password" minLength={6} maxLength={32} value={deletePassword} onChange={(event) => setDeletePassword(event.target.value)} /></label>}</div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => deleteDialog.current?.close()}>취소</button><button className="danger-btn" type="submit">삭제</button></div></form></dialog>
+      <dialog ref={reportDialog} className="small-dialog" onCancel={(event) => { event.preventDefault(); closePostActionDialog(reportDialog.current); }}><form onSubmit={submitReport}><DialogHeader title="게시글 신고" onClose={() => closePostActionDialog(reportDialog.current)} /><div className="dialog-body"><p className="dialog-copy">개인정보 노출, 비방, 광고, 저작권 침해 등 확인이 필요한 이유를 알려주세요.</p><label className="field"><span>신고 사유</span><textarea required minLength={2} maxLength={300} value={reportReason} onChange={(event) => setReportReason(event.target.value)} /></label></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => closePostActionDialog(reportDialog.current)}>취소</button><button className="danger-btn" type="submit">신고 접수</button></div></form></dialog>
+      <dialog ref={deleteDialog} className="small-dialog" onCancel={(event) => { event.preventDefault(); closePostActionDialog(deleteDialog.current); }}><form onSubmit={deleteActivePost}><DialogHeader title="게시글 삭제" onClose={() => closePostActionDialog(deleteDialog.current)} /><div className="dialog-body"><p className="dialog-copy">삭제한 게시글은 일반 화면에서 즉시 보이지 않습니다.</p>{!admin && <label className="field"><span>작성 시 입력한 비밀번호</span><input required type="password" minLength={6} maxLength={32} value={deletePassword} onChange={(event) => setDeletePassword(event.target.value)} /></label>}</div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => closePostActionDialog(deleteDialog.current)}>취소</button><button className="danger-btn" type="submit">삭제</button></div></form></dialog>
+      <dialog ref={claimDialog} className="small-dialog" onCancel={(event) => { event.preventDefault(); claimDialog.current?.close(); }}><form onSubmit={claimVisitorPost}><DialogHeader title="내 글 수정" onClose={() => claimDialog.current?.close()} /><div className="dialog-body"><p className="dialog-copy">접수·반려된 글도 게시글 번호와 작성 시 비밀번호로 다시 열 수 있습니다.</p><label className="field"><span>게시글 번호</span><input required autoComplete="off" value={claimPostId} onChange={(event) => setClaimPostId(event.target.value)} /></label><label className="field"><span>작성 시 입력한 비밀번호</span><input required type="password" minLength={6} maxLength={32} value={claimPassword} onChange={(event) => setClaimPassword(event.target.value)} /></label></div><div className="dialog-actions"><button className="secondary-btn" type="button" onClick={() => claimDialog.current?.close()}>취소</button><button className="primary-btn" type="submit" disabled={claiming}>{claiming ? "확인 중…" : "내 글 열기"}</button></div></form></dialog>
 
       <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite">{toast}</div>
     </div>

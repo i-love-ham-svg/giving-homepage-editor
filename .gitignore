@@ -18,6 +18,7 @@ data/
 skill-build/
 tools/__pycache__/
 **/node_modules/
+**/.vite/
 **/.env
 **/.dev.vars
 !**/.env.example

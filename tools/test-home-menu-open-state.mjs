@@ -41,6 +41,16 @@ assert.match(html, /if \(!expanded \|\| usesInlineSubmenu\) \{[\s\S]*?homepageMe
 assert.match(html, /homepage-menu-subbar\.layout-two-level,[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
 assert.match(html, /homepage-menu-subbar\.layout-mega[\s\S]*?repeat\(auto-fit, minmax\(170px, 1fr\)\)/);
 assert.match(html, /selectedDropdownMode = level === 1 && state\.homeMenu\.layoutMode === "selected-dropdown"/);
+assert.match(html, /unifiedMode = level === 1 && state\.homeMenu\.layoutMode === "unified"/,
+  "unified editor preview must identify the delivery-compatible flattened branch");
+assert.match(html, /selectedDropdownMode \|\| unifiedMode \|\| \(quickMode && state\.homeMenu\.layoutMode === "two-level"\)/,
+  "unified editor preview must flatten final destinations like the delivery header");
+assert.match(html, /unifiedMode \? "quick-dropdown"/,
+  "unified editor preview must expose the delivery quick-dropdown class");
+assert.match(html, /state\.homeMenu\.layoutMode === "cascade" && found\.meta\.level === 2 && hasHomeMenuChildren\(found\.item\)/,
+  "cascade level-two pointer disclosure must work at every viewport");
+assert.doesNotMatch(html, /state\.homeMenu\.layoutMode === "cascade" && isHomeMenuMobileSurface\(\) && found\.meta\.level === 2/,
+  "cascade level-two pointer disclosure must not be mobile-only");
 assert.match(html, /quickMode = level === 1 && !\["selected-dropdown", "cascade", "unified"\]\.includes\(state\.homeMenu\.layoutMode\)/);
 assert.match(html, /homepage-menu-subbar\.layout-two-level \.homepage-subbar-link[\s\S]*?min-height: 56px[\s\S]*?flex-direction: column/);
 assert.match(html, /className = "homepage-quick-group-label"[\s\S]*?className = "homepage-quick-destination-label"/);
@@ -86,6 +96,9 @@ assert.match(html, /\.stage\.home-menu-open \.homepage-breadcrumb \{[\s\S]*?visi
 assert.doesNotMatch(html, /const visibleStageHeight = Math\.max\(320,/, "mobile menu height must not exceed a short landscape or keyboard viewport");
 assert.match(html, /html:has\(body\.home-menu-open\) \{[\s\S]*?overflow-y: scroll;[\s\S]*?overscroll-behavior: none;/, "the open menu should retain the root scrollbar gutter");
 assert.match(html, /body\.home-menu-open \{[\s\S]*?overflow: hidden;[\s\S]*?overscroll-behavior: none;/, "the open mobile menu should lock body scrolling");
+assert.match(html, /body\.home-menu-surface-open \.inline-toolbar,[\s\S]*?body\.home-menu-surface-open \.inline-toolbar-float,[\s\S]*?display: none !important;/, "any open homepage menu panel should hide the unrelated inline editing toolbar");
+assert.match(html, /const menuSurfaceOpen = menuOpen \|\| Boolean\(state\.expandedHomeMenuId\);[\s\S]*?classList\.toggle\("home-menu-surface-open", menuSurfaceOpen\)/, "desktop dropdowns and the mobile full menu should share the auxiliary-surface suppression state");
+assert.match(html, /const toolbarSuppressed = menuSurfaceOpen \|\| document\.body\.classList\.contains\("section-appearance-surface-open"\);[\s\S]*?\[inlineToolbar, inlineToolbarFloat\]\.forEach[\s\S]*?surface\.inert = toolbarSuppressed;[\s\S]*?surface\.setAttribute\("aria-hidden", "true"\)[\s\S]*?surface\.removeAttribute\("aria-hidden"\)/, "open homepage or section-appearance surfaces should make hidden inline tools unfocusable and restore their accessibility state after close");
 assert.match(html, /homepageMenu\.addEventListener\("touchmove", preventHomeMenuBackgroundScroll, \{ passive: false \}\)/, "touches outside the menu list should not move the background page");
 assert.match(html, /window\.visualViewport\?\.addEventListener\("resize",[\s\S]*?scheduleFloatingEditorUi\(\{ fit: true \}\)/, "visible viewport resize should recompute the mobile menu panel height");
 assert.match(html, /\.editable\s*\{[\s\S]*?position:\s*absolute/);

@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const workspaceRoot = resolve(__dirname, "..");
-const outputRoot = resolve(workspaceRoot, "outputs");
+const outputRoot = resolve(
+  process.env.SONGAK_EDITOR_ASSET_ROOT || resolve(workspaceRoot, "outputs"),
+);
 const defaultFile = "representative-greeting-editor.html";
 const host = "127.0.0.1";
 const requestedPort = Number.parseInt(process.env.PORT ?? process.argv.at(2) ?? "43185", 10);

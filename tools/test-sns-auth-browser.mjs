@@ -1,11 +1,18 @@
 import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
-import { pathToFileURL } from "node:url";
-import { resolve } from "node:path";
+import { createEditorServer } from "./serve-editor.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
-const editorUrl = pathToFileURL(resolve("outputs", "representative-greeting-editor.html")).href;
+const server = createEditorServer();
+const origin = await new Promise((resolveListen, rejectListen) => {
+  server.once("error", rejectListen);
+  server.listen(0, "127.0.0.1", () => {
+    server.off("error", rejectListen);
+    resolveListen(`http://127.0.0.1:${server.address().port}`);
+  });
+});
+const editorUrl = `${origin}/representative-greeting-editor.html`;
 const executablePath = [
   process.env.BROWSER_EXECUTABLE,
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -24,12 +31,9 @@ try {
     await page.addInitScript(() => localStorage.removeItem("sacwcWebsiteEditor"));
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(`${editorUrl}?mode=view&stylePage=account`, { waitUntil: "commit" });
+    const profile = viewport.name === "pc" ? "desktop" : viewport.name === "small-mobile" ? "phoneSmall" : viewport.name === "mobile" ? "phone" : "tablet";
+    await page.goto(`${editorUrl}?mode=view&viewport=${profile}&stylePage=account`, { waitUntil: "commit" });
     await page.waitForSelector('.sns-auth-button[data-sns-provider="kakao"]', { timeout: 60000 });
-    await page.evaluate((name) => {
-      setMode("view");
-      setViewport(name === "pc" ? "desktop" : name === "tablet" ? "tablet" : name === "small-mobile" ? "phoneSmall" : "phone");
-    }, viewport.name);
     await page.waitForFunction(() => [...document.querySelectorAll(".sns-auth-visual img")].some((image) => image.naturalWidth > 0));
     await page.waitForTimeout(350);
     const state = await page.evaluate(() => {
@@ -265,4 +269,5 @@ try {
   console.log("SNS-only account browser tests OK");
 } finally {
   await browser.close();
+  await new Promise((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose()));
 }

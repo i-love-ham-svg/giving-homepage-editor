@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "status": "durable-source-recovery-evidence-preserved",
+  "generatedAt": "2026-08-14T08:40:37.969Z",
+  "purpose": "Preserve the approved CH04 full editor source and exact 9,890-line CSS recovery segment independently of an unreachable Git object.",
+  "source": {
+    "gitBlobOid": "2834733d7ec77a5d18e1bce0840cf3c452931f93",
+    "approvedChapter": "CH04",
+    "fullBlob": {
+      "path": "manual-video/v2/captures/CH06-source-recovery/approved-CH04-editor-blob-2834733d.html",
+      "sha256": "227e39be57e95f64d01cac559b818736ca52b6cd464b559e8714886be9e96a57",
+      "bytes": 1846658,
+      "disposition": "created"
+    },
+    "recoveredSegment": {
+      "path": "manual-video/v2/captures/CH06-source-recovery/approved-CH04-css-segment-9890.css",
+      "sha256": "479af6c1305e8ef8c9b2051b7f0d531993c715c8e8a08c3b7999d48c337ff33c",
+      "bytes": 262405,
+      "lines": 9890,
+      "startAnchor": "    .stage.has-background-image.edit-mode .background-edit-hit {",
+      "journalAnchor": "    .stage.mobile .gallery-section-content[data-mobile-style=\"journal\"] .gallery-grid::before,",
+      "endAnchor": "      -webkit-mask: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 900' preserveAspectRatio='none'%3E%3Cpath d='M65 0 C260 90 250 185 92 245 C-8 290 18 390 198 435 C305 465 286 575 108 625 C-8 660 10 790 240 900' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-dasharray='8 13'/%3E%3C/svg%3E\") center / 100% 100% no-repeat;",
+      "disposition": "created"
+    }
+  },
+  "stableCanonicalAtPreservation": {
+    "path": "outputs/representative-greeting-editor.html",
+    "sha256": "41c98293979876a660617a8631410a9cd12053323d9a0360e8d692fa2ebcbba2",
+    "bytes": 1853743,
+    "malformedRecoveryFragmentCount": 0
+  },
+  "policy": {
+    "gitRefCreated": false,
+    "commitCreated": false,
+    "publicDeploymentPerformed": false,
+    "evidenceContainsCredentials": false
+  }
+}

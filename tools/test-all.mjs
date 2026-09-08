@@ -4,6 +4,8 @@ import path from "node:path";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tests = [
+  "tools/test-background-float-bounds.mjs",
+  "tools/test-theme-preset-labels-browser.mjs",
   "tools/test-change-registry.mjs",
   "tools/test-html-syntax.mjs",
   "tools/test-public-scope-loading.mjs",
@@ -14,6 +16,8 @@ const tests = [
   "tools/test-category-toolbar-manager.mjs",
   "tools/test-home-menu-open-state.mjs",
   "tools/test-color-picker-manager.mjs",
+  "tools/test-editor-modal-contract.mjs",
+  "tools/test-editor-modal-contract-browser.mjs",
   "tools/test-inline-text-toolbar.mjs",
   "tools/test-cta-toolbar.mjs",
   "tools/test-visual-asset-manager.mjs",

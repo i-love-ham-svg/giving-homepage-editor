@@ -96,7 +96,7 @@ test("keeps every durable board interaction behind the renewed shell", async () 
     "/api/board/media",
     "/api/board/posts/${encodeURIComponent(id)}",
     "/api/board/posts/${activePost.id}/moderate",
-    "/api/board/posts/${activePost.id}/share",
+    "/api/board/posts/${post.id}/share",
     "/api/board/posts/${activePost.id}/report",
   ]) {
     assert.ok(board.includes(endpoint), `missing board operation: ${endpoint}`);
@@ -112,7 +112,7 @@ test("keeps every durable board interaction behind the renewed shell", async () 
   assert.match(board, /\{admin && !communityEditor\.active && <section className="moderation-panel">/);
   assert.doesNotMatch(board, /function logoutAdmin\(/);
   assert.match(board, /params\.get\("manage"\) === "1"/);
-  assert.match(board, /!adminDialog\.current\.open[\s\S]*?adminDialog\.current\.showModal\(\)/);
+  assert.match(board, /params\.get\("manage"\) === "1"[\s\S]*?openExclusiveDialog\(adminDialog\.current\)/);
   assert.doesNotMatch(board, /adminSignOutPath|signout-with-chatgpt/);
 });
 
@@ -133,6 +133,50 @@ test("keeps identity and contact data out of the local board draft", async () =>
   assert.doesNotMatch(resetWrite, /\.\.\.saved(?:\s|,|})/);
   assert.match(resetWrite, /localStorage\.setItem\("songak-board-draft-v2", JSON\.stringify\(safeSaved\)\)/);
   assert.match(submitPost, /const payload = \{[\s\S]*?\.\.\.draft,/);
+});
+
+test("keeps board dialogs exclusive and restores the retained detail after child actions", async () => {
+  const board = await readFile(new URL("app/board-app.tsx", root), "utf8");
+  const exclusive = board.slice(board.indexOf("function openExclusiveDialog"), board.indexOf("function cancelWrite"));
+  const cancelWrite = board.slice(board.indexOf("function cancelWrite"), board.indexOf("function openPostActionDialog"));
+  const postActions = board.slice(board.indexOf("function openPostActionDialog"), board.indexOf("const loadPosts"));
+  const openPost = board.slice(board.indexOf("async function openPost"), board.indexOf("function closeDetail"));
+  const closeDetail = board.slice(board.indexOf("function closeDetail"), board.indexOf("function resetWrite"));
+  const openWrite = board.slice(board.indexOf("function openWrite"), board.indexOf("function saveDraft"));
+  const sharePost = board.slice(board.indexOf("async function sharePost"), board.indexOf("async function submitReport"));
+
+  assert.equal((board.match(/\.showModal\(\)/g) || []).length, 1, "all application dialogs must open through the exclusive helper");
+  for (const ref of ["writeDialog", "detailDialog", "adminDialog", "reportDialog", "deleteDialog"]) {
+    assert.ok(exclusive.includes(`${ref}.current`), `exclusive helper must include ${ref}`);
+  }
+  assert.match(exclusive, /dialog !== next && dialog\.open\) dialog\.close\(\)/);
+  assert.match(exclusive, /if \(!next\.open\) next\.showModal\(\)/);
+
+  assert.match(openPost, /openExclusiveDialog\(detailDialog\.current\)/);
+  assert.match(openWrite, /returnToDetailAfterWriteRef\.current = Boolean\(post && detailDialog\.current\?\.open\)/);
+  assert.match(openWrite, /openExclusiveDialog\(writeDialog\.current\)/);
+  assert.match(cancelWrite, /writeDialog\.current\?\.open[\s\S]*?writeDialog\.current\.close\(\)/);
+  assert.match(cancelWrite, /shouldRestoreDetail && activePost[\s\S]*?openExclusiveDialog\(detailDialog\.current\)/);
+
+  assert.match(postActions, /returnToDetailAfterPostActionRef\.current = Boolean\(detailDialog\.current\?\.open && activePost\)/);
+  assert.match(postActions, /if \(current\?\.open\) current\.close\(\)/);
+  assert.match(postActions, /restoreDetail && shouldRestoreDetail && activePost[\s\S]*?openExclusiveDialog\(detailDialog\.current\)/);
+  assert.match(board, /onClick=\{\(\) => openPostActionDialog\(reportDialog\.current\)\}>신고<\/button>/);
+  assert.match(board, /onClick=\{\(\) => openPostActionDialog\(deleteDialog\.current\)\}>삭제<\/button>/);
+  for (const ref of ["reportDialog", "deleteDialog"]) {
+    assert.match(board, new RegExp(`ref=\\{${ref}\\}[\\s\\S]*?onCancel=\\{\\(event\\) => \\{ event\\.preventDefault\\(\\); closePostActionDialog\\(${ref}\\.current\\); \\}\\}`));
+    assert.match(board, new RegExp(`onClose=\\{\\(\\) => closePostActionDialog\\(${ref}\\.current\\)\\}`));
+    assert.match(board, new RegExp(`onClick=\\{\\(\\) => closePostActionDialog\\(${ref}\\.current\\)\\}>취소`));
+  }
+
+  assert.match(board, /ref=\{detailDialog\}[\s\S]*?onCancel=\{\(event\) => \{ event\.preventDefault\(\); closeDetail\(\); \}\}/);
+  assert.doesNotMatch(board, /ref=\{detailDialog\}[^>]*onClose=/);
+  assert.match(closeDetail, /setActivePost\(null\)/);
+  assert.match(closeDetail, /url\.searchParams\.delete\("post"\)/);
+
+  assert.match(sharePost, /const shouldRestoreDetail = Boolean\(detailDialog\.current\?\.open\)/);
+  assert.match(sharePost, /if \(shouldRestoreDetail\) detailDialog\.current\?\.close\(\)/);
+  assert.match(sharePost, /finally \{[\s\S]*?openExclusiveDialog\(detailDialog\.current\)/);
 });
 
 test("adapts community visual fields to the parent editor without mounting another toolbar", async () => {

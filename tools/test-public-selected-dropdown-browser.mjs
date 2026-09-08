@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-import { createRequire } from "node:module";
 import { existsSync } from "node:fs";
 import { createEditorServer } from "./serve-editor.mjs";
+import { loadPlaywrightCore } from "../manual-video/v2/record-manual-v2.cjs";
 
-const require = createRequire(import.meta.url);
-const { chromium } = require(process.env.PLAYWRIGHT_PACKAGE || "playwright");
+const { chromium } = loadPlaywrightCore();
 const executablePath = [
   process.env.BROWSER_EXECUTABLE,
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",

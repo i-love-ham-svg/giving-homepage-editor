@@ -651,6 +651,22 @@ export async function updatePost(request: Request, id: string): Promise<BoardPos
   return mapPost(updated, grouped.get(id) || [], admin);
 }
 
+export async function claimVisitorPost(request: Request, id: string): Promise<BoardPost | null> {
+  await ensureBoardSchema();
+  const input = await readJson<Record<string, unknown>>(request, 4_096);
+  const { DB } = getBoardEnv();
+  const row = await DB.prepare("SELECT * FROM posts WHERE id = ? AND status != 'deleted'").bind(id).first<D1Row>();
+  if (!row) return null;
+  if (!(await verifyVisitorPassword(String(input.password || ""), String(row.password_salt), String(row.password_hash)))) {
+    throw new Error("게시글 번호 또는 비밀번호가 올바르지 않습니다.");
+  }
+  const grouped = await mediaForPosts([id]);
+  const item = mapPost(row, grouped.get(id) || [], false);
+  item.contact = String(row.contact || "");
+  item.moderationNote = String(row.moderation_note || "");
+  return item;
+}
+
 export async function deletePost(request: Request, id: string): Promise<boolean> {
   await ensureBoardSchema();
   const admin = await isAdminRequest(request);

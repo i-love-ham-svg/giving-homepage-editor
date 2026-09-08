@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
-import { createRequire } from "node:module";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
+import { loadPlaywrightCore } from "../manual-video/v2/record-manual-v2.cjs";
 
-const require = createRequire(import.meta.url);
-const { chromium } = require("playwright");
+const { chromium } = loadPlaywrightCore();
 const workspaceRoot = resolve(".");
+const assetRoot = resolve(
+  process.env.SONGAK_EDITOR_ASSET_ROOT || resolve(workspaceRoot, "outputs"),
+);
 const executablePath = [
   process.env.BROWSER_EXECUTABLE,
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -32,11 +34,13 @@ const contentTypes = {
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, "http://127.0.0.1").pathname);
-    const localPath = pathname.startsWith("/songak/")
-      ? `/outputs/${pathname.slice("/songak/".length)}`
-      : pathname;
-    const filePath = resolve(workspaceRoot, `.${localPath}`);
-    if (!filePath.startsWith(workspaceRoot)) throw new Error("invalid path");
+    const relativePath = pathname.startsWith("/songak/")
+      ? pathname.slice("/songak/".length)
+      : pathname.startsWith("/outputs/")
+        ? pathname.slice("/outputs/".length)
+        : pathname.replace(/^\/+/, "");
+    const filePath = resolve(assetRoot, relativePath);
+    if (filePath !== assetRoot && !filePath.startsWith(`${assetRoot}\\`)) throw new Error("invalid path");
     const fileStat = await stat(filePath);
     const resolvedPath = fileStat.isDirectory() ? resolve(filePath, "index.html") : filePath;
     const extension = resolvedPath.slice(resolvedPath.lastIndexOf("."));
@@ -48,7 +52,7 @@ const server = createServer(async (request, response) => {
 });
 await new Promise((resolveReady) => server.listen(0, "127.0.0.1", resolveReady));
 const { port } = server.address();
-const editorUrl = `http://127.0.0.1:${port}/outputs/representative-greeting-editor.html`;
+const editorUrl = `http://127.0.0.1:${port}/songak/representative-greeting-editor.html`;
 
 try {
   for (const viewport of [
@@ -86,7 +90,8 @@ try {
         visual: { top: visual.top, bottom: visual.bottom },
         buttons,
         viewportHeight: window.innerHeight,
-        stageIsDesktop: !document.getElementById("stage").classList.contains("mobile")
+        stageIsDesktop: !document.getElementById("stage").classList.contains("mobile"),
+        stageScale: Number.parseFloat(getComputedStyle(document.getElementById("stage")).getPropertyValue("--scale")) || 1
       };
     });
 
@@ -94,7 +99,7 @@ try {
     assert.equal(result.buttons.length, 3, `${viewport.width}x${viewport.height}: three SNS buttons`);
     assert.ok(result.panel.top >= result.visual.top, `${viewport.width}x${viewport.height}: panel starts inside image`);
     assert.ok(result.panel.bottom <= result.visual.bottom, `${viewport.width}x${viewport.height}: panel ends inside image`);
-    assert.ok(result.panel.top <= result.visual.top + 330, `${viewport.width}x${viewport.height}: panel stays directly below the hero title`);
+    assert.ok(result.panel.top <= result.visual.top + 330 * result.stageScale, `${viewport.width}x${viewport.height}: panel stays directly below the hero title in stage coordinates`);
     assert.ok(result.buttons.every((button) => button.height >= 44), `${viewport.width}x${viewport.height}: button target height`);
     assert.ok(result.buttons.every((button) => button.top >= 0 && button.bottom <= result.viewportHeight), `${viewport.width}x${viewport.height}: all SNS buttons appear in the first screen`);
     console.log(`${viewport.width}x${viewport.height}`, JSON.stringify(result));
@@ -122,7 +127,12 @@ try {
       desktopImageVisible: getComputedStyle(desktopImage).display !== "none",
       mobileImageVisible: getComputedStyle(mobileImage).display !== "none",
       buttons,
-      viewport: { width: innerWidth, height: innerHeight },
+      viewport: {
+        width: innerWidth,
+        height: innerHeight,
+        clientWidth: document.documentElement.clientWidth,
+        contentWidth: document.documentElement.scrollWidth
+      },
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
     };
   });
@@ -141,7 +151,7 @@ try {
   const landscape = await readTabletLayout();
   assert.equal(landscape.landscape, true, "1024x768: tablet switches to the landscape composition after rotation");
   assert.ok(landscape.stage.width >= landscape.viewport.width - 18, "1024x768: landscape tablet uses the available width");
-  assert.ok(Math.abs(landscape.stage.left - (landscape.viewport.width - landscape.stage.right)) <= 2, "1024x768: landscape tablet remains centered");
+  assert.ok(Math.abs(landscape.stage.left - (landscape.viewport.contentWidth - landscape.stage.right)) <= 2, "1024x768: landscape tablet remains centered inside the stable scrollbar gutter");
   assert.ok(landscape.visualRatio > 1.45 && landscape.visualRatio < 1.55, "1024x768: landscape hero keeps the 3:2 desktop image ratio");
   assert.ok(landscape.desktopImageVisible && !landscape.mobileImageVisible, "1024x768: landscape tablet uses the desktop image without stretching the portrait asset");
   assert.ok(landscape.buttons.every((button) => button.height >= 44 && button.top >= 0 && button.bottom <= landscape.viewport.height), "1024x768: all three SNS buttons are in the first screen");
